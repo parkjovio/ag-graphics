@@ -2,13 +2,13 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>아시아경제 통합 그래픽 대시보드 v3.8</title>
+    <title>아시아경제 통합 그래픽 대시보드 v3.9</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
-            /* 🚨 기자님, 여기에 아시아경제 전용 폰트 이름을 입력하세요! 🚨 */
+            /* 🚨 아시아경제 전용 폰트 🚨 */
             --main-font: 'Malgun Gothic', sans-serif; 
         }
 
@@ -60,7 +60,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v3.8</h2>
+        <h2>🛠️ 그래픽 데스크 v3.9</h2>
         
         <label>종류 선택</label>
         <select id="chartType" onchange="toggleInputs()">
@@ -131,7 +131,7 @@
             <div id="table-container" style="display: block;"></div>
             
             <div class="footer-watermark">
-                그래픽  <span id="displayName">문지원</span>
+                그래픽  <span id="displayName">박충훈 기자</span>
                 <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous">
             </div>
         </div>
@@ -164,23 +164,29 @@
                     ds2Group.style.display = 'none';
                 }
 
+                // =========================================================
+                // 🚨 v3.9 데이터 1 이름(dataName1) 완벽 초기화 추가 🚨
+                // =========================================================
                 if (type === 'line') {
                     document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
                     document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
                     document.getElementById('labelsInput').value = '7월,8월,9월,10월,11월,12월,1월';
+                    document.getElementById('dataName1').value = '총통화량'; // 데이터 1 이름 초기화
                     document.getElementById('dataInput1').value = '4370,4400,4430,4470,4480,4530,4565';
                     helpText.innerText = '';
                 } else if (type === 'bar') {
                     document.getElementById('titleInput').value = '주요 정당 지지율 추이';
                     document.getElementById('subInput').value = '(단위: %, 자료: 리얼미터)';
                     document.getElementById('labelsInput').value = 'A당,B당,C당,D당,무당층';
+                    document.getElementById('dataName1').value = '지지율'; // 데이터 1 이름 초기화
                     document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
                     helpText.innerText = '';
                 } else if (type === 'pie') {
                     document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
                     document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
                     document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
-                    document.getElementById('dataInput1').value = '40.6, 29.9, 24.8, 4.7';
+                    document.getElementById('dataName1').value = '점유율'; // 데이터 1 이름 초기화
+                    document.getElementById('dataInput1').value = '97, 1, 1, 1';
                     helpText.innerText = '원그래프의 경우 수치가 자동으로 비율로 환산됩니다.';
                 } else if (type === 'multi-line') {
                     document.getElementById('titleInput').value = '전국 휘발유·경유 유가 추이';
