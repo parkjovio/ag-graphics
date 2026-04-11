@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>아시아경제 통합 그래픽 대시보드 (모바일 반응형)</title>
+    <title>아시아경제 통합 그래픽 대시보드 (모바일 가독성 최적화)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -35,57 +35,43 @@
             display: flex; flex-direction: column;
         }
         .header-line { border-top: 3px solid #000; margin-bottom: 15px; }
-        .chart-title { font-size: 24px; font-weight: 900; margin: 0 0 5px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
-        .chart-subtitle { font-size: 14px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline;}
+        
+        /* 🚨 모바일 가독성: 텍스트 요소들 30~40% 확대 🚨 */
+        .chart-title { font-size: 32px; font-weight: 900; margin: 0 0 8px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
+        .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline;}
         .title-red-bar { color: #E61E2B; display: none; margin-right: 5px; }
 
         #table-container { display: none; margin-top: 20px; margin-bottom: 10px; flex-grow: 1; height: auto; min-height: unset; }
-        .asia-table { width: 100%; border-collapse: collapse; font-size: 16px; text-align: center; font-family: var(--main-font);}
-        .asia-table th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 12px 5px; font-weight: bold; color: #333; }
-        .asia-table td { border-bottom: 1px solid #ddd; padding: 12px 5px; color: #111; }
+        .asia-table { width: 100%; border-collapse: collapse; font-size: 20px; text-align: center; font-family: var(--main-font);} /* 표 글자 16px -> 20px */
+        .asia-table th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 15px 5px; font-weight: bold; color: #333; }
+        .asia-table td { border-bottom: 1px solid #ddd; padding: 15px 5px; color: #111; }
         .asia-table td:first-child { background-color: #E61E2B; color: white; font-weight: bold; border-bottom: 1px solid #fff; }
         .asia-table td:nth-child(2) { font-weight: bold; }
         .asia-table td:nth-child(3) { background-color: #f2f2f2; }
         
-        #chart-container { height: 380px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; }
+        /* 🚨 모바일 가독성: 글자가 커진 만큼 차트 영역 높이 확장 🚨 */
+        #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; }
         .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; }
 
         .footer-watermark {
             display: flex; justify-content: flex-end; align-items: center; 
-            margin-top: 15px; font-size: 14px; font-weight: bold; color: #111; 
+            margin-top: 20px; font-size: 18px; font-weight: bold; color: #111; /* 바이라인 글자 14px -> 18px */
             flex-shrink: 0; font-family: var(--main-font);
         }
-        .as_logo_img { height: 25px; margin-left: 8px; width: auto; }
+        .as_logo_img { height: 32px; margin-left: 8px; width: auto; } /* 로고 크기 25px -> 32px */
 
-        /* ========================================================= */
-        /* 🚨 v4.0 추가: 모바일 화면을 위한 반응형 미디어 쿼리 🚨 */
-        /* 화면 너비가 768px 이하(태블릿/스마트폰)일 때 아래 스타일 적용 */
-        /* ========================================================= */
         @media screen and (max-width: 768px) {
-            body {
-                flex-direction: column; /* 세로 배치로 변경 */
-                padding: 10px; /* 모바일은 여백을 조금 줄임 */
-                gap: 15px;
-            }
-            .control-panel {
-                width: 100%; /* 컨트롤 패널이 화면 꽉 차게 */
-                padding: 20px;
-            }
-            .preview-area {
-                width: 100%;
-                overflow-x: auto; /* 넘치는 그래픽 영역은 좌우로 스와이프해서 볼 수 있게 설정 */
-                padding-bottom: 10px;
-            }
-            #capture-area {
-                min-width: 750px; /* 화면이 작아져도 원본 750px 화질 및 비율 유지 */
-            }
+            body { flex-direction: column; padding: 10px; gap: 15px; }
+            .control-panel { width: 100%; padding: 20px; }
+            .preview-area { width: 100%; overflow-x: auto; padding-bottom: 10px; }
+            #capture-area { min-width: 750px; }
         }
     </style>
 </head>
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v4.0</h2>
+        <h2>🛠️ 그래픽 데스크 (모바일 최적화)</h2>
         
         <label>종류 선택</label>
         <select id="chartType" onchange="toggleInputs()">
@@ -286,10 +272,11 @@
             const chartContainer = document.getElementById('chart-container');
             chartContainer.style.display = 'block';
             
+            /* 🚨 모바일 가독성: 폰트가 커져서 겹치지 않도록 높이 추가 확장 🚨 */
             if (chartType === 'pie') {
-                chartContainer.style.height = '500px'; 
+                chartContainer.style.height = '550px'; 
             } else {
-                chartContainer.style.height = '380px'; 
+                chartContainer.style.height = '420px'; 
             }
 
             document.getElementById('topLine').style.display = 'block';
@@ -348,12 +335,12 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: chartType === 'pie' ? '40%' : '0%',
-                    layout: { padding: chartType === 'pie' ? 40 : 10 },
+                    layout: { padding: chartType === 'pie' ? 60 : 20 }, /* 🚨 글자 확대 대비 여백 추가 확보 🚨 */
                     plugins: { 
                         legend: { 
                             display: (chartType === 'multi-line' || chartType === 'combo'),
                             position: 'top', align: 'end',
-                            labels: { font: { size: 14, weight: 'bold' }, color: '#111' }
+                            labels: { font: { size: 18, weight: 'bold' }, color: '#111' } /* 🚨 범례 14px -> 18px 🚨 */
                         },
                         tooltip: { enabled: false },
                         datalabels: {
@@ -376,30 +363,37 @@
                                 const val = context.dataset.data[context.dataIndex];
                                 const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
                                 if (((val / sum) * 100) < 10) {
-                                    return 10 + (context.dataIndex % 3) * 15;
+                                    return 10 + (context.dataIndex % 3) * 20; /* 🚨 라벨 간격 확대 🚨 */
                                 }
                                 return 0;
                             },
                             backgroundColor: null, 
                             color: '#111', 
-                            font: { size: 14, weight: '900' }, 
+                            font: { size: 18, weight: '900' }, /* 🚨 원그래프 라벨 14px -> 18px 🚨 */
                             textStrokeColor: '#ffffff', 
-                            textStrokeWidth: 5, 
+                            textStrokeWidth: 6, 
                             formatter: (value, ctx) => { return ctx.chart.data.labels[ctx.dataIndex] + '\n' + value; },
                             textAlign: 'center'
                         }
                     },
                     scales: {
-                        x: { display: chartType !== 'pie', grid: { display: false }, ticks: { font: { size: 14, weight: 'bold' }, color: '#333' } },
-                        y: { display: chartType !== 'pie', type: 'linear', position: 'left', grid: { color: '#e0e0e0', drawBorder: false }, ticks: { font: { size: 13 }, color: '#666' }, beginAtZero: chartType === 'bar' },
-                        y1: { display: chartType === 'combo', type: 'linear', position: 'right', grid: { display: false }, ticks: { font: { size: 13, weight: 'bold' }, color: '#E61E2B' }, beginAtZero: false }
+                        /* 🚨 축 라벨 글자 크기 확대 (14px -> 18px, 13px -> 16px) 🚨 */
+                        x: { display: chartType !== 'pie', grid: { display: false }, ticks: { font: { size: 18, weight: 'bold' }, color: '#333' } },
+                        y: { display: chartType !== 'pie', type: 'linear', position: 'left', grid: { color: '#e0e0e0', drawBorder: false }, ticks: { font: { size: 16 }, color: '#666' }, beginAtZero: chartType === 'bar' },
+                        y1: { display: chartType === 'combo', type: 'linear', position: 'right', grid: { display: false }, ticks: { font: { size: 16, weight: 'bold' }, color: '#E61E2B' }, beginAtZero: false }
                     },
                     animation: {
                         onComplete: function() {
                             if (chartType === 'bar') {
                                 const ctx = this.ctx;
-                                ctx.font = `bold 14px ${globalFont}`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#111';
-                                this.data.datasets.forEach(function (dataset, i) { const meta = myChart.getDatasetMeta(i); meta.data.forEach(function (bar, index) { ctx.fillText(dataset.data[index], bar.x, bar.y - 5); }); });
+                                ctx.font = `bold 18px ${globalFont}`; /* 🚨 막대 위 숫자 14px -> 18px 🚨 */
+                                ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#111';
+                                this.data.datasets.forEach(function (dataset, i) { 
+                                    const meta = myChart.getDatasetMeta(i); 
+                                    meta.data.forEach(function (bar, index) { 
+                                        ctx.fillText(dataset.data[index], bar.x, bar.y - 8); /* 🚨 커진 글자만큼 위치 상향 조정 (-5 -> -8) 🚨 */
+                                    }); 
+                                });
                             }
                         }
                     }
