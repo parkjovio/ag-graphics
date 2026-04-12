@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>아시아경제 통합 그래픽 대시보드 v5.8 (예시 데이터 복구)</title>
+    <title>아시아경제 통합 그래픽 대시보드 v5.9 (하단 주석 기능 추가)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -62,7 +62,10 @@
         #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; }
         .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; line-height: 1.4;}
 
-        .footer-watermark { display: flex; justify-content: flex-end; align-items: center; margin-top: 20px; font-size: 18px; font-weight: bold; color: #111; flex-shrink: 0; font-family: var(--main-font); }
+        /* 🚨 v5.9 신규: 하단 주석 스타일 🚨 */
+        #displayFootnote { font-size: 16px; color: #111; margin-top: 15px; text-align: left; letter-spacing: -0.5px; display: none; font-family: var(--main-font); line-height: 1.4; font-weight: 500;}
+
+        .footer-watermark { display: flex; justify-content: flex-end; align-items: center; margin-top: 20px; font-size: 18px; font-weight: bold; color: #111; flex-shrink: 0; font-family: var(--main-font); border-top: 1px solid #eee; padding-top: 15px;}
         .as_logo_img { height: 32px; margin-left: 8px; width: auto; }
 
         @media screen and (max-width: 768px) {
@@ -76,7 +79,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v5.8</h2>
+        <h2>🛠️ 그래픽 데스크 v5.9</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -183,6 +186,12 @@
             <label>엑셀 데이터 붙여넣기</label>
             <textarea id="tableDataInput" rows="8"></textarea>
         </div>
+
+        <div class="data-group" style="background-color: #fff; border: 1px solid #ccc;">
+            <label style="margin-top:0;">하단 주석 (선택)</label>
+            <input type="text" id="footnoteInput" placeholder="예: *보험사들은 대면 영업이 많아..." value="">
+            <span class="help-text">그래프/표 바로 밑에 부가 설명을 표시합니다.</span>
+        </div>
         
         <label>기자 이름</label>
         <input type="text" id="nameInput" value="박충훈 기자">
@@ -214,6 +223,8 @@
             </div>
 
             <div id="table-container" style="display: none;"></div>
+
+            <div id="displayFootnote"></div>
             
             <div class="footer-watermark">
                 그래픽&nbsp;&nbsp;<span id="displayName">박충훈 기자</span>
@@ -257,11 +268,9 @@
             return sign + result + decStr;
         }
 
-        // 🚨 v5.8 신규: 예시 데이터를 언제든 불러올 수 있는 전용 함수 🚨
         function loadExampleData() {
             const type = document.getElementById('chartType').value;
             
-            // 기본 세팅 초기화
             document.getElementById('dataName2').value = '';
             document.getElementById('dataInput2').value = '';
             document.getElementById('dataName3').value = '';
@@ -271,11 +280,15 @@
             document.getElementById('y1Min').value = '';
             document.getElementById('y1Max').value = '';
             document.getElementById('showTableType').value = 'none';
+            document.getElementById('footnoteInput').value = ''; // 주석 초기화
 
             if (type === 'table') {
-                document.getElementById('titleInput').value = '정유사별 카드 제휴 할인';
-                document.getElementById('subInput').value = '';
-                document.getElementById('tableDataInput').value = `정유사\t제휴 카드\t혜택 유형\nGS칼텍스\t현대카드에너지플러스\t최저가 동기화, ℓ당 100원 할인\nHD현대오일뱅크\t삼성카드iDSTATION\t주유 금액 10%, 월 최대 3.5만원 할인\nSK에너지\t하나카드 CLUB SK 카드\tℓ당 150원, 월 최대 2.2만원 할인`;
+                // 🚨 v5.9: 올려주신 '금융권 조직문화 특이사항'으로 표 템플릿 변경 🚨
+                document.getElementById('titleInput').value = '금융권 조직문화 특이사항';
+                document.getElementById('subInput').value = '(자료:각사)';
+                document.getElementById('tableDataInput').value = `회사\t활동\n하나은행\t근무태만 방지 등 공문 수시 안내, 업무집중시간 안내\nNH농협은행\t오전 10시~점심식사, 오후 2시~퇴근시 업무집중시간 운영\nKB국민은행\t현안 있을 때 주말 부서장급 회의\n신한금융지주\t불필요한 회의 최소화 등 '온타임제' 운영\n삼성금융네트웍스\t그룹 차원 임원 주 6일제 운영 유지`;
+                document.getElementById('footnoteInput').value = '*보험사들은 대면 영업이 많아 고객 요청에 따라 수시로 식사시간 조정';
+                document.getElementById('nameInput').value = '오성수 기자';
             } else if (type === 'line') {
                 document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
                 document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
@@ -283,6 +296,7 @@
                 document.getElementById('dataName1').value = '총통화량'; 
                 document.getElementById('dataInput1').value = '4370,4400,4430,4470,4480,4530,4565';
                 document.getElementById('labelDisplayType').value = 'all';
+                document.getElementById('nameInput').value = '박충훈 기자';
             } else if (type === 'bar') {
                 document.getElementById('titleInput').value = '주요 정당 지지율 추이';
                 document.getElementById('subInput').value = '(단위: %, 자료: 리얼미터)';
@@ -290,6 +304,7 @@
                 document.getElementById('dataName1').value = '지지율'; 
                 document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
                 document.getElementById('labelDisplayType').value = 'all';
+                document.getElementById('nameInput').value = '박충훈 기자';
             } else if (type === 'pie') {
                 document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
                 document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
@@ -297,6 +312,7 @@
                 document.getElementById('dataName1').value = '점유율'; 
                 document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
                 document.getElementById('labelDisplayType').value = 'all';
+                document.getElementById('nameInput').value = '박충훈 기자';
             } else if (type === 'multi-line') {
                 document.getElementById('titleInput').value = '5대 은행 가계대출 증감 추이';
                 document.getElementById('subInput').value = '(단위: 억원, 기준: 전월말대비, 자료: 각사)';
@@ -308,6 +324,7 @@
                 document.getElementById('dataName3').value = '신용대출';
                 document.getElementById('dataInput3').value = '-6000, -2000, -4000, 14008';
                 document.getElementById('labelDisplayType').value = 'last';
+                document.getElementById('nameInput').value = '박충훈 기자';
             } else if (type === 'combo') {
                 document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
                 document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
@@ -317,6 +334,7 @@
                 document.getElementById('dataName2').value = '계절조정 실업률';
                 document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
                 document.getElementById('labelDisplayType').value = 'all';
+                document.getElementById('nameInput').value = '박충훈 기자';
             }
             
             toggleInputs();
@@ -378,6 +396,9 @@
             document.getElementById('yMax').value = extract('[Y좌측최대]');
             document.getElementById('y1Min').value = extract('[Y우측최소]');
             document.getElementById('y1Max').value = extract('[Y우측최대]');
+
+            // 🚨 v5.9: AI 파서가 [하단주석] 태그도 읽어오도록 연동 🚨
+            document.getElementById('footnoteInput').value = extract('[하단주석]');
             
             const tableData = extract('[표데이터]');
             if (tableData) {
@@ -399,7 +420,6 @@
             }, 2000);
         }
 
-        // 입력창을 가시성 있게 토글해주는 함수 (데이터 덮어쓰기 로직 삭제됨)
         function toggleInputs() {
             const type = document.getElementById('chartType').value;
             const showTable = document.getElementById('showTableType').value;
@@ -473,6 +493,16 @@
             const displaySub = document.getElementById('displaySub');
             if (subText.trim() === '') { displaySub.style.display = 'none'; } 
             else { displaySub.innerText = subText; displaySub.style.display = 'inline-block'; }
+
+            // 🚨 v5.9: 주석(Footnote) 텍스트 반영 로직 🚨
+            const footnoteText = document.getElementById('footnoteInput').value;
+            const displayFootnote = document.getElementById('displayFootnote');
+            if (footnoteText.trim() === '') {
+                displayFootnote.style.display = 'none';
+            } else {
+                displayFootnote.innerText = footnoteText;
+                displayFootnote.style.display = 'block';
+            }
 
             if (type === 'table') { 
                 document.getElementById('chart-container').style.display = 'none';
@@ -797,7 +827,8 @@
         }
 
         window.onload = function() {
-            // 처음 실행 시 기본 템플릿 로딩
+            // 처음 실행 시 표(Table) 예시로 세팅하여 주석 기능 확인을 도움
+            document.getElementById('chartType').value = 'table';
             loadExampleData();
         };
     </script>
