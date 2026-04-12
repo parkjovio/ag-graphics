@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>아시아경제 통합 그래픽 대시보드 v4.7 (원그래프 버그 픽스)</title>
+    <title>아시아경제 통합 그래픽 대시보드 v4.9 (텍스트표 초기화 픽스)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -22,6 +22,10 @@
         .axis-inputs { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 5px;}
         .axis-inputs input { width: 48%; }
 
+        .slider-group { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .slider-group input[type="range"] { flex: 1; cursor: pointer; accent-color: #E61E2B; }
+        .font-size-display { font-size: 14px; font-weight: bold; color: #E61E2B; width: 40px; text-align: right; }
+
         button { background: #E61E2B; color: white; border: none; padding: 12px; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; margin-top: 15px; font-family: var(--main-font);}
         button:hover { background: #c51824; }
         .btn-download { background: #333; margin-top: 10px; }
@@ -36,13 +40,12 @@
         .title-red-bar { color: #E61E2B; display: none; margin-right: 5px; }
 
         #table-container { display: none; margin-top: 20px; margin-bottom: 10px; flex-grow: 1; height: auto; min-height: unset; }
-        .asia-table { width: 100%; border-collapse: collapse; font-size: 20px; text-align: center; font-family: var(--main-font);}
+        .asia-table { width: 100%; border-collapse: collapse; text-align: center; font-family: var(--main-font);}
         .asia-table th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 15px 5px; font-weight: bold; color: #333; }
         .asia-table td { border-bottom: 1px solid #ddd; padding: 15px 5px; color: #111; }
         .asia-table td:first-child { background-color: #E61E2B; color: white; font-weight: bold; border-bottom: 1px solid #fff; }
         .asia-table td:nth-child(2) { font-weight: bold; background-color: #ffffff; }
         
-        /* 텍스트표 3열 이후 계단식 명암 처리 유지 */
         .asia-table td:nth-child(3) { background-color: #f2f2f2; }
         .asia-table td:nth-child(4) { background-color: #e8e8e8; }
         .asia-table td:nth-child(5) { background-color: #dedede; }
@@ -67,7 +70,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v4.7</h2>
+        <h2>🛠️ 그래픽 데스크 v4.9</h2>
         
         <label>종류 선택</label>
         <select id="chartType" onchange="toggleInputs()">
@@ -75,8 +78,8 @@
             <option value="bar">📊 단일 막대 그래프</option>
             <option value="multi-line">📉 다중 선 그래프 (최대 3개)</option>
             <option value="combo">📈 선+막대 혼합 그래프 (이중 Y축)</option>
-            <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
-            <option value="table">📋 텍스트 표 (엑셀 연동)</option>
+            <option value="pie">📋 원 그래프 (도넛 차트)</option>
+            <option value="table" selected>📋 텍스트 표 (엑셀 연동)</option>
         </select>
 
         <div class="data-group" id="labelSettingGroup" style="display: none;">
@@ -88,26 +91,35 @@
             </select>
         </div>
 
+        <div class="data-group" id="tableSettingGroup">
+            <label style="color:#E61E2B; font-size:14px;">📌 표 글자 크기 미세 조절</label>
+            <div class="slider-group">
+                <input type="range" id="tableFontSize" min="12" max="26" value="20" oninput="document.getElementById('fontSizeDisplay').innerText = this.value + 'px'; updateOutput();">
+                <span id="fontSizeDisplay" class="font-size-display">20px</span>
+            </div>
+            <span class="help-text">글자가 길어 줄바꿈이 생길 경우 크기를 줄여보세요.</span>
+        </div>
+
         <label>제목</label>
-        <input type="text" id="titleInput" value="세계 D램 시장 점유율(22년 3분기)">
+        <input type="text" id="titleInput" value="정유사별 카드 제휴 할인">
         
         <div id="subInputGroup">
             <label>단위 및 출처</label>
-            <input type="text" id="subInput" value="(단위: %, 자료: 옴디아)">
+            <input type="text" id="subInput" value="">
         </div>
         
-        <div id="chartInputs">
+        <div id="chartInputs" style="display: none;">
             <label>X축 항목 / 데이터 라벨 (콤마 구분)</label>
-            <textarea id="labelsInput" rows="2">삼성전자,SK하이닉스,마이크론,기타</textarea>
+            <textarea id="labelsInput" rows="2">'25.1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '26.1, 2</textarea>
             
             <div class="data-group">
                 <label id="ds1NameLabel">데이터 1 (이름)</label>
-                <input type="text" id="dataName1" value="점유율">
+                <input type="text" id="dataName1" value="계절조정 실업자">
                 <label id="ds1DataLabel">데이터 1 (수치 - 콤마 구분)</label>
-                <textarea id="dataInput1" rows="2">40.6,29.9,24.8,4.7</textarea>
+                <textarea id="dataInput1" rows="2">813,827,833,813,806,792,783,816,796,804,827,976,899,877</textarea>
             </div>
 
-            <div class="data-group" id="dataset2Group" style="display: none;">
+            <div class="data-group" id="dataset2Group">
                 <label id="ds2NameLabel">데이터 2 (이름)</label>
                 <input type="text" id="dataName2" value="계절조정 실업률">
                 <label id="ds2DataLabel">데이터 2 (수치 - 콤마 구분)</label>
@@ -121,7 +133,7 @@
                 <textarea id="dataInput3" rows="2">-6000, -2000, -4000, 14008</textarea>
             </div>
             
-            <div class="data-group" id="axisSettingGroup" style="display: none;">
+            <div class="data-group" id="axisSettingGroup">
                 <label>Y축 범위 수동 설정</label>
                 <div class="axis-inputs">
                     <input type="text" id="yMin" placeholder="좌측축 최소">
@@ -134,13 +146,12 @@
             </div>
         </div>
 
-        <div id="tableInputs" style="display: none;">
+        <div id="tableInputs">
             <label>엑셀 데이터 붙여넣기</label>
-            <textarea id="tableDataInput" rows="8">분야	애로사항	대응방식
-자동차	수요·공급 불안정성	2030년 中·印 비중 23% 목표
-반도체	정책 불확실성	기존 투자안 이행
-철강	대미 수출 급감, 수익성 악화	유럽·중동 등 수출 다변화
-가전	국가·품목별 관세 영향 파악	공장 간 생산량 조절, 라인 증설</textarea>
+            <textarea id="tableDataInput" rows="8">정유사	제휴 카드	혜택 유형
+GS칼텍스	현대카드에너지플러스	최저가 동기화, ℓ당 100원 할인
+HD현대오일뱅크	삼성카드iDSTATION	주유 금액 10%, 월 최대 3.5만원 할인
+SK에너지	하나카드 CLUB SK 카드	ℓ당 150원, 월 최대 2.2만원 할인</textarea>
         </div>
         
         <label>기자 이름</label>
@@ -152,17 +163,17 @@
 
     <div class="preview-area">
         <div id="capture-area">
-            <div class="header-line" id="topLine"></div>
+            <div class="header-line" id="topLine" style="display: none;"></div>
             <h1 class="chart-title">
-                <span class="title-red-bar" id="redBar">❙</span><span id="displayTitle">제목입력</span>
+                <span class="title-red-bar" id="redBar" style="display: inline;">❙</span><span id="displayTitle">정유사별 카드 제휴 할인</span>
             </h1>
-            <span class="chart-subtitle" id="displaySub">(단위 및 출처 입력)</span>
+            <span class="chart-subtitle" id="displaySub" style="display: none;"></span>
             
-            <div id="chart-container">
+            <div id="chart-container" style="display: none;">
                 <canvas id="myChart"></canvas>
             </div>
 
-            <div id="table-container"></div>
+            <div id="table-container" style="display: block;"></div>
             
             <div class="footer-watermark">
                 그래픽&nbsp;&nbsp;<span id="displayName">박충훈 기자</span>
@@ -185,18 +196,20 @@
             const axisSettingGroup = document.getElementById('axisSettingGroup');
             const y1Group = document.getElementById('y1Group');
             const labelSettingGroup = document.getElementById('labelSettingGroup');
+            const tableSettingGroup = document.getElementById('tableSettingGroup');
             
             if (type === 'table') {
                 document.getElementById('chartInputs').style.display = 'none';
                 document.getElementById('tableInputs').style.display = 'block';
                 labelSettingGroup.style.display = 'none';
+                tableSettingGroup.style.display = 'block'; 
             } else {
                 document.getElementById('chartInputs').style.display = 'block';
                 document.getElementById('tableInputs').style.display = 'none';
+                tableSettingGroup.style.display = 'none'; 
                 
                 if (type === 'pie') { 
                     labelSettingGroup.style.display = 'none'; 
-                    // 🚨 v4.7 원그래프 진입 시 은닉 상태 초기화 방어코드 🚨
                     document.getElementById('labelDisplayType').value = 'all'; 
                 } else { 
                     labelSettingGroup.style.display = 'block'; 
@@ -223,45 +236,50 @@
 
                 if (type === 'pie') { axisSettingGroup.style.display = 'none'; } 
                 else { axisSettingGroup.style.display = 'block'; }
-
-                if (type === 'line') {
-                    document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
-                    document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
-                    document.getElementById('labelsInput').value = '7월,8월,9월,10월,11월,12월,1월';
-                    document.getElementById('dataName1').value = '총통화량'; 
-                    document.getElementById('dataInput1').value = '4370,4400,4430,4470,4480,4530,4565';
-                } else if (type === 'bar') {
-                    document.getElementById('titleInput').value = '주요 정당 지지율 추이';
-                    document.getElementById('subInput').value = '(단위: %, 자료: 리얼미터)';
-                    document.getElementById('labelsInput').value = 'A당,B당,C당,D당,무당층';
-                    document.getElementById('dataName1').value = '지지율'; 
-                    document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
-                } else if (type === 'pie') {
-                    document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
-                    document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
-                    document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
-                    document.getElementById('dataName1').value = '점유율'; 
-                    document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
-                } else if (type === 'multi-line') {
-                    document.getElementById('titleInput').value = '5대 은행 가계대출 증감 추이';
-                    document.getElementById('subInput').value = '(단위: 억원, 기준: 전월말대비, 자료: 각사)';
-                    document.getElementById('labelsInput').value = '25년12월, 26년1월, 2월, 3월(16일기준)';
-                    document.getElementById('dataName1').value = '주담대';
-                    document.getElementById('dataInput1').value = '3000, -15000, 6000, -5776';
-                    document.getElementById('dataName2').value = '총가계대출';
-                    document.getElementById('dataInput2').value = '-5000, -20000, 0, 8068';
-                    document.getElementById('dataName3').value = '신용대출';
-                    document.getElementById('dataInput3').value = '-6000, -2000, -4000, 14008';
-                } else if (type === 'combo') {
-                    document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
-                    document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
-                    document.getElementById('labelsInput').value = "'25.1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '26.1, 2";
-                    document.getElementById('dataName1').value = '계절조정 실업자';
-                    document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
-                    document.getElementById('dataName2').value = '계절조정 실업률';
-                    document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
-                }
             }
+
+            // 🚨 v4.9: 텍스트표를 포함한 모든 메뉴의 템플릿 값 세팅 로직 보강 🚨
+            if (type === 'table') {
+                document.getElementById('titleInput').value = '정유사별 카드 제휴 할인';
+                document.getElementById('subInput').value = '';
+            } else if (type === 'line') {
+                document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
+                document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
+                document.getElementById('labelsInput').value = '7월,8월,9월,10월,11월,12월,1월';
+                document.getElementById('dataName1').value = '총통화량'; 
+                document.getElementById('dataInput1').value = '4370,4400,4430,4470,4480,4530,4565';
+            } else if (type === 'bar') {
+                document.getElementById('titleInput').value = '주요 정당 지지율 추이';
+                document.getElementById('subInput').value = '(단위: %, 자료: 리얼미터)';
+                document.getElementById('labelsInput').value = 'A당,B당,C당,D당,무당층';
+                document.getElementById('dataName1').value = '지지율'; 
+                document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
+            } else if (type === 'pie') {
+                document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
+                document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
+                document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
+                document.getElementById('dataName1').value = '점유율'; 
+                document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
+            } else if (type === 'multi-line') {
+                document.getElementById('titleInput').value = '5대 은행 가계대출 증감 추이';
+                document.getElementById('subInput').value = '(단위: 억원, 기준: 전월말대비, 자료: 각사)';
+                document.getElementById('labelsInput').value = '25년12월, 26년1월, 2월, 3월(16일기준)';
+                document.getElementById('dataName1').value = '주담대';
+                document.getElementById('dataInput1').value = '3000, -15000, 6000, -5776';
+                document.getElementById('dataName2').value = '총가계대출';
+                document.getElementById('dataInput2').value = '-5000, -20000, 0, 8068';
+                document.getElementById('dataName3').value = '신용대출';
+                document.getElementById('dataInput3').value = '-6000, -2000, -4000, 14008';
+            } else if (type === 'combo') {
+                document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
+                document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
+                document.getElementById('labelsInput').value = "'25.1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '26.1, 2";
+                document.getElementById('dataName1').value = '계절조정 실업자';
+                document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
+                document.getElementById('dataName2').value = '계절조정 실업률';
+                document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
+            }
+            
             updateOutput();
         }
 
@@ -288,7 +306,10 @@
 
             const tsvData = document.getElementById('tableDataInput').value.trim();
             const rows = tsvData.split('\n');
-            let html = '<table class="asia-table">';
+            
+            const fontSize = document.getElementById('tableFontSize').value;
+            
+            let html = `<table class="asia-table" style="font-size: ${fontSize}px;">`;
             rows.forEach((row, index) => {
                 const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(','); 
                 if (index === 0) {
@@ -387,10 +408,9 @@
                         tooltip: { enabled: false },
                         datalabels: {
                             display: function(context) {
-                                // 🚨 v4.7: 원그래프는 어떤 상황에서도 무조건 100% 라벨 표시 🚨
-                                if (chartType === 'pie') return true; 
-                                
                                 if (labelDisplayType === 'none') return false; 
+                                
+                                if (chartType === 'pie') return true;
                                 if (labelDisplayType === 'last') {
                                     return context.dataIndex === context.dataset.data.length - 1; 
                                 }
@@ -500,8 +520,7 @@
         }
 
         window.onload = function() {
-            // 초기 화면을 '원 그래프'로 세팅
-            document.getElementById('chartType').value = 'pie';
+            document.getElementById('chartType').value = 'table';
             toggleInputs();
         };
     </script>
