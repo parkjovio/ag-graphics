@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>아시아경제 통합 그래픽 대시보드 v6.0 (지능형 주석 감지)</title>
+    <title>아시아경제 통합 그래픽 대시보드 v6.2 (라벨 짤림 픽스)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -42,7 +42,10 @@
         .header-line { border-top: 3px solid #000; margin-bottom: 15px; }
         
         .chart-title { font-size: 32px; font-weight: 900; margin: 0 0 8px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
-        .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline;}
+        
+        /* 🚨 v6.2 신규: 부제목이 길어졌을 때를 대비한 래핑(Wrapping) CSS 최적화 🚨 */
+        .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: bottom; line-height: 1.4; word-break: keep-all; margin-top: 5px;}
+        
         .title-red-bar { color: #E61E2B; display: none; margin-right: 5px; }
 
         #table-container { display: none; margin-top: 20px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
@@ -62,7 +65,6 @@
         #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; }
         .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; line-height: 1.4;}
 
-        /* 🚨 v6.0 신규: 하단 주석 스타일 (작게, 바싹 붙임) 🚨 */
         #displayFootnote { font-size: 14px; color: #111; margin-top: 5px; text-align: left; letter-spacing: -0.5px; display: none; font-family: var(--main-font); line-height: 1.4; font-weight: 500;}
 
         .footer-watermark { display: flex; justify-content: flex-end; align-items: center; margin-top: 20px; font-size: 18px; font-weight: bold; color: #111; flex-shrink: 0; font-family: var(--main-font); border-top: 1px solid #eee; padding-top: 15px;}
@@ -79,7 +81,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v6.0</h2>
+        <h2>🛠️ 그래픽 데스크 v6.2</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -274,7 +276,7 @@
             document.getElementById('y1Max').value = '';
             document.getElementById('showTableType').value = 'none';
             document.getElementById('footnoteInput').value = '';
-            document.getElementById('nameInput').value = '박충훈 기자'; // 🚨 v6.0 예시 불러오기 시에도 통일 🚨
+            document.getElementById('nameInput').value = '박충훈 기자'; 
 
             if (type === 'table') {
                 document.getElementById('titleInput').value = '금융권 조직문화 특이사항';
@@ -296,11 +298,11 @@
                 document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
                 document.getElementById('labelDisplayType').value = 'all';
             } else if (type === 'pie') {
-                document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
-                document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
-                document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
-                document.getElementById('dataName1').value = '점유율'; 
-                document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
+                document.getElementById('titleInput').value = '하루에 스마트폰을 몇 시간 정도 사용하시나요?';
+                document.getElementById('subInput').value = '2024년 8월 9일부터 8월 15일까지 어피티 머니레터 구독자를 대상으로 한 온라인 설문 조사 결과, 369명 대상';
+                document.getElementById('labelsInput').value = '4시간 이상, 3~4시간, 2~3시간, 1~2시간, 1시간 미만';
+                document.getElementById('dataName1').value = '비중'; 
+                document.getElementById('dataInput1').value = '49.8, 31.5, 15.4, 3, 0.3';
                 document.getElementById('labelDisplayType').value = 'all';
             } else if (type === 'multi-line') {
                 document.getElementById('titleInput').value = '5대 은행 가계대출 증감 추이';
@@ -434,7 +436,6 @@
             if (subText.trim() === '') { displaySub.style.display = 'none'; } 
             else { displaySub.innerText = subText; displaySub.style.display = 'inline-block'; }
 
-            // 🚨 v6.0 초기화 시 주석 감지 로직 🚨
             renderGraphics(type, showTable);
         }
 
@@ -469,7 +470,6 @@
             }
         }
 
-        // 🚨 v6.0 핵심: 지능형 행 분리 로직 🚨
         function renderTable(manualFootnote) {
             const tsvData = document.getElementById('tableDataInput').value.trim();
             const rows = tsvData.split('\n');
@@ -480,16 +480,14 @@
             let tableRows = [...rows];
             let autoFootnote = manualFootnote;
 
-            // 마지막 줄이 주석인지 판단하는 로직
             if (tableRows.length > 2) {
                 const lastLine = tableRows[tableRows.length - 1];
                 const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
                 const headerCols = tableRows[0].indexOf('\t') !== -1 ? tableRows[0].split('\t') : tableRows[0].split(',');
 
-                // 마지막 줄 열이 1개인데, 첫 줄(헤더) 열이 2개 이상이라면 주석으로 간주
                 if (lastCols.length === 1 && headerCols.length > 1) {
                     if (autoFootnote === '') { autoFootnote = lastCols[0].trim(); }
-                    tableRows.pop(); // 표 렌더링 대상에서 제외
+                    tableRows.pop(); 
                 }
             }
 
@@ -514,7 +512,7 @@
             });
             html += '</tbody></table>';
             document.getElementById('table-container').innerHTML = html;
-            return autoFootnote; // 감지된 주석 반환
+            return autoFootnote; 
         }
 
         function renderChart(chartType) {
@@ -547,11 +545,13 @@
                 let bgColors = chartType === 'line' ? 'rgba(235, 235, 235, 0.8)' : '#E61E2B';
                 let borderColors = chartType === 'pie' ? '#fff' : '#E61E2B';
                 if (chartType === 'pie') {
-                    const colorPalette = [ '#333333', '#666666', '#999999', '#cccccc', '#eeeeee']; 
-                    const maxVal = Math.max(...dataVals1); const maxIndex = dataVals1.indexOf(maxVal); let greyIndex = 0;
+                    const colorPalette = [ '#E61E2B', '#666666', '#999999', '#cccccc', '#eeeeee']; 
+                    const maxVal = Math.max(...dataVals1); const maxIndex = dataVals1.indexOf(maxVal); let greyIndex = 1;
                     bgColors = labels.map((label, index) => {
                         if (index === maxIndex) return '#E61E2B';
-                        return colorPalette[(greyIndex++) % colorPalette.length]; 
+                        let color = colorPalette[greyIndex % colorPalette.length];
+                        greyIndex++;
+                        return color;
                     });
                 }
                 datasets.push({ type: chartType === 'pie' ? 'pie' : (chartType === 'bar' ? 'bar' : 'line'), data: dataVals1, borderColor: borderColors, borderWidth: chartType === 'pie' ? 2 : (chartType === 'line' ? 4 : 0), backgroundColor: bgColors, fill: chartType === 'line', pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 2, pointRadius: chartType === 'line' ? 5 : 0, borderRadius: chartType === 'bar' ? 4 : 0, barPercentage: 0.55 });
@@ -565,7 +565,10 @@
                 data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: chartType === 'pie' ? '40%' : '0%',
-                    layout: { padding: chartType === 'pie' ? 40 : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) },
+                    layout: { 
+                        // 🚨 v6.2: 원그래프 캔버스 내부 여백을 65px로 균등 적용하여 클리핑 원천 차단 🚨
+                        padding: chartType === 'pie' ? 65 : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) 
+                    },
                     plugins: { 
                         title: { display: false },
                         legend: { display: (chartType === 'multi-line' || chartType === 'combo'), position: 'top', align: 'end', labels: { font: { size: 16, weight: 'bold' }, color: '#111' }, padding: { bottom: 25 } },
@@ -605,7 +608,7 @@
                             offset: function(context) { 
                                 if (chartType === 'pie') {
                                     const val = context.dataset.data[context.dataIndex]; const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
-                                    if (((val / sum) * 100) < 10) return 10 + (context.dataIndex % 3) * 20; return 0;
+                                    if (((val / sum) * 100) < 10) return 15 + (context.dataIndex % 3) * 20; return 0;
                                 }
                                 if (chartType === 'combo') { return context.datasetIndex === 0 ? 6 : 12; }
                                 if (chartType === 'multi-line') {
