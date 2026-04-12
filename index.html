@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>아시아경제 통합 그래픽 대시보드 v5.7 (데이터 보존 & 지능형 보정)</title>
+    <title>아시아경제 통합 그래픽 대시보드 v5.8 (예시 데이터 복구)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -76,7 +76,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v5.7</h2>
+        <h2>🛠️ 그래픽 데스크 v5.8</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -85,7 +85,10 @@
             <button class="btn-ai" id="autoFillBtn" onclick="parseGeminiData()">🪄 AI 데이터 자동 완성하기</button>
         </div>
         
-        <label>종류 선택</label>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <label style="margin-bottom: 0;">종류 선택</label>
+            <span style="font-size: 12px; cursor: pointer; color: #E61E2B; font-weight: bold; text-decoration: underline;" onclick="loadExampleData()">📝 예시 불러오기</span>
+        </div>
         <select id="chartType" onchange="toggleInputs()">
             <option value="line">📈 단일 꺾은선 그래프</option>
             <option value="bar">📊 단일 막대 그래프</option>
@@ -254,6 +257,71 @@
             return sign + result + decStr;
         }
 
+        // 🚨 v5.8 신규: 예시 데이터를 언제든 불러올 수 있는 전용 함수 🚨
+        function loadExampleData() {
+            const type = document.getElementById('chartType').value;
+            
+            // 기본 세팅 초기화
+            document.getElementById('dataName2').value = '';
+            document.getElementById('dataInput2').value = '';
+            document.getElementById('dataName3').value = '';
+            document.getElementById('dataInput3').value = '';
+            document.getElementById('yMin').value = '';
+            document.getElementById('yMax').value = '';
+            document.getElementById('y1Min').value = '';
+            document.getElementById('y1Max').value = '';
+            document.getElementById('showTableType').value = 'none';
+
+            if (type === 'table') {
+                document.getElementById('titleInput').value = '정유사별 카드 제휴 할인';
+                document.getElementById('subInput').value = '';
+                document.getElementById('tableDataInput').value = `정유사\t제휴 카드\t혜택 유형\nGS칼텍스\t현대카드에너지플러스\t최저가 동기화, ℓ당 100원 할인\nHD현대오일뱅크\t삼성카드iDSTATION\t주유 금액 10%, 월 최대 3.5만원 할인\nSK에너지\t하나카드 CLUB SK 카드\tℓ당 150원, 월 최대 2.2만원 할인`;
+            } else if (type === 'line') {
+                document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
+                document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
+                document.getElementById('labelsInput').value = '7월,8월,9월,10월,11월,12월,1월';
+                document.getElementById('dataName1').value = '총통화량'; 
+                document.getElementById('dataInput1').value = '4370,4400,4430,4470,4480,4530,4565';
+                document.getElementById('labelDisplayType').value = 'all';
+            } else if (type === 'bar') {
+                document.getElementById('titleInput').value = '주요 정당 지지율 추이';
+                document.getElementById('subInput').value = '(단위: %, 자료: 리얼미터)';
+                document.getElementById('labelsInput').value = 'A당,B당,C당,D당,무당층';
+                document.getElementById('dataName1').value = '지지율'; 
+                document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
+                document.getElementById('labelDisplayType').value = 'all';
+            } else if (type === 'pie') {
+                document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
+                document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
+                document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
+                document.getElementById('dataName1').value = '점유율'; 
+                document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
+                document.getElementById('labelDisplayType').value = 'all';
+            } else if (type === 'multi-line') {
+                document.getElementById('titleInput').value = '5대 은행 가계대출 증감 추이';
+                document.getElementById('subInput').value = '(단위: 억원, 기준: 전월말대비, 자료: 각사)';
+                document.getElementById('labelsInput').value = '25년12월, 26년1월, 2월, 3월(16일기준)';
+                document.getElementById('dataName1').value = '주담대';
+                document.getElementById('dataInput1').value = '3000, -15000, 6000, -5776';
+                document.getElementById('dataName2').value = '총가계대출';
+                document.getElementById('dataInput2').value = '-5000, -20000, 0, 8068';
+                document.getElementById('dataName3').value = '신용대출';
+                document.getElementById('dataInput3').value = '-6000, -2000, -4000, 14008';
+                document.getElementById('labelDisplayType').value = 'last';
+            } else if (type === 'combo') {
+                document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
+                document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
+                document.getElementById('labelsInput').value = "'25.1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '26.1, 2";
+                document.getElementById('dataName1').value = '계절조정 실업자';
+                document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
+                document.getElementById('dataName2').value = '계절조정 실업률';
+                document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
+                document.getElementById('labelDisplayType').value = 'all';
+            }
+            
+            toggleInputs();
+        }
+
         function parseGeminiData() {
             const text = document.getElementById('geminiInput').value;
             if (!text.trim()) {
@@ -290,7 +358,6 @@
             }
             
             let data2 = extract('[데이터2수치]');
-            // 🚨 v5.7 신규: AI가 line으로 잘못 짚었어도, 데이터2가 들어있으면 다중선으로 강제 보정 🚨
             if (data2 !== '' && (mappedType === 'line' || mappedType === 'bar' || mappedType === 'pie')) {
                 mappedType = 'multi-line';
             }
@@ -332,8 +399,7 @@
             }, 2000);
         }
 
-        // 🚨 v5.7 변경: 사용자가 메뉴를 바꿀 때 템플릿(예시) 데이터 덮어씌우기 로직 전면 삭제 🚨
-        // 이제 종류를 변경해도 기존 입력값이 날아가지 않습니다.
+        // 입력창을 가시성 있게 토글해주는 함수 (데이터 덮어쓰기 로직 삭제됨)
         function toggleInputs() {
             const type = document.getElementById('chartType').value;
             const showTable = document.getElementById('showTableType').value;
@@ -730,21 +796,9 @@
             });
         }
 
-        // 페이지 최초 로드 시 예시 데이터 세팅
         window.onload = function() {
-            document.getElementById('chartType').value = 'combo';
-            
-            document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
-            document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
-            document.getElementById('labelsInput').value = "'25.1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '26.1, 2";
-            
-            document.getElementById('dataName1').value = '계절조정 실업자';
-            document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
-            
-            document.getElementById('dataName2').value = '계절조정 실업률';
-            document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
-
-            toggleInputs(true);
+            // 처음 실행 시 기본 템플릿 로딩
+            loadExampleData();
         };
     </script>
 </body>
