@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>아시아경제 통합 그래픽 대시보드 v4.7 (원그래프 버그 픽스)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root { --main-font: 'Malgun Gothic', sans-serif; }
+        body { font-family: var(--main-font); background-color: #eef2f5; padding: 20px; display: flex; gap: 25px; margin: 0; align-items: flex-start;}
+        
+        .control-panel { background: white; padding: 25px; border-radius: 10px; width: 360px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: fit-content; flex-shrink: 0; box-sizing: border-box;}
+        .control-panel h2 { margin-top: 0; font-size: 20px; color: #333; border-bottom: 2px solid #E61E2B; padding-bottom: 10px; margin-bottom: 20px; }
+        .control-panel label { font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 5px; margin-top: 15px;}
+        .control-panel select, .control-panel input[type="text"], .control-panel textarea { width: 100%; margin-bottom: 5px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; font-family: var(--main-font); }
+        .control-panel select { background-color: #f9f9f9; font-weight: bold; color: #E61E2B;}
+        
+        .data-group { background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #e0e0e0; margin-top: 10px; }
+        .data-group label { margin-top: 5px; color: #333; }
+        .axis-inputs { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 5px;}
+        .axis-inputs input { width: 48%; }
+
+        button { background: #E61E2B; color: white; border: none; padding: 12px; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; margin-top: 15px; font-family: var(--main-font);}
+        button:hover { background: #c51824; }
+        .btn-download { background: #333; margin-top: 10px; }
+        .btn-download:hover { background: #111; }
+        
+        .preview-area { flex: 1; display: flex; justify-content: flex-start; align-items: flex-start; width: 100%;}
+        #capture-area { background: white; width: 750px; padding: 40px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .header-line { border-top: 3px solid #000; margin-bottom: 15px; }
+        
+        .chart-title { font-size: 32px; font-weight: 900; margin: 0 0 8px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
+        .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline;}
+        .title-red-bar { color: #E61E2B; display: none; margin-right: 5px; }
+
+        #table-container { display: none; margin-top: 20px; margin-bottom: 10px; flex-grow: 1; height: auto; min-height: unset; }
+        .asia-table { width: 100%; border-collapse: collapse; font-size: 20px; text-align: center; font-family: var(--main-font);}
+        .asia-table th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 15px 5px; font-weight: bold; color: #333; }
+        .asia-table td { border-bottom: 1px solid #ddd; padding: 15px 5px; color: #111; }
+        .asia-table td:first-child { background-color: #E61E2B; color: white; font-weight: bold; border-bottom: 1px solid #fff; }
+        .asia-table td:nth-child(2) { font-weight: bold; background-color: #ffffff; }
+        
+        /* 텍스트표 3열 이후 계단식 명암 처리 유지 */
+        .asia-table td:nth-child(3) { background-color: #f2f2f2; }
+        .asia-table td:nth-child(4) { background-color: #e8e8e8; }
+        .asia-table td:nth-child(5) { background-color: #dedede; }
+        .asia-table td:nth-child(6) { background-color: #d4d4d4; }
+        .asia-table td:nth-child(7) { background-color: #cacaca; }
+        .asia-table td:nth-child(8) { background-color: #c0c0c0; }
+        
+        #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; }
+        .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; line-height: 1.4;}
+
+        .footer-watermark { display: flex; justify-content: flex-end; align-items: center; margin-top: 20px; font-size: 18px; font-weight: bold; color: #111; flex-shrink: 0; font-family: var(--main-font); }
+        .as_logo_img { height: 32px; margin-left: 8px; width: auto; }
+
+        @media screen and (max-width: 768px) {
+            body { flex-direction: column; padding: 10px; gap: 15px; }
+            .control-panel { width: 100%; padding: 20px; }
+            .preview-area { width: 100%; overflow-x: auto; padding-bottom: 10px; }
+            #capture-area { min-width: 750px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="control-panel">
+        <h2>🛠️ 그래픽 데스크 v4.7</h2>
+        
+        <label>종류 선택</label>
+        <select id="chartType" onchange="toggleInputs()">
+            <option value="line">📈 단일 꺾은선 그래프</option>
+            <option value="bar">📊 단일 막대 그래프</option>
+            <option value="multi-line">📉 다중 선 그래프 (최대 3개)</option>
+            <option value="combo">📈 선+막대 혼합 그래프 (이중 Y축)</option>
+            <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
+            <option value="table">📋 텍스트 표 (엑셀 연동)</option>
+        </select>
+
+        <div class="data-group" id="labelSettingGroup" style="display: none;">
+            <label style="color:#E61E2B; font-size:14px;">📌 수치 표시 방식</label>
+            <select id="labelDisplayType" onchange="updateOutput()">
+                <option value="all" selected>모든 데이터에 표시</option>
+                <option value="last">맨 끝 데이터만 표시 (강조)</option>
+                <option value="none">표시 안 함 (숫자 숨김)</option>
+            </select>
+        </div>
+
+        <label>제목</label>
+        <input type="text" id="titleInput" value="세계 D램 시장 점유율(22년 3분기)">
+        
+        <div id="subInputGroup">
+            <label>단위 및 출처</label>
+            <input type="text" id="subInput" value="(단위: %, 자료: 옴디아)">
+        </div>
+        
+        <div id="chartInputs">
+            <label>X축 항목 / 데이터 라벨 (콤마 구분)</label>
+            <textarea id="labelsInput" rows="2">삼성전자,SK하이닉스,마이크론,기타</textarea>
+            
+            <div class="data-group">
+                <label id="ds1NameLabel">데이터 1 (이름)</label>
+                <input type="text" id="dataName1" value="점유율">
+                <label id="ds1DataLabel">데이터 1 (수치 - 콤마 구분)</label>
+                <textarea id="dataInput1" rows="2">40.6,29.9,24.8,4.7</textarea>
+            </div>
+
+            <div class="data-group" id="dataset2Group" style="display: none;">
+                <label id="ds2NameLabel">데이터 2 (이름)</label>
+                <input type="text" id="dataName2" value="계절조정 실업률">
+                <label id="ds2DataLabel">데이터 2 (수치 - 콤마 구분)</label>
+                <textarea id="dataInput2" rows="2">2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9</textarea>
+            </div>
+            
+            <div class="data-group" id="dataset3Group" style="display: none;">
+                <label id="ds3NameLabel">데이터 3 (이름 - 다중 선 그래프용)</label>
+                <input type="text" id="dataName3" value="신용대출">
+                <label id="ds3DataLabel">데이터 3 (수치 - 비워두면 숨김)</label>
+                <textarea id="dataInput3" rows="2">-6000, -2000, -4000, 14008</textarea>
+            </div>
+            
+            <div class="data-group" id="axisSettingGroup" style="display: none;">
+                <label>Y축 범위 수동 설정</label>
+                <div class="axis-inputs">
+                    <input type="text" id="yMin" placeholder="좌측축 최소">
+                    <input type="text" id="yMax" placeholder="좌측축 최대">
+                </div>
+                <div class="axis-inputs" id="y1Group">
+                    <input type="text" id="y1Min" placeholder="우측축 최소">
+                    <input type="text" id="y1Max" placeholder="우측축 최대">
+                </div>
+            </div>
+        </div>
+
+        <div id="tableInputs" style="display: none;">
+            <label>엑셀 데이터 붙여넣기</label>
+            <textarea id="tableDataInput" rows="8">분야	애로사항	대응방식
+자동차	수요·공급 불안정성	2030년 中·印 비중 23% 목표
+반도체	정책 불확실성	기존 투자안 이행
+철강	대미 수출 급감, 수익성 악화	유럽·중동 등 수출 다변화
+가전	국가·품목별 관세 영향 파악	공장 간 생산량 조절, 라인 증설</textarea>
+        </div>
+        
+        <label>기자 이름</label>
+        <input type="text" id="nameInput" value="박충훈 기자">
+        
+        <button onclick="updateOutput()">🔄 적용하기</button>
+        <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
+    </div>
+
+    <div class="preview-area">
+        <div id="capture-area">
+            <div class="header-line" id="topLine"></div>
+            <h1 class="chart-title">
+                <span class="title-red-bar" id="redBar">❙</span><span id="displayTitle">제목입력</span>
+            </h1>
+            <span class="chart-subtitle" id="displaySub">(단위 및 출처 입력)</span>
+            
+            <div id="chart-container">
+                <canvas id="myChart"></canvas>
+            </div>
+
+            <div id="table-container"></div>
+            
+            <div class="footer-watermark">
+                그래픽&nbsp;&nbsp;<span id="displayName">박충훈 기자</span>
+                <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rootStyles = getComputedStyle(document.documentElement);
+        const globalFont = rootStyles.getPropertyValue('--main-font').trim();
+        Chart.defaults.font.family = globalFont;
+
+        let myChart = null;
+
+        function toggleInputs() {
+            const type = document.getElementById('chartType').value;
+            const ds2Group = document.getElementById('dataset2Group');
+            const ds3Group = document.getElementById('dataset3Group');
+            const axisSettingGroup = document.getElementById('axisSettingGroup');
+            const y1Group = document.getElementById('y1Group');
+            const labelSettingGroup = document.getElementById('labelSettingGroup');
+            
+            if (type === 'table') {
+                document.getElementById('chartInputs').style.display = 'none';
+                document.getElementById('tableInputs').style.display = 'block';
+                labelSettingGroup.style.display = 'none';
+            } else {
+                document.getElementById('chartInputs').style.display = 'block';
+                document.getElementById('tableInputs').style.display = 'none';
+                
+                if (type === 'pie') { 
+                    labelSettingGroup.style.display = 'none'; 
+                    // 🚨 v4.7 원그래프 진입 시 은닉 상태 초기화 방어코드 🚨
+                    document.getElementById('labelDisplayType').value = 'all'; 
+                } else { 
+                    labelSettingGroup.style.display = 'block'; 
+                }
+                
+                if (type === 'multi-line') {
+                    ds2Group.style.display = 'block'; 
+                    ds3Group.style.display = 'block'; 
+                    y1Group.style.display = 'none'; 
+                    document.getElementById('labelDisplayType').value = 'last'; 
+                } else if (type === 'combo') {
+                    ds2Group.style.display = 'block'; 
+                    ds3Group.style.display = 'none'; 
+                    y1Group.style.display = 'flex'; 
+                    document.getElementById('labelDisplayType').value = 'all'; 
+                } else {
+                    ds2Group.style.display = 'none';
+                    ds3Group.style.display = 'none';
+                    y1Group.style.display = 'none'; 
+                    if(type === 'line' || type === 'bar') {
+                        document.getElementById('labelDisplayType').value = 'all';
+                    }
+                }
+
+                if (type === 'pie') { axisSettingGroup.style.display = 'none'; } 
+                else { axisSettingGroup.style.display = 'block'; }
+
+                if (type === 'line') {
+                    document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
+                    document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
+                    document.getElementById('labelsInput').value = '7월,8월,9월,10월,11월,12월,1월';
+                    document.getElementById('dataName1').value = '총통화량'; 
+                    document.getElementById('dataInput1').value = '4370,4400,4430,4470,4480,4530,4565';
+                } else if (type === 'bar') {
+                    document.getElementById('titleInput').value = '주요 정당 지지율 추이';
+                    document.getElementById('subInput').value = '(단위: %, 자료: 리얼미터)';
+                    document.getElementById('labelsInput').value = 'A당,B당,C당,D당,무당층';
+                    document.getElementById('dataName1').value = '지지율'; 
+                    document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
+                } else if (type === 'pie') {
+                    document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
+                    document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
+                    document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
+                    document.getElementById('dataName1').value = '점유율'; 
+                    document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
+                } else if (type === 'multi-line') {
+                    document.getElementById('titleInput').value = '5대 은행 가계대출 증감 추이';
+                    document.getElementById('subInput').value = '(단위: 억원, 기준: 전월말대비, 자료: 각사)';
+                    document.getElementById('labelsInput').value = '25년12월, 26년1월, 2월, 3월(16일기준)';
+                    document.getElementById('dataName1').value = '주담대';
+                    document.getElementById('dataInput1').value = '3000, -15000, 6000, -5776';
+                    document.getElementById('dataName2').value = '총가계대출';
+                    document.getElementById('dataInput2').value = '-5000, -20000, 0, 8068';
+                    document.getElementById('dataName3').value = '신용대출';
+                    document.getElementById('dataInput3').value = '-6000, -2000, -4000, 14008';
+                } else if (type === 'combo') {
+                    document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
+                    document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
+                    document.getElementById('labelsInput').value = "'25.1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '26.1, 2";
+                    document.getElementById('dataName1').value = '계절조정 실업자';
+                    document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
+                    document.getElementById('dataName2').value = '계절조정 실업률';
+                    document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
+                }
+            }
+            updateOutput();
+        }
+
+        function updateOutput() {
+            const type = document.getElementById('chartType').value;
+            
+            document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
+            document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
+
+            const subText = document.getElementById('subInput').value;
+            const displaySub = document.getElementById('displaySub');
+            if (subText.trim() === '') { displaySub.style.display = 'none'; } 
+            else { displaySub.innerText = subText; displaySub.style.display = 'inline-block'; }
+
+            if (type === 'table') { renderTable(); } 
+            else { renderChart(type); }
+        }
+
+        function renderTable() {
+            document.getElementById('chart-container').style.display = 'none';
+            document.getElementById('table-container').style.display = 'block';
+            document.getElementById('topLine').style.display = 'none';
+            document.getElementById('redBar').style.display = 'inline';
+
+            const tsvData = document.getElementById('tableDataInput').value.trim();
+            const rows = tsvData.split('\n');
+            let html = '<table class="asia-table">';
+            rows.forEach((row, index) => {
+                const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(','); 
+                if (index === 0) {
+                    html += '<thead><tr>';
+                    cols.forEach(col => html += `<th>${col.trim()}</th>`);
+                    html += '</tr></thead><tbody>';
+                } else {
+                    html += '<tr>';
+                    cols.forEach(col => html += `<td>${col.trim()}</td>`);
+                    html += '</tr>';
+                }
+            });
+            html += '</tbody></table>';
+            document.getElementById('table-container').innerHTML = html;
+        }
+
+        function renderChart(chartType) {
+            document.getElementById('table-container').style.display = 'none';
+            const chartContainer = document.getElementById('chart-container');
+            chartContainer.style.display = 'block';
+            
+            if (chartType === 'pie') { chartContainer.style.height = '550px'; } 
+            else { chartContainer.style.height = '420px'; }
+
+            document.getElementById('topLine').style.display = 'block';
+            document.getElementById('redBar').style.display = 'none';
+
+            if (myChart != null) myChart.destroy();
+            Chart.register(ChartDataLabels);
+
+            const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
+            const dataVals1 = document.getElementById('dataInput1').value.split(',').map(item => parseFloat(item.trim()));
+            const name1 = document.getElementById('dataName1').value;
+            
+            let datasets = [];
+
+            if (chartType === 'multi-line' || chartType === 'combo') {
+                const dataVals2 = document.getElementById('dataInput2').value.split(',').map(item => parseFloat(item.trim()));
+                const name2 = document.getElementById('dataName2').value;
+
+                if (chartType === 'multi-line') {
+                    datasets.push({ type: 'line', label: name1, data: dataVals1, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                    datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: '#E61E2B', borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                    const dataInput3Val = document.getElementById('dataInput3').value.trim();
+                    if(dataInput3Val !== "") {
+                        const dataVals3 = dataInput3Val.split(',').map(item => parseFloat(item.trim()));
+                        const name3 = document.getElementById('dataName3').value;
+                        datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: '#888888', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#888888', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                    }
+                } else if (chartType === 'combo') {
+                    datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, barPercentage: 0.55, yAxisID: 'y', order: 2 });
+                    datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: '#E61E2B', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
+                }
+            } else {
+                let bgColors = chartType === 'line' ? 'rgba(235, 235, 235, 0.8)' : '#E61E2B';
+                let borderColors = chartType === 'pie' ? '#fff' : '#E61E2B';
+                if (chartType === 'pie') {
+                    const colorPalette = [ '#333333', '#666666', '#999999', '#cccccc', '#eeeeee']; 
+                    const maxVal = Math.max(...dataVals1);
+                    const maxIndex = dataVals1.indexOf(maxVal);
+                    let greyIndex = 0;
+                    bgColors = labels.map((label, index) => {
+                        if (index === maxIndex) return '#E61E2B';
+                        return colorPalette[(greyIndex++) % colorPalette.length]; 
+                    });
+                }
+                datasets.push({ type: chartType === 'pie' ? 'pie' : (chartType === 'bar' ? 'bar' : 'line'), data: dataVals1, borderColor: borderColors, borderWidth: chartType === 'pie' ? 2 : (chartType === 'line' ? 4 : 0), backgroundColor: bgColors, fill: chartType === 'line', pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 2, pointRadius: chartType === 'line' ? 5 : 0, borderRadius: chartType === 'bar' ? 4 : 0, barPercentage: 0.55 });
+            }
+
+            let yMin = document.getElementById('yMin').value;
+            let yMax = document.getElementById('yMax').value;
+            let y1Min = document.getElementById('y1Min').value;
+            let y1Max = document.getElementById('y1Max').value;
+
+            const labelDisplayType = document.getElementById('labelDisplayType') ? document.getElementById('labelDisplayType').value : 'all';
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: chartType === 'pie' ? '40%' : '0%',
+                    layout: { 
+                        padding: chartType === 'pie' ? 40 : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) 
+                    },
+                    plugins: { 
+                        title: { display: false },
+                        legend: { 
+                            display: (chartType === 'multi-line' || chartType === 'combo'), 
+                            position: 'top', 
+                            align: 'end', 
+                            labels: { font: { size: 16, weight: 'bold' }, color: '#111' },
+                            padding: { bottom: 25 }
+                        },
+                        tooltip: { enabled: false },
+                        datalabels: {
+                            display: function(context) {
+                                // 🚨 v4.7: 원그래프는 어떤 상황에서도 무조건 100% 라벨 표시 🚨
+                                if (chartType === 'pie') return true; 
+                                
+                                if (labelDisplayType === 'none') return false; 
+                                if (labelDisplayType === 'last') {
+                                    return context.dataIndex === context.dataset.data.length - 1; 
+                                }
+                                return true;
+                            },
+                            align: function(context) { 
+                                if (chartType === 'pie') {
+                                    const val = context.dataset.data[context.dataIndex];
+                                    const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
+                                    if (((val / sum) * 100) < 10) return ['end', 'right', 'left', 'start'][context.dataIndex % 4];
+                                    return 'center';
+                                }
+                                if (chartType === 'combo') {
+                                    return context.datasetIndex === 0 ? 'start' : 'top'; 
+                                }
+                                if (chartType === 'multi-line') {
+                                    if (labelDisplayType === 'last') {
+                                        return ['top', 'bottom', 'right'][context.datasetIndex % 3];
+                                    }
+                                    return ['top', 'bottom', 'top'][context.datasetIndex % 3];
+                                }
+                                return 'top'; 
+                            }, 
+                            anchor: function(context) { 
+                                if (chartType === 'pie') {
+                                    const val = context.dataset.data[context.dataIndex];
+                                    const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
+                                    return ((val / sum) * 100 < 10) ? 'end' : 'center';
+                                }
+                                if (chartType === 'combo' && context.datasetIndex === 0) return 'end';
+                                if (chartType === 'bar') return 'end';
+                                return 'center'; 
+                            },
+                            offset: function(context) { 
+                                if (chartType === 'pie') {
+                                    const val = context.dataset.data[context.dataIndex];
+                                    const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
+                                    if (((val / sum) * 100) < 10) return 10 + (context.dataIndex % 3) * 20;
+                                    return 0;
+                                }
+                                if (chartType === 'combo') {
+                                    return context.datasetIndex === 0 ? 6 : 12; 
+                                }
+                                if (chartType === 'multi-line') {
+                                    if (labelDisplayType === 'last') return 12;
+                                    return [8, 8, 25][context.datasetIndex % 3]; 
+                                }
+                                if (chartType === 'bar') return 6;
+                                return 10; 
+                            }, 
+                            color: function(context) { 
+                                if (chartType === 'pie') return '#111';
+                                if (chartType === 'combo' && context.datasetIndex === 0) return '#333'; 
+                                if (chartType === 'bar') return '#111';
+                                return context.dataset.borderColor; 
+                            }, 
+                            font: function(context) {
+                                if (chartType === 'pie') return { size: 18, weight: '900' };
+                                if (labelDisplayType === 'last') return { size: 22, weight: '900' }; 
+                                return { size: 18, weight: 'bold' }; 
+                            },
+                            textStrokeColor: '#ffffff', 
+                            textStrokeWidth: 6, 
+                            formatter: (value, ctx) => { 
+                                if (chartType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + value;
+                                return value; 
+                            },
+                            textAlign: 'center'
+                        }
+                    },
+                    scales: {
+                        x: { display: chartType !== 'pie', grid: { display: false }, ticks: { font: { size: 16, weight: 'bold' }, color: '#333' } },
+                        y: { 
+                            display: chartType !== 'pie', type: 'linear', position: 'left', 
+                            grid: { 
+                                color: function(context) { return context.tick.value === 0 ? '#000000' : '#e0e0e0'; },
+                                lineWidth: function(context) { return context.tick.value === 0 ? 2 : 1; },
+                                drawBorder: false 
+                            }, 
+                            ticks: { font: { size: 16 }, color: '#666' }, 
+                            beginAtZero: chartType === 'bar' ? true : false, 
+                            min: yMin !== '' ? parseFloat(yMin) : undefined,
+                            max: yMax !== '' ? parseFloat(yMax) : undefined,
+                            grace: '15%' 
+                        },
+                        y1: { 
+                            display: chartType === 'combo', type: 'linear', position: 'right', grid: { display: false }, ticks: { font: { size: 16, weight: 'bold' }, color: '#E61E2B' }, 
+                            beginAtZero: true,
+                            min: y1Min !== '' ? parseFloat(y1Min) : undefined,
+                            max: y1Max !== '' ? parseFloat(y1Max) : undefined,
+                            grace: '15%'
+                        }
+                    }
+                }
+            });
+        }
+
+        function downloadImage() {
+            const captureDiv = document.getElementById('capture-area');
+            const btn = document.getElementById('downloadBtn');
+            const originalText = btn.innerText;
+            btn.innerText = '⏳ 이미지 생성 중...'; btn.style.backgroundColor = '#666';
+            html2canvas(captureDiv, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+                const link = document.createElement('a'); link.download = 'asia_graphic_' + new Date().getTime() + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+                btn.innerText = originalText; btn.style.backgroundColor = '#333';
+            }).catch(err => { alert("저장 오류"); btn.innerText = originalText; btn.style.backgroundColor = '#333'; });
+        }
+
+        window.onload = function() {
+            // 초기 화면을 '원 그래프'로 세팅
+            document.getElementById('chartType').value = 'pie';
+            toggleInputs();
+        };
+    </script>
+</body>
+</html>
