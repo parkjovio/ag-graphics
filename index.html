@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>아시아경제 통합 그래픽 대시보드 v6.4 (파서 픽스)</title>
+    <title>아시아경제 통합 그래픽 대시보드 v6.8 (예시 데이터 복구)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -42,7 +42,8 @@
         .header-line { border-top: 3px solid #000; margin-bottom: 15px; }
         
         .chart-title { font-size: 32px; font-weight: 900; margin: 0 0 8px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
-        .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: bottom; line-height: 1.4; word-break: keep-all; margin-top: 5px;}
+        
+        .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline; line-height: 1.4; word-break: keep-all;}
         .title-red-bar { color: #E61E2B; display: none; margin-right: 5px; }
 
         #table-container { display: none; margin-top: 20px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
@@ -78,7 +79,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v6.4</h2>
+        <h2>🛠️ 그래픽 데스크 v6.8</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -95,10 +96,18 @@
             <option value="line">📈 단일 꺾은선 그래프</option>
             <option value="bar">📊 단일 막대 그래프</option>
             <option value="multi-line">📉 다중 선 그래프 (최대 3개)</option>
-            <option value="combo" selected>📈 선+막대 혼합 그래프 (이중 Y축)</option>
-            <option value="pie">📋 원 그래프 (도넛 차트)</option>
+            <option value="combo">📈 선+막대 혼합 그래프 (이중 Y축)</option>
+            <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
             <option value="table">📋 텍스트 표 (엑셀 연동)</option>
         </select>
+
+        <div class="data-group" id="showTableGroup">
+            <label style="color:#E61E2B; font-size:14px;">📌 데이터 표 함께 보기</label>
+            <select id="showTableType" onchange="toggleInputs()">
+                <option value="none" selected>표시 안 함 (그래프만)</option>
+                <option value="show">그래프 아래에 표 함께 표시</option>
+            </select>
+        </div>
 
         <div class="data-group" id="labelSettingGroup">
             <label style="color:#E61E2B; font-size:14px;">📌 수치 표시 방식</label>
@@ -146,21 +155,21 @@
                 <textarea id="dataInput1" rows="2"></textarea>
             </div>
 
-            <div class="data-group" id="dataset2Group">
+            <div class="data-group" id="dataset2Group" style="display: none;">
                 <label id="ds2NameLabel">데이터 2 (이름)</label>
                 <input type="text" id="dataName2" value="">
                 <label id="ds2DataLabel">데이터 2 (수치 - 콤마 구분)</label>
                 <textarea id="dataInput2" rows="2"></textarea>
             </div>
             
-            <div class="data-group" id="dataset3Group">
+            <div class="data-group" id="dataset3Group" style="display: none;">
                 <label id="ds3NameLabel">데이터 3 (이름 - 다중 선 그래프용)</label>
                 <input type="text" id="dataName3" value="">
                 <label id="ds3DataLabel">데이터 3 (수치 - 비워두면 숨김)</label>
                 <textarea id="dataInput3" rows="2"></textarea>
             </div>
             
-            <div class="data-group" id="axisSettingGroup">
+            <div class="data-group" id="axisSettingGroup" style="display: none;">
                 <label>Y축 범위 수동 설정</label>
                 <div class="axis-inputs">
                     <input type="text" id="yMin" placeholder="좌측축 최소">
@@ -188,6 +197,16 @@
         <input type="text" id="nameInput" value="박충훈 기자">
         
         <button onclick="updateOutput()">🔄 수동 적용하기</button>
+
+        <div class="data-group" id="downloadSettingGroup" style="display: none; background: #ffebeb; border-color: #ffcccc; margin-top: 20px;">
+            <label style="color:#E61E2B; font-size:14px;">📌 저장 영역 선택</label>
+            <select id="downloadTarget">
+                <option value="all" selected>화면 전체 저장 (그래프 + 표)</option>
+                <option value="chart">그래프 영역만 저장</option>
+                <option value="table">텍스트 표 영역만 저장</option>
+            </select>
+        </div>
+
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
     </div>
 
@@ -276,11 +295,12 @@
                 document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
                 document.getElementById('labelDisplayType').value = 'all';
             } else if (type === 'pie') {
-                document.getElementById('titleInput').value = '하루에 스마트폰을 몇 시간 정도 사용하시나요?';
-                document.getElementById('subInput').value = '2024년 8월 9일부터 8월 15일까지 어피티 머니레터 구독자를 대상으로 한 온라인 설문 조사 결과, 369명 대상';
-                document.getElementById('labelsInput').value = '4시간 이상, 3~4시간, 2~3시간, 1~2시간, 1시간 미만';
-                document.getElementById('dataName1').value = '비중'; 
-                document.getElementById('dataInput1').value = '49.8, 31.5, 15.4, 3, 0.3';
+                // 🚨 v6.8: D램 점유율 예시로 원상 복구 🚨
+                document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
+                document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
+                document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
+                document.getElementById('dataName1').value = '점유율'; 
+                document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
                 document.getElementById('labelDisplayType').value = 'all';
             } else if (type === 'multi-line') {
                 document.getElementById('titleInput').value = '5대 은행 가계대출 증감 추이';
@@ -306,7 +326,6 @@
             toggleInputs();
         }
 
-        // 🚨 v6.4 파서 핵심: 줄 단위 상태 감지 파서 적용 (빈 태그 완벽 인식) 🚨
         function parseGeminiData() {
             const text = document.getElementById('geminiInput').value;
             if (!text.trim()) { alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요."); return; }
@@ -314,28 +333,21 @@
             let parsedData = {};
             let currentTag = '';
             
-            // 줄 단위로 쪼개기
             const lines = text.split(/\r?\n/);
-            
             for (let line of lines) {
                 const trimmedLine = line.trim();
-                // [태그] 형식의 줄을 만나면 상태 변경
                 if (/^\[.*\]$/.test(trimmedLine)) {
                     currentTag = trimmedLine;
-                    parsedData[currentTag] = ''; // 새 태그를 만나면 빈 문자열로 초기화 (내용이 없으면 그대로 빈칸 유지)
+                    parsedData[currentTag] = ''; 
                 } else if (currentTag) {
-                    // 태그 아래에 있는 내용들은 모두 해당 태그의 데이터로 합침
                     parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine;
                 }
             }
 
-            const extract = (tag) => {
-                return parsedData[tag] ? parsedData[tag].trim() : '';
-            };
+            const extract = (tag) => { return parsedData[tag] ? parsedData[tag].trim() : ''; };
 
             let rawType = extract('[종류]').toLowerCase();
             let mappedType = 'line'; 
-            
             if (rawType.includes('multi') || rawType.includes('다중')) { mappedType = 'multi-line'; } 
             else if (rawType.includes('combo') || rawType.includes('혼합')) { mappedType = 'combo'; } 
             else if (rawType.includes('pie') || rawType.includes('원')) { mappedType = 'pie'; } 
@@ -343,7 +355,6 @@
             else if (rawType.includes('bar') || rawType.includes('막대')) { mappedType = 'bar'; } 
             else if (rawType.includes('line') || rawType.includes('선')) { mappedType = 'line'; }
             
-            // 데이터2수치가 진짜 비어있지 않을 때만 다중선으로 보정
             let data2 = extract('[데이터2수치]');
             if (data2 !== '' && (mappedType === 'line' || mappedType === 'bar' || mappedType === 'pie')) { mappedType = 'multi-line'; }
             
@@ -411,6 +422,7 @@
 
         function updateOutput() {
             const type = document.getElementById('chartType').value;
+            const showTable = document.getElementById('showTableType') ? document.getElementById('showTableType').value : 'none';
             document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
             document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
             const subText = document.getElementById('subInput').value;
@@ -418,10 +430,10 @@
             if (subText.trim() === '') { displaySub.style.display = 'none'; } 
             else { displaySub.innerText = subText; displaySub.style.display = 'inline-block'; }
 
-            renderGraphics(type);
+            renderGraphics(type, showTable);
         }
 
-        function renderGraphics(type) {
+        function renderGraphics(type, showTable) {
             let detectedFootnote = document.getElementById('footnoteInput').value;
             
             if (type === 'table') { 
@@ -494,8 +506,8 @@
 
         function renderChart(chartType) {
             const chartContainer = document.getElementById('chart-container');
-            if (chartType === 'pie') { chartContainer.style.height = '550px'; } 
-            else { chartContainer.style.height = '420px'; }
+            chartContainer.style.height = '420px'; 
+            
             if (myChart != null) myChart.destroy();
             Chart.register(ChartDataLabels);
             const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
@@ -543,7 +555,7 @@
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: chartType === 'pie' ? '40%' : '0%',
                     layout: { 
-                        padding: chartType === 'pie' ? 65 : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) 
+                        padding: chartType === 'pie' ? { top: 50, bottom: 30, left: 40, right: 40 } : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) 
                     },
                     plugins: { 
                         title: { display: false },
@@ -584,7 +596,8 @@
                             offset: function(context) { 
                                 if (chartType === 'pie') {
                                     const val = context.dataset.data[context.dataIndex]; const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
-                                    if (((val / sum) * 100) < 10) return 15 + (context.dataIndex % 3) * 20; return 0;
+                                    if (((val / sum) * 100) < 10) return 10 + (context.dataIndex % 3) * 15; 
+                                    return 0;
                                 }
                                 if (chartType === 'combo') { return context.datasetIndex === 0 ? 6 : 12; }
                                 if (chartType === 'multi-line') {
@@ -597,14 +610,16 @@
                                 if (chartType === 'bar') return 6; return 10; 
                             }, 
                             color: function(context) { 
-                                if (chartType === 'pie') return '#111'; if (chartType === 'combo' && context.datasetIndex === 0) return '#333'; 
+                                if (chartType === 'pie') return '#111'; 
+                                if (chartType === 'combo' && context.datasetIndex === 0) return '#333'; 
                                 if (chartType === 'bar') return '#111'; return context.dataset.borderColor; 
                             }, 
                             font: function(context) {
                                 if (chartType === 'pie') return { size: 18, weight: '900' };
                                 if (labelDisplayType === 'last') return { size: 22, weight: '900' }; return { size: 18, weight: 'bold' }; 
                             },
-                            textStrokeColor: '#ffffff', textStrokeWidth: 6, 
+                            textStrokeColor: '#ffffff', 
+                            textStrokeWidth: 6, 
                             formatter: (value, ctx) => { 
                                 let displayVal = isKoreanNumber ? formatKoreanNumber(value) : value;
                                 if (chartType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + displayVal; return displayVal; 
@@ -634,25 +649,29 @@
             const captureDiv = document.getElementById('capture-area');
             const btn = document.getElementById('downloadBtn');
             const originalText = btn.innerText;
+            const target = document.getElementById('downloadTarget') ? document.getElementById('downloadTarget').value : 'all';
+            const chartContainer = document.getElementById('chart-container');
+            const tableContainer = document.getElementById('table-container');
+            const displayFootnote = document.getElementById('displayFootnote');
+            const topLine = document.getElementById('topLine');
+            const redBar = document.getElementById('redBar');
+            const origChartDisplay = chartContainer.style.display;
+            const origTableDisplay = tableContainer.style.display;
+            const origFootnoteDisplay = displayFootnote.style.display;
+            const origTopLineDisplay = topLine.style.display;
+            const origRedBarDisplay = redBar.style.display;
 
-            btn.innerText = '⏳ 이미지 생성 중...'; 
-            btn.style.backgroundColor = '#666';
-
+            if (target === 'chart') { tableContainer.style.display = 'none'; displayFootnote.style.display = 'none'; topLine.style.display = 'block'; redBar.style.display = 'none'; } 
+            else if (target === 'table') { chartContainer.style.display = 'none'; topLine.style.display = 'none'; redBar.style.display = 'inline'; }
+            btn.innerText = '⏳ 이미지 생성 중...'; btn.style.backgroundColor = '#666';
             html2canvas(captureDiv, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
-                const link = document.createElement('a'); 
-                const type = document.getElementById('chartType').value;
-                let filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
-                link.download = filePrefix + new Date().getTime() + '.png'; 
-                link.href = canvas.toDataURL('image/png'); 
-                link.click();
-                
-                btn.innerText = originalText; 
-                btn.style.backgroundColor = '#333';
-            }).catch(err => { 
-                alert("저장 오류가 발생했습니다."); 
-                btn.innerText = originalText; 
-                btn.style.backgroundColor = '#333';
-            });
+                const link = document.createElement('a'); let filePrefix = 'asia_graphic_';
+                if (target === 'chart') filePrefix = 'asia_chart_'; if (target === 'table') filePrefix = 'asia_table_';
+                link.download = filePrefix + new Date().getTime() + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+                chartContainer.style.display = origChartDisplay; tableContainer.style.display = origTableDisplay; displayFootnote.style.display = origFootnoteDisplay;
+                topLine.style.display = origTopLineDisplay; redBar.style.display = origRedBarDisplay;
+                btn.innerText = originalText; btn.style.backgroundColor = '#333';
+            }).catch(err => { alert("저장 오류"); btn.innerText = originalText; btn.style.backgroundColor = '#333'; });
         }
 
         window.onload = function() { loadExampleData(); };
