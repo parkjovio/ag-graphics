@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>아시아경제 통합 그래픽 대시보드 v6.8 (예시 데이터 복구)</title>
+    <title>아시아경제 통합 그래픽 대시보드 (v6.8 원본 + 시트 에디터 추가)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -37,6 +37,20 @@
         .btn-download { background: #333; margin-top: 10px; }
         .btn-download:hover { background: #111; }
         
+        /* 🚨 추가된 데이터 시트 버튼 및 모달 스타일 🚨 */
+        .btn-sheet { background: #2E7D32; color: white; margin-top: 15px; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; font-size: 14px;}
+        .btn-sheet:hover { background: #1B5E20; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 85%; max-width: 800px; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #E61E2B; padding-bottom: 10px; color: #333;}
+        .modal-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .modal-table th, .modal-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .modal-table th { background: #f4f4f4; font-size: 13px; color: #555;}
+        .modal-table input { width: 90%; border: 1px solid #ccc; border-radius: 3px; text-align: center; padding: 6px; font-family: var(--main-font); }
+        .modal-table input:focus { border-color: #E61E2B; outline: none; background: #fffafa;}
+        .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;}
+        .modal-btns button { width: auto; margin: 0; padding: 10px 20px;}
+
         .preview-area { flex: 1; display: flex; justify-content: flex-start; align-items: flex-start; width: 100%;}
         #capture-area { background: white; width: 750px; padding: 40px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         .header-line { border-top: 3px solid #000; margin-bottom: 15px; }
@@ -79,7 +93,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v6.8</h2>
+        <h2>🛠️ 그래픽 데스크 v6.8 (시트 추가)</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -100,6 +114,8 @@
             <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
             <option value="table">📋 텍스트 표 (엑셀 연동)</option>
         </select>
+
+        <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (엑셀 방식)</button>
 
         <div class="data-group" id="showTableGroup">
             <label style="color:#E61E2B; font-size:14px;">📌 데이터 표 함께 보기</label>
@@ -210,6 +226,32 @@
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
     </div>
 
+    <div class="modal-overlay" id="sheetModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="margin:0;">📊 데이터 시트 편집</h3>
+                <span style="font-size:12px; color:#666; font-weight:normal;">* 행을 비우면 해당 항목이 삭제됩니다.</span>
+            </div>
+            <table class="modal-table" id="modalTable">
+                <thead>
+                    <tr id="modalTh">
+                        <th>X축 항목(라벨)</th>
+                        <th><span id="sheetName1">데이터 1</span> 수치</th>
+                        <th id="sheetTh2" style="display:none;"><span id="sheetName2">데이터 2</span> 수치</th>
+                        <th id="sheetTh3" style="display:none;"><span id="sheetName3">데이터 3</span> 수치</th>
+                    </tr>
+                </thead>
+                <tbody id="modalTbody">
+                </tbody>
+            </table>
+            <button onclick="addRow()" style="margin-bottom:20px; cursor:pointer; background:#555; border:none; padding:8px 12px; color:white; border-radius:4px; font-size:12px;">+ 행 추가하기</button>
+            <div class="modal-btns">
+                <button class="btn-close" onclick="closeDataSheet()" style="background:#888; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">취소</button>
+                <button class="btn-save" onclick="saveDataSheet()" style="background:#E61E2B; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">✅ 적용 및 닫기</button>
+            </div>
+        </div>
+    </div>
+
     <div class="preview-area">
         <div id="capture-area">
             <div class="header-line" id="topLine"></div>
@@ -261,6 +303,84 @@
             return sign + result + decStr;
         }
 
+        // 🚨 새로 추가된 데이터 시트 편집기 자바스크립트 기능 🚨
+        function openDataSheet() {
+            const type = document.getElementById('chartType').value;
+            if (type === 'table') { alert("텍스트 표 모드에서는 좌측 '엑셀 데이터 붙여넣기' 창을 이용해 주세요."); return; }
+
+            document.getElementById('sheetName1').innerText = document.getElementById('dataName1').value || '데이터 1';
+            document.getElementById('sheetName2').innerText = document.getElementById('dataName2').value || '데이터 2';
+            document.getElementById('sheetName3').innerText = document.getElementById('dataName3').value || '데이터 3';
+
+            const useD2 = (type === 'multi-line' || type === 'combo');
+            const useD3 = (type === 'multi-line');
+
+            document.getElementById('sheetTh2').style.display = useD2 ? 'table-cell' : 'none';
+            document.getElementById('sheetTh3').style.display = useD3 ? 'table-cell' : 'none';
+
+            const labels = document.getElementById('labelsInput').value.split(',').map(s => s.trim());
+            const d1 = document.getElementById('dataInput1').value.split(',').map(s => s.trim());
+            const d2 = document.getElementById('dataInput2').value.split(',').map(s => s.trim());
+            const d3 = document.getElementById('dataInput3').value.split(',').map(s => s.trim());
+
+            const tbody = document.getElementById('modalTbody');
+            tbody.innerHTML = '';
+
+            let maxLen = Math.max(labels.length, d1.length, (useD2 ? d2.length : 0), (useD3 ? d3.length : 0));
+            if (maxLen === 0 || (maxLen === 1 && labels[0] === "")) maxLen = 5; 
+
+            for (let i = 0; i < maxLen; i++) {
+                const tr = document.createElement('tr');
+                let rowHtml = `<td><input type="text" class="grid-label" value="${labels[i] !== undefined ? labels[i] : ''}"></td>`;
+                rowHtml += `<td><input type="text" class="grid-d1" value="${d1[i] !== undefined ? d1[i] : ''}"></td>`;
+                rowHtml += `<td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2" value="${d2[i] !== undefined ? d2[i] : ''}"></td>`;
+                rowHtml += `<td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3" value="${d3[i] !== undefined ? d3[i] : ''}"></td>`;
+                tr.innerHTML = rowHtml;
+                tbody.appendChild(tr);
+            }
+            document.getElementById('sheetModal').style.display = 'flex';
+        }
+
+        function addRow() {
+            const type = document.getElementById('chartType').value;
+            const useD2 = (type === 'multi-line' || type === 'combo');
+            const useD3 = (type === 'multi-line');
+            const tbody = document.getElementById('modalTbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="text" class="grid-label"></td><td><input type="text" class="grid-d1"></td><td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2"></td><td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3"></td>`;
+            tbody.appendChild(tr);
+        }
+
+        function closeDataSheet() { document.getElementById('sheetModal').style.display = 'none'; }
+
+        function saveDataSheet() {
+            const type = document.getElementById('chartType').value;
+            const useD2 = (type === 'multi-line' || type === 'combo');
+            const useD3 = (type === 'multi-line');
+
+            const labels = []; const d1 = []; const d2 = []; const d3 = [];
+
+            const rows = document.querySelectorAll('#modalTbody tr');
+            rows.forEach(row => {
+                const l = row.querySelector('.grid-label').value.trim();
+                const v1 = row.querySelector('.grid-d1').value.trim();
+                const v2 = useD2 ? row.querySelector('.grid-d2').value.trim() : '';
+                const v3 = useD3 ? row.querySelector('.grid-d3').value.trim() : '';
+                
+                if (l !== '' || v1 !== '' || v2 !== '' || v3 !== '') {
+                    labels.push(l); d1.push(v1); if(useD2) d2.push(v2); if(useD3) d3.push(v3);
+                }
+            });
+
+            document.getElementById('labelsInput').value = labels.join(',');
+            document.getElementById('dataInput1').value = d1.join(',');
+            if(useD2) document.getElementById('dataInput2').value = d2.join(',');
+            if(useD3) document.getElementById('dataInput3').value = d3.join(',');
+            
+            closeDataSheet();
+            updateOutput();
+        }
+
         function loadExampleData() {
             const type = document.getElementById('chartType').value;
             
@@ -272,6 +392,7 @@
             document.getElementById('yMax').value = '';
             document.getElementById('y1Min').value = '';
             document.getElementById('y1Max').value = '';
+            document.getElementById('showTableType').value = 'none';
             document.getElementById('footnoteInput').value = '';
             document.getElementById('nameInput').value = '박충훈 기자'; 
 
@@ -295,7 +416,6 @@
                 document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
                 document.getElementById('labelDisplayType').value = 'all';
             } else if (type === 'pie') {
-                // 🚨 v6.8: D램 점유율 예시로 원상 복구 🚨
                 document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
                 document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
                 document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
@@ -330,21 +450,16 @@
             const text = document.getElementById('geminiInput').value;
             if (!text.trim()) { alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요."); return; }
             
-            let parsedData = {};
-            let currentTag = '';
-            
-            const lines = text.split(/\r?\n/);
-            for (let line of lines) {
-                const trimmedLine = line.trim();
-                if (/^\[.*\]$/.test(trimmedLine)) {
-                    currentTag = trimmedLine;
-                    parsedData[currentTag] = ''; 
-                } else if (currentTag) {
-                    parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine;
+            const extract = (tag) => {
+                if (tag === '[표데이터]') {
+                    const match = text.match(/\[표데이터\]([\s\S]*)/);
+                    return match ? match[1].trim() : '';
                 }
-            }
-
-            const extract = (tag) => { return parsedData[tag] ? parsedData[tag].trim() : ''; };
+                const escapedTag = tag.replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+                const regex = new RegExp(escapedTag + '[:\\s]*([^\\n\\[]+)'); 
+                const match = text.match(regex);
+                return match ? match[1].trim() : '';
+            };
 
             let rawType = extract('[종류]').toLowerCase();
             let mappedType = 'line'; 
@@ -375,8 +490,10 @@
             document.getElementById('footnoteInput').value = extract('[하단주석]');
             
             const tableData = extract('[표데이터]');
-            if (tableData) { document.getElementById('tableDataInput').value = tableData; }
-            
+            if (tableData) {
+                document.getElementById('tableDataInput').value = tableData;
+                if (mappedType !== 'table') { document.getElementById('showTableType').value = 'show'; }
+            }
             toggleInputs(); 
 
             const btn = document.getElementById('autoFillBtn');
@@ -388,22 +505,40 @@
 
         function toggleInputs() {
             const type = document.getElementById('chartType').value;
+            const showTable = document.getElementById('showTableType').value;
             const ds2Group = document.getElementById('dataset2Group');
             const ds3Group = document.getElementById('dataset3Group');
             const axisSettingGroup = document.getElementById('axisSettingGroup');
             const y1Group = document.getElementById('y1Group');
             const labelSettingGroup = document.getElementById('labelSettingGroup');
             const tableSettingGroup = document.getElementById('tableSettingGroup');
+            const showTableGroup = document.getElementById('showTableGroup');
+            const downloadSettingGroup = document.getElementById('downloadSettingGroup');
             
             if (type === 'table') {
                 document.getElementById('chartInputs').style.display = 'none';
                 document.getElementById('tableInputs').style.display = 'block';
                 labelSettingGroup.style.display = 'none';
                 tableSettingGroup.style.display = 'block'; 
+                showTableGroup.style.display = 'none'; 
+                downloadSettingGroup.style.display = 'none';
+                document.getElementById('downloadTarget').value = 'all';
+                document.getElementById('openSheetBtn').style.display = 'none'; // 표 모드 시 숨김
             } else {
                 document.getElementById('chartInputs').style.display = 'block';
-                document.getElementById('tableInputs').style.display = 'none';
-                tableSettingGroup.style.display = 'none'; 
+                showTableGroup.style.display = 'block'; 
+                document.getElementById('openSheetBtn').style.display = 'flex'; // 일반 모드 시 표시
+                
+                if (showTable === 'show') {
+                    document.getElementById('tableInputs').style.display = 'block';
+                    tableSettingGroup.style.display = 'block'; 
+                    downloadSettingGroup.style.display = 'block';
+                } else {
+                    document.getElementById('tableInputs').style.display = 'none';
+                    tableSettingGroup.style.display = 'none'; 
+                    downloadSettingGroup.style.display = 'none'; 
+                    document.getElementById('downloadTarget').value = 'all';
+                }
                 
                 if (type === 'pie') { labelSettingGroup.style.display = 'none'; } 
                 else { labelSettingGroup.style.display = 'block'; }
@@ -430,27 +565,28 @@
             if (subText.trim() === '') { displaySub.style.display = 'none'; } 
             else { displaySub.innerText = subText; displaySub.style.display = 'inline-block'; }
 
-            renderGraphics(type, showTable);
-        }
-
-        function renderGraphics(type, showTable) {
             let detectedFootnote = document.getElementById('footnoteInput').value;
-            
+            const displayFootnote = document.getElementById('displayFootnote');
+
             if (type === 'table') { 
                 document.getElementById('chart-container').style.display = 'none';
                 document.getElementById('table-container').style.display = 'block';
                 document.getElementById('topLine').style.display = 'none';
                 document.getElementById('redBar').style.display = 'inline';
-                detectedFootnote = renderTable(detectedFootnote); 
+                renderTable(); 
             } else { 
                 document.getElementById('chart-container').style.display = 'block';
-                document.getElementById('table-container').style.display = 'none';
                 document.getElementById('topLine').style.display = 'block';
                 document.getElementById('redBar').style.display = 'none';
                 renderChart(type); 
+                if (showTable === 'show') {
+                    document.getElementById('table-container').style.display = 'block';
+                    renderTable();
+                } else {
+                    document.getElementById('table-container').style.display = 'none';
+                }
             }
 
-            const displayFootnote = document.getElementById('displayFootnote');
             if (detectedFootnote.trim() === '') {
                 displayFootnote.style.display = 'none';
             } else {
@@ -459,28 +595,13 @@
             }
         }
 
-        function renderTable(manualFootnote) {
+        function renderTable() {
             const tsvData = document.getElementById('tableDataInput').value.trim();
             const rows = tsvData.split('\n');
             const fontSize = document.getElementById('tableFontSize').value;
             const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
-            
             let html = `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 15px;">`;
-            let tableRows = [...rows];
-            let autoFootnote = manualFootnote;
-
-            if (tableRows.length > 2) {
-                const lastLine = tableRows[tableRows.length - 1];
-                const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
-                const headerCols = tableRows[0].indexOf('\t') !== -1 ? tableRows[0].split('\t') : tableRows[0].split(',');
-
-                if (lastCols.length === 1 && headerCols.length > 1) {
-                    if (autoFootnote === '') { autoFootnote = lastCols[0].trim(); }
-                    tableRows.pop(); 
-                }
-            }
-
-            tableRows.forEach((row, index) => {
+            rows.forEach((row, index) => {
                 const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(','); 
                 if (index === 0) {
                     html += '<thead><tr>';
@@ -501,13 +622,12 @@
             });
             html += '</tbody></table>';
             document.getElementById('table-container').innerHTML = html;
-            return autoFootnote; 
         }
 
         function renderChart(chartType) {
             const chartContainer = document.getElementById('chart-container');
-            chartContainer.style.height = '420px'; 
-            
+            if (chartType === 'pie') { chartContainer.style.height = '550px'; } 
+            else { chartContainer.style.height = '420px'; }
             if (myChart != null) myChart.destroy();
             Chart.register(ChartDataLabels);
             const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
@@ -534,13 +654,11 @@
                 let bgColors = chartType === 'line' ? 'rgba(235, 235, 235, 0.8)' : '#E61E2B';
                 let borderColors = chartType === 'pie' ? '#fff' : '#E61E2B';
                 if (chartType === 'pie') {
-                    const colorPalette = [ '#E61E2B', '#666666', '#999999', '#cccccc', '#eeeeee']; 
-                    const maxVal = Math.max(...dataVals1); const maxIndex = dataVals1.indexOf(maxVal); let greyIndex = 1;
+                    const colorPalette = [ '#333333', '#666666', '#999999', '#cccccc', '#eeeeee']; 
+                    const maxVal = Math.max(...dataVals1); const maxIndex = dataVals1.indexOf(maxVal); let greyIndex = 0;
                     bgColors = labels.map((label, index) => {
                         if (index === maxIndex) return '#E61E2B';
-                        let color = colorPalette[greyIndex % colorPalette.length];
-                        greyIndex++;
-                        return color;
+                        return colorPalette[(greyIndex++) % colorPalette.length]; 
                     });
                 }
                 datasets.push({ type: chartType === 'pie' ? 'pie' : (chartType === 'bar' ? 'bar' : 'line'), data: dataVals1, borderColor: borderColors, borderWidth: chartType === 'pie' ? 2 : (chartType === 'line' ? 4 : 0), backgroundColor: bgColors, fill: chartType === 'line', pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 2, pointRadius: chartType === 'line' ? 5 : 0, borderRadius: chartType === 'bar' ? 4 : 0, barPercentage: 0.55 });
@@ -554,9 +672,7 @@
                 data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: chartType === 'pie' ? '40%' : '0%',
-                    layout: { 
-                        padding: chartType === 'pie' ? { top: 50, bottom: 30, left: 40, right: 40 } : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) 
-                    },
+                    layout: { padding: chartType === 'pie' ? 40 : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) },
                     plugins: { 
                         title: { display: false },
                         legend: { display: (chartType === 'multi-line' || chartType === 'combo'), position: 'top', align: 'end', labels: { font: { size: 16, weight: 'bold' }, color: '#111' }, padding: { bottom: 25 } },
@@ -596,8 +712,7 @@
                             offset: function(context) { 
                                 if (chartType === 'pie') {
                                     const val = context.dataset.data[context.dataIndex]; const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
-                                    if (((val / sum) * 100) < 10) return 10 + (context.dataIndex % 3) * 15; 
-                                    return 0;
+                                    if (((val / sum) * 100) < 10) return 10 + (context.dataIndex % 3) * 20; return 0;
                                 }
                                 if (chartType === 'combo') { return context.datasetIndex === 0 ? 6 : 12; }
                                 if (chartType === 'multi-line') {
@@ -610,16 +725,14 @@
                                 if (chartType === 'bar') return 6; return 10; 
                             }, 
                             color: function(context) { 
-                                if (chartType === 'pie') return '#111'; 
-                                if (chartType === 'combo' && context.datasetIndex === 0) return '#333'; 
+                                if (chartType === 'pie') return '#111'; if (chartType === 'combo' && context.datasetIndex === 0) return '#333'; 
                                 if (chartType === 'bar') return '#111'; return context.dataset.borderColor; 
                             }, 
                             font: function(context) {
                                 if (chartType === 'pie') return { size: 18, weight: '900' };
                                 if (labelDisplayType === 'last') return { size: 22, weight: '900' }; return { size: 18, weight: 'bold' }; 
                             },
-                            textStrokeColor: '#ffffff', 
-                            textStrokeWidth: 6, 
+                            textStrokeColor: '#ffffff', textStrokeWidth: 6, 
                             formatter: (value, ctx) => { 
                                 let displayVal = isKoreanNumber ? formatKoreanNumber(value) : value;
                                 if (chartType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + displayVal; return displayVal; 
@@ -652,23 +765,21 @@
             const target = document.getElementById('downloadTarget') ? document.getElementById('downloadTarget').value : 'all';
             const chartContainer = document.getElementById('chart-container');
             const tableContainer = document.getElementById('table-container');
-            const displayFootnote = document.getElementById('displayFootnote');
             const topLine = document.getElementById('topLine');
             const redBar = document.getElementById('redBar');
             const origChartDisplay = chartContainer.style.display;
             const origTableDisplay = tableContainer.style.display;
-            const origFootnoteDisplay = displayFootnote.style.display;
             const origTopLineDisplay = topLine.style.display;
             const origRedBarDisplay = redBar.style.display;
 
-            if (target === 'chart') { tableContainer.style.display = 'none'; displayFootnote.style.display = 'none'; topLine.style.display = 'block'; redBar.style.display = 'none'; } 
+            if (target === 'chart') { tableContainer.style.display = 'none'; topLine.style.display = 'block'; redBar.style.display = 'none'; } 
             else if (target === 'table') { chartContainer.style.display = 'none'; topLine.style.display = 'none'; redBar.style.display = 'inline'; }
             btn.innerText = '⏳ 이미지 생성 중...'; btn.style.backgroundColor = '#666';
             html2canvas(captureDiv, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
                 const link = document.createElement('a'); let filePrefix = 'asia_graphic_';
                 if (target === 'chart') filePrefix = 'asia_chart_'; if (target === 'table') filePrefix = 'asia_table_';
                 link.download = filePrefix + new Date().getTime() + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
-                chartContainer.style.display = origChartDisplay; tableContainer.style.display = origTableDisplay; displayFootnote.style.display = origFootnoteDisplay;
+                chartContainer.style.display = origChartDisplay; tableContainer.style.display = origTableDisplay;
                 topLine.style.display = origTopLineDisplay; redBar.style.display = origRedBarDisplay;
                 btn.innerText = originalText; btn.style.backgroundColor = '#333';
             }).catch(err => { alert("저장 오류"); btn.innerText = originalText; btn.style.backgroundColor = '#333'; });
