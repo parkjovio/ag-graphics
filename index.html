@@ -260,539 +260,857 @@
     </div>
 
     <script>
-        const rootStyles = getComputedStyle(document.documentElement);
-        const globalFont = rootStyles.getPropertyValue('--main-font').trim();
-        Chart.defaults.font.family = globalFont;
+    const rootStyles = getComputedStyle(document.documentElement);
+    const globalFont = rootStyles.getPropertyValue('--main-font').trim();
+    Chart.defaults.font.family = globalFont;
 
-        let myChart = null;
+    let myChart = null;
 
-        function formatKoreanNumber(num) {
-            if (isNaN(num) || num === 0) return num;
-            let absNum = Math.abs(num);
-            if (absNum < 10000) return num; 
-            let sign = num < 0 ? '-' : '';
-            let intPart = Math.floor(absNum);
-            let decPart = absNum - intPart;
-            let decStr = decPart > 0 ? String(decPart).substring(1) : ''; 
-            let result = '';
-            let units = ['', '만', '억', '조', '경'];
-            let chunks = [];
-            let tempNum = intPart;
-            while (tempNum > 0) {
-                chunks.push(tempNum % 10000);
-                tempNum = Math.floor(tempNum / 10000);
-            }
-            for (let i = chunks.length - 1; i >= 0; i--) {
-                if (chunks[i] > 0) { result += chunks[i] + units[i]; }
-            }
-            return sign + result + decStr;
+    function formatKoreanNumber(num) {
+        if (isNaN(num) || num === 0) return num;
+        let absNum = Math.abs(num);
+        if (absNum < 10000) return num;
+        let sign = num < 0 ? '-' : '';
+        let intPart = Math.floor(absNum);
+        let decPart = absNum - intPart;
+        let decStr = decPart > 0 ? String(decPart).substring(1) : '';
+        let result = '';
+        let units = ['', '만', '억', '조', '경'];
+        let chunks = [];
+        let tempNum = intPart;
+
+        while (tempNum > 0) {
+            chunks.push(tempNum % 10000);
+            tempNum = Math.floor(tempNum / 10000);
         }
 
-        // 📊 데이터 시트 에디터 스크립트 
-        function openDataSheet() {
-            const type = document.getElementById('chartType').value;
-            if (type === 'table') { alert("텍스트 표 모드에서는 좌측 입력창을 이용해 주세요."); return; }
-
-            document.getElementById('sheetName1').innerText = document.getElementById('dataName1').value || '데이터 1';
-            document.getElementById('sheetName2').innerText = document.getElementById('dataName2').value || '데이터 2';
-            document.getElementById('sheetName3').innerText = document.getElementById('dataName3').value || '데이터 3';
-
-            const useD2 = (type === 'multi-line' || type === 'combo');
-            const useD3 = (type === 'multi-line');
-
-            document.getElementById('sheetTh2').style.display = useD2 ? 'table-cell' : 'none';
-            document.getElementById('sheetTh3').style.display = useD3 ? 'table-cell' : 'none';
-
-            const labels = document.getElementById('labelsInput').value.split(',').map(s => s.trim());
-            const d1 = document.getElementById('dataInput1').value.split(',').map(s => s.trim());
-            const d2 = document.getElementById('dataInput2').value.split(',').map(s => s.trim());
-            const d3 = document.getElementById('dataInput3').value.split(',').map(s => s.trim());
-
-            const tbody = document.getElementById('modalTbody');
-            tbody.innerHTML = '';
-
-            let maxLen = Math.max(labels.length, d1.length, (useD2 ? d2.length : 0), (useD3 ? d3.length : 0));
-            if (maxLen === 0 || (maxLen === 1 && labels[0] === "")) maxLen = 5; 
-
-            for (let i = 0; i < maxLen; i++) {
-                const tr = document.createElement('tr');
-                let rowHtml = `<td><input type="text" class="grid-label" value="${labels[i] !== undefined ? labels[i] : ''}"></td>`;
-                rowHtml += `<td><input type="text" class="grid-d1" value="${d1[i] !== undefined ? d1[i] : ''}"></td>`;
-                rowHtml += `<td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2" value="${d2[i] !== undefined ? d2[i] : ''}"></td>`;
-                rowHtml += `<td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3" value="${d3[i] !== undefined ? d3[i] : ''}"></td>`;
-                tr.innerHTML = rowHtml;
-                tbody.appendChild(tr);
-            }
-            document.getElementById('sheetModal').style.display = 'flex';
+        for (let i = chunks.length - 1; i >= 0; i--) {
+            if (chunks[i] > 0) result += chunks[i] + units[i];
         }
 
-        function addRow() {
-            const type = document.getElementById('chartType').value;
-            const useD2 = (type === 'multi-line' || type === 'combo');
-            const useD3 = (type === 'multi-line');
-            const tbody = document.getElementById('modalTbody');
+        return sign + result + decStr;
+    }
+
+    // 원그래프용 색상 생성: 최댓값만 빨강, 나머지는 회색톤
+    function getPieColors(values) {
+        const grayPalette = ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
+        const numericValues = values.map(v => Number(v) || 0);
+        const maxValue = Math.max(...numericValues);
+        const maxIndex = numericValues.indexOf(maxValue);
+
+        let grayCursor = 0;
+
+        return numericValues.map((_, index) => {
+            if (index === maxIndex) return '#E61E2B';
+            const color = grayPalette[grayCursor % grayPalette.length];
+            grayCursor += 1;
+            return color;
+        });
+    }
+
+    function getPieTopPadding(labels) {
+        const longest = labels.reduce((maxLen, label) => Math.max(maxLen, String(label || '').length), 0);
+        return Math.min(120, 72 + Math.max(0, longest - 6) * 3);
+    }
+
+    function getPieRatio(context) {
+        const value = Number(context.dataset.data[context.dataIndex]) || 0;
+        const total = context.dataset.data.reduce((a, b) => a + (Number(b) || 0), 0);
+        return total > 0 ? value / total : 0;
+    }
+
+    function getPieMidAngle(context) {
+        const meta = context.chart.getDatasetMeta(context.datasetIndex);
+        const arc = meta && meta.data ? meta.data[context.dataIndex] : null;
+        if (!arc) return -Math.PI / 2;
+        return (arc.startAngle + arc.endAngle) / 2;
+    }
+
+    function getPieDirectionByAngle(angle) {
+        const deg = ((angle * 180 / Math.PI) + 360) % 360;
+        if (deg >= 330 || deg < 30) return 'right';
+        if (deg >= 30 && deg < 150) return 'bottom';
+        if (deg >= 150 && deg < 210) return 'left';
+        return 'top';
+    }
+
+    function getPieOffset(context) {
+        const ratio = getPieRatio(context);
+        if (ratio >= 0.22) return 0;
+        if (ratio >= 0.12) return 10;
+        return 18;
+    }
+
+    function getPieAlign(context) {
+        const ratio = getPieRatio(context);
+        if (ratio >= 0.22) return 'center';
+        if (ratio >= 0.12) return 'end';
+        return getPieDirectionByAngle(getPieMidAngle(context));
+    }
+
+    function getPieAnchor(context) {
+        const ratio = getPieRatio(context);
+        return ratio >= 0.22 ? 'center' : 'end';
+    }
+
+    function getPieTextAlign(context) {
+        const ratio = getPieRatio(context);
+        if (ratio >= 0.22) return 'center';
+
+        const direction = getPieDirectionByAngle(getPieMidAngle(context));
+        if (direction === 'left') return 'right';
+        if (direction === 'right') return 'left';
+        return 'center';
+    }
+
+    function getPieFont(context) {
+        const ratio = getPieRatio(context);
+        if (ratio >= 0.22) return { size: 19, weight: '900' };
+        if (ratio >= 0.12) return { size: 17, weight: '900' };
+        return { size: 15, weight: '800' };
+    }
+
+    // 📊 데이터 시트 에디터 스크립트
+    function openDataSheet() {
+        const type = document.getElementById('chartType').value;
+        if (type === 'table') {
+            alert("텍스트 표 모드에서는 좌측 입력창을 이용해 주세요.");
+            return;
+        }
+
+        document.getElementById('sheetName1').innerText = document.getElementById('dataName1').value || '데이터 1';
+        document.getElementById('sheetName2').innerText = document.getElementById('dataName2').value || '데이터 2';
+        document.getElementById('sheetName3').innerText = document.getElementById('dataName3').value || '데이터 3';
+
+        const useD2 = (type === 'multi-line' || type === 'combo');
+        const useD3 = (type === 'multi-line');
+
+        document.getElementById('sheetTh2').style.display = useD2 ? 'table-cell' : 'none';
+        document.getElementById('sheetTh3').style.display = useD3 ? 'table-cell' : 'none';
+
+        const labels = document.getElementById('labelsInput').value.split(',').map(s => s.trim());
+        const d1 = document.getElementById('dataInput1').value.split(',').map(s => s.trim());
+        const d2 = document.getElementById('dataInput2').value.split(',').map(s => s.trim());
+        const d3 = document.getElementById('dataInput3').value.split(',').map(s => s.trim());
+
+        const tbody = document.getElementById('modalTbody');
+        tbody.innerHTML = '';
+
+        let maxLen = Math.max(labels.length, d1.length, (useD2 ? d2.length : 0), (useD3 ? d3.length : 0));
+        if (maxLen === 0 || (maxLen === 1 && labels[0] === "")) maxLen = 5;
+
+        for (let i = 0; i < maxLen; i++) {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td><input type="text" class="grid-label"></td><td><input type="text" class="grid-d1"></td><td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2"></td><td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3"></td>`;
+            let rowHtml = `<td><input type="text" class="grid-label" value="${labels[i] !== undefined ? labels[i] : ''}"></td>`;
+            rowHtml += `<td><input type="text" class="grid-d1" value="${d1[i] !== undefined ? d1[i] : ''}"></td>`;
+            rowHtml += `<td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2" value="${d2[i] !== undefined ? d2[i] : ''}"></td>`;
+            rowHtml += `<td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3" value="${d3[i] !== undefined ? d3[i] : ''}"></td>`;
+            tr.innerHTML = rowHtml;
             tbody.appendChild(tr);
         }
 
-        function closeDataSheet() { document.getElementById('sheetModal').style.display = 'none'; }
+        document.getElementById('sheetModal').style.display = 'flex';
+    }
 
-        function saveDataSheet() {
-            const type = document.getElementById('chartType').value;
-            const useD2 = (type === 'multi-line' || type === 'combo');
-            const useD3 = (type === 'multi-line');
+    function addRow() {
+        const type = document.getElementById('chartType').value;
+        const useD2 = (type === 'multi-line' || type === 'combo');
+        const useD3 = (type === 'multi-line');
+        const tbody = document.getElementById('modalTbody');
+        const tr = document.createElement('tr');
 
-            const labels = []; const d1 = []; const d2 = []; const d3 = [];
+        tr.innerHTML = `
+            <td><input type="text" class="grid-label"></td>
+            <td><input type="text" class="grid-d1"></td>
+            <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2"></td>
+            <td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3"></td>
+        `;
+        tbody.appendChild(tr);
+    }
 
-            const rows = document.querySelectorAll('#modalTbody tr');
-            rows.forEach(row => {
-                const l = row.querySelector('.grid-label').value.trim();
-                const v1 = row.querySelector('.grid-d1').value.trim();
-                const v2 = useD2 ? row.querySelector('.grid-d2').value.trim() : '';
-                const v3 = useD3 ? row.querySelector('.grid-d3').value.trim() : '';
-                
-                if (l !== '' || v1 !== '' || v2 !== '' || v3 !== '') {
-                    labels.push(l); d1.push(v1); if(useD2) d2.push(v2); if(useD3) d3.push(v3);
-                }
-            });
+    function closeDataSheet() {
+        document.getElementById('sheetModal').style.display = 'none';
+    }
 
-            document.getElementById('labelsInput').value = labels.join(', ');
-            document.getElementById('dataInput1').value = d1.join(', ');
-            if(useD2) document.getElementById('dataInput2').value = d2.join(', ');
-            if(useD3) document.getElementById('dataInput3').value = d3.join(', ');
-            
-            closeDataSheet();
-            updateOutput();
+    function saveDataSheet() {
+        const type = document.getElementById('chartType').value;
+        const useD2 = (type === 'multi-line' || type === 'combo');
+        const useD3 = (type === 'multi-line');
+
+        const labels = [];
+        const d1 = [];
+        const d2 = [];
+        const d3 = [];
+
+        const rows = document.querySelectorAll('#modalTbody tr');
+        rows.forEach(row => {
+            const l = row.querySelector('.grid-label').value.trim();
+            const v1 = row.querySelector('.grid-d1').value.trim();
+            const v2 = useD2 ? row.querySelector('.grid-d2').value.trim() : '';
+            const v3 = useD3 ? row.querySelector('.grid-d3').value.trim() : '';
+
+            if (l !== '' || v1 !== '' || v2 !== '' || v3 !== '') {
+                labels.push(l);
+                d1.push(v1);
+                if (useD2) d2.push(v2);
+                if (useD3) d3.push(v3);
+            }
+        });
+
+        document.getElementById('labelsInput').value = labels.join(', ');
+        document.getElementById('dataInput1').value = d1.join(', ');
+        if (useD2) document.getElementById('dataInput2').value = d2.join(', ');
+        if (useD3) document.getElementById('dataInput3').value = d3.join(', ');
+
+        closeDataSheet();
+        updateOutput();
+    }
+
+    function loadExampleData() {
+        const type = document.getElementById('chartType').value;
+
+        document.getElementById('dataName2').value = '';
+        document.getElementById('dataInput2').value = '';
+        document.getElementById('dataName3').value = '';
+        document.getElementById('dataInput3').value = '';
+        document.getElementById('yMin').value = '';
+        document.getElementById('yMax').value = '';
+        document.getElementById('y1Min').value = '';
+        document.getElementById('y1Max').value = '';
+        document.getElementById('footnoteInput').value = '';
+        document.getElementById('nameInput').value = '박충훈 기자';
+
+        if (type === 'table') {
+            document.getElementById('titleInput').value = '금융권 조직문화 특이사항';
+            document.getElementById('subInput').value = '(자료:각사)';
+            document.getElementById('tableDataInput').value = `회사\t활동
+하나은행\t근무태만 방지 등 공문 수시 안내, 업무집중시간 안내
+NH농협은행\t오전 10시~점심식사, 오후 2시~퇴근시 업무집중시간 운영
+KB국민은행\t현안 있을 때 주말 부서장급 회의
+신한금융지주\t불필요한 회의 최소화 등 '온타임제' 운영
+삼성금융네트웍스\t그룹 차원 임원 주 6일제 운영 유지`;
+            document.getElementById('footnoteInput').value = '*보험사들은 대면 영업이 많아 고객 요청에 따라 수시로 식사시간 조정';
+        } else if (type === 'line') {
+            document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
+            document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
+            document.getElementById('labelsInput').value = '7월,8월,9월,10월,11월,12월,1월';
+            document.getElementById('dataName1').value = '총통화량';
+            document.getElementById('dataInput1').value = '4370,4400,4430,4470,4480,4530,4565';
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'bar') {
+            document.getElementById('titleInput').value = '주요 정당 지지율 추이';
+            document.getElementById('subInput').value = '(단위: %, 자료: 리얼미터)';
+            document.getElementById('labelsInput').value = 'A당,B당,C당,D당,무당층';
+            document.getElementById('dataName1').value = '지지율';
+            document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'pie') {
+            document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
+            document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
+            document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
+            document.getElementById('dataName1').value = '점유율';
+            document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'multi-line') {
+            document.getElementById('titleInput').value = '5대 은행 가계대출 증감 추이';
+            document.getElementById('subInput').value = '(단위: 억원, 기준: 전월말대비, 자료: 각사)';
+            document.getElementById('labelsInput').value = '25년12월, 26년1월, 2월, 3월(16일기준)';
+            document.getElementById('dataName1').value = '주담대';
+            document.getElementById('dataInput1').value = '3000, -15000, 6000, -5776';
+            document.getElementById('dataName2').value = '총가계대출';
+            document.getElementById('dataInput2').value = '-5000, -20000, 0, 8068';
+            document.getElementById('dataName3').value = '신용대출';
+            document.getElementById('dataInput3').value = '-6000, -2000, -4000, 14008';
+            document.getElementById('labelDisplayType').value = 'last';
+        } else if (type === 'combo') {
+            document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
+            document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
+            document.getElementById('labelsInput').value = "'25.1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '26.1, 2";
+            document.getElementById('dataName1').value = '계절조정 실업자';
+            document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
+            document.getElementById('dataName2').value = '계절조정 실업률';
+            document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
+            document.getElementById('labelDisplayType').value = 'all';
         }
 
-        function loadExampleData() {
-            const type = document.getElementById('chartType').value;
-            
-            document.getElementById('dataName2').value = '';
-            document.getElementById('dataInput2').value = '';
-            document.getElementById('dataName3').value = '';
-            document.getElementById('dataInput3').value = '';
-            document.getElementById('yMin').value = '';
-            document.getElementById('yMax').value = '';
-            document.getElementById('y1Min').value = '';
-            document.getElementById('y1Max').value = '';
-            document.getElementById('footnoteInput').value = '';
-            document.getElementById('nameInput').value = '박충훈 기자'; 
+        toggleInputs();
+    }
 
-            if (type === 'table') {
-                document.getElementById('titleInput').value = '금융권 조직문화 특이사항';
-                document.getElementById('subInput').value = '(자료:각사)';
-                document.getElementById('tableDataInput').value = `회사\t활동\n하나은행\t근무태만 방지 등 공문 수시 안내, 업무집중시간 안내\nNH농협은행\t오전 10시~점심식사, 오후 2시~퇴근시 업무집중시간 운영\nKB국민은행\t현안 있을 때 주말 부서장급 회의\n신한금융지주\t불필요한 회의 최소화 등 '온타임제' 운영\n삼성금융네트웍스\t그룹 차원 임원 주 6일제 운영 유지`;
-                document.getElementById('footnoteInput').value = '*보험사들은 대면 영업이 많아 고객 요청에 따라 수시로 식사시간 조정';
-            } else if (type === 'line') {
-                document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
-                document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
-                document.getElementById('labelsInput').value = '7월,8월,9월,10월,11월,12월,1월';
-                document.getElementById('dataName1').value = '총통화량'; 
-                document.getElementById('dataInput1').value = '4370,4400,4430,4470,4480,4530,4565';
-                document.getElementById('labelDisplayType').value = 'all';
-            } else if (type === 'bar') {
-                document.getElementById('titleInput').value = '주요 정당 지지율 추이';
-                document.getElementById('subInput').value = '(단위: %, 자료: 리얼미터)';
-                document.getElementById('labelsInput').value = 'A당,B당,C당,D당,무당층';
-                document.getElementById('dataName1').value = '지지율'; 
-                document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
-                document.getElementById('labelDisplayType').value = 'all';
-            } else if (type === 'pie') {
-                document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
-                document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
-                document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
-                document.getElementById('dataName1').value = '점유율'; 
-                document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
-                document.getElementById('labelDisplayType').value = 'all';
-            } else if (type === 'multi-line') {
-                document.getElementById('titleInput').value = '5대 은행 가계대출 증감 추이';
-                document.getElementById('subInput').value = '(단위: 억원, 기준: 전월말대비, 자료: 각사)';
-                document.getElementById('labelsInput').value = '25년12월, 26년1월, 2월, 3월(16일기준)';
-                document.getElementById('dataName1').value = '주담대';
-                document.getElementById('dataInput1').value = '3000, -15000, 6000, -5776';
-                document.getElementById('dataName2').value = '총가계대출';
-                document.getElementById('dataInput2').value = '-5000, -20000, 0, 8068';
-                document.getElementById('dataName3').value = '신용대출';
-                document.getElementById('dataInput3').value = '-6000, -2000, -4000, 14008';
-                document.getElementById('labelDisplayType').value = 'last';
+    // 🚨 v7.9 파서 완벽 픽스 (하단주석 분리) 🚨
+    function parseGeminiData() {
+        const text = document.getElementById('geminiInput').value;
+        if (!text.trim()) {
+            alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요.");
+            return;
+        }
+
+        let parsedData = {};
+        let currentTag = '';
+
+        const lines = text.split(/\r?\n/);
+        for (let line of lines) {
+            const trimmedLine = line.trim();
+            if (/^\[.+\]$/.test(trimmedLine)) {
+                currentTag = trimmedLine;
+                parsedData[currentTag] = '';
+            } else if (currentTag) {
+                if (parsedData[currentTag] !== '' || trimmedLine !== '') {
+                    parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine;
+                }
+            }
+        }
+
+        const extract = (tag) => {
+            return parsedData[tag] ? parsedData[tag].trim() : '';
+        };
+
+        let rawType = extract('[종류]').toLowerCase();
+        let mappedType = 'line';
+
+        if (rawType.includes('multi') || rawType.includes('다중')) mappedType = 'multi-line';
+        else if (rawType.includes('combo') || rawType.includes('혼합')) mappedType = 'combo';
+        else if (rawType.includes('pie') || rawType.includes('원')) mappedType = 'pie';
+        else if (rawType.includes('table') || rawType.includes('표')) mappedType = 'table';
+        else if (rawType.includes('bar') || rawType.includes('막대')) mappedType = 'bar';
+        else if (rawType.includes('line') || rawType.includes('선')) mappedType = 'line';
+
+        let data2 = extract('[데이터2수치]');
+        if (data2 !== '' && (mappedType === 'line' || mappedType === 'bar' || mappedType === 'pie')) {
+            mappedType = 'multi-line';
+        }
+
+        document.getElementById('chartType').value = mappedType;
+        document.getElementById('titleInput').value = extract('[제목]');
+        document.getElementById('subInput').value = extract('[부제목]');
+        document.getElementById('labelsInput').value = extract('[X축]');
+        document.getElementById('dataName1').value = extract('[데이터1이름]');
+        document.getElementById('dataInput1').value = extract('[데이터1수치]');
+        document.getElementById('dataName2').value = extract('[데이터2이름]');
+        document.getElementById('dataInput2').value = extract('[데이터2수치]');
+        document.getElementById('dataName3').value = extract('[데이터3이름]');
+        document.getElementById('dataInput3').value = extract('[데이터3수치]');
+        document.getElementById('yMin').value = extract('[Y좌측최소]');
+        document.getElementById('yMax').value = extract('[Y좌측최대]');
+        document.getElementById('y1Min').value = extract('[Y우측최소]');
+        document.getElementById('y1Max').value = extract('[Y우측최대]');
+        document.getElementById('footnoteInput').value = extract('[하단주석]');
+
+        const tableData = extract('[표데이터]');
+        if (tableData) document.getElementById('tableDataInput').value = tableData;
+
+        toggleInputs();
+
+        const btn = document.getElementById('autoFillBtn');
+        const originalText = btn.innerText;
+        btn.innerText = '✅ 데이터 맵핑 성공!';
+        btn.style.backgroundColor = '#111';
+
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.backgroundColor = '#0056b3';
+        }, 2000);
+    }
+
+    // 🚨 v7.9 표 동시출력 삭제로 인한 UI 토글 간소화 🚨
+    function toggleInputs() {
+        const type = document.getElementById('chartType').value;
+        const ds2Group = document.getElementById('dataset2Group');
+        const ds3Group = document.getElementById('dataset3Group');
+        const axisSettingGroup = document.getElementById('axisSettingGroup');
+        const y1Group = document.getElementById('y1Group');
+        const labelSettingGroup = document.getElementById('labelSettingGroup');
+        const tableSettingGroup = document.getElementById('tableSettingGroup');
+        const downloadSettingGroup = document.getElementById('downloadSettingGroup');
+
+        if (type === 'table') {
+            document.getElementById('chartInputs').style.display = 'none';
+            document.getElementById('tableInputs').style.display = 'block';
+            labelSettingGroup.style.display = 'none';
+            tableSettingGroup.style.display = 'block';
+            document.getElementById('openSheetBtn').style.display = 'none';
+
+            if (downloadSettingGroup) downloadSettingGroup.style.display = 'none';
+        } else {
+            document.getElementById('chartInputs').style.display = 'block';
+            document.getElementById('tableInputs').style.display = 'none';
+            tableSettingGroup.style.display = 'none';
+            document.getElementById('openSheetBtn').style.display = 'flex';
+
+            if (downloadSettingGroup) downloadSettingGroup.style.display = 'none';
+
+            if (type === 'pie') labelSettingGroup.style.display = 'none';
+            else labelSettingGroup.style.display = 'block';
+
+            if (type === 'multi-line') {
+                ds2Group.style.display = 'block';
+                ds3Group.style.display = 'block';
+                y1Group.style.display = 'none';
             } else if (type === 'combo') {
-                document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
-                document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
-                document.getElementById('labelsInput').value = "'25.1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '26.1, 2";
-                document.getElementById('dataName1').value = '계절조정 실업자';
-                document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
-                document.getElementById('dataName2').value = '계절조정 실업률';
-                document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
-                document.getElementById('labelDisplayType').value = 'all';
+                ds2Group.style.display = 'block';
+                ds3Group.style.display = 'none';
+                y1Group.style.display = 'flex';
+            } else {
+                ds2Group.style.display = 'none';
+                ds3Group.style.display = 'none';
+                y1Group.style.display = 'none';
             }
-            toggleInputs();
+
+            if (type === 'pie') axisSettingGroup.style.display = 'none';
+            else axisSettingGroup.style.display = 'block';
         }
 
-        // 🚨 v7.9 파서 완벽 픽스 (하단주석 분리) 🚨
-        function parseGeminiData() {
-            const text = document.getElementById('geminiInput').value;
-            if (!text.trim()) { alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요."); return; }
-            
-            let parsedData = {};
-            let currentTag = '';
-            
-            // 줄 단위로 쪼개서 확실하게 태그 분리
-            const lines = text.split(/\r?\n/);
-            for (let line of lines) {
-                const trimmedLine = line.trim();
-                // [태그이름] 이 정확히 일치할 때만 새로운 태그로 인식
-                if (/^\[.+\]$/.test(trimmedLine)) {
-                    currentTag = trimmedLine;
-                    parsedData[currentTag] = ''; 
-                } else if (currentTag) {
-                    if(parsedData[currentTag] !== '' || trimmedLine !== '') {
-                        parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine;
+        updateOutput();
+    }
+
+    function updateOutput() {
+        const type = document.getElementById('chartType').value;
+
+        document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
+        document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
+
+        const subText = document.getElementById('subInput').value;
+        const displaySub = document.getElementById('displaySub');
+
+        if (subText.trim() === '') {
+            displaySub.style.display = 'none';
+        } else {
+            displaySub.innerText = subText;
+            displaySub.style.display = 'inline-block';
+        }
+
+        let detectedFootnote = document.getElementById('footnoteInput').value;
+
+        if (type === 'table') {
+            document.getElementById('chart-container').style.display = 'none';
+            document.getElementById('table-container').style.display = 'block';
+            document.getElementById('topLine').style.display = 'none';
+            document.getElementById('redBar').style.display = 'inline';
+            detectedFootnote = renderTable(detectedFootnote);
+        } else {
+            document.getElementById('chart-container').style.display = 'block';
+            document.getElementById('table-container').style.display = 'none';
+            document.getElementById('topLine').style.display = 'block';
+            document.getElementById('redBar').style.display = 'none';
+            renderChart(type);
+        }
+
+        const displayFootnote = document.getElementById('displayFootnote');
+        if (detectedFootnote.trim() === '') {
+            displayFootnote.style.display = 'none';
+        } else {
+            displayFootnote.innerText = detectedFootnote;
+            displayFootnote.style.display = 'block';
+        }
+    }
+
+    function renderTable(manualFootnote) {
+        const tsvData = document.getElementById('tableDataInput').value.trim();
+        const rows = tsvData.split('\n');
+        const fontSize = document.getElementById('tableFontSize') ? document.getElementById('tableFontSize').value : 20;
+        const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
+
+        let html = `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 15px;">`;
+        let tableRows = [...rows];
+        let autoFootnote = manualFootnote;
+
+        if (tableRows.length > 2) {
+            const lastLine = tableRows[tableRows.length - 1];
+            const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
+            const headerCols = tableRows[0].indexOf('\t') !== -1 ? tableRows[0].split('\t') : tableRows[0].split(',');
+
+            if (lastCols.length === 1 && headerCols.length > 1) {
+                if (autoFootnote === '') autoFootnote = lastCols[0].trim();
+                tableRows.pop();
+            }
+        }
+
+        tableRows.forEach((row, index) => {
+            const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',');
+
+            if (index === 0) {
+                html += '<thead><tr>';
+                cols.forEach(col => html += `<th>${col.trim()}</th>`);
+                html += '</tr></thead><tbody>';
+            } else {
+                html += '<tr>';
+                cols.forEach(col => {
+                    let cellText = col.trim();
+                    let cleanText = cellText.replace(/,/g, '');
+
+                    if (isKoreanNumber && cellText !== '' && !isNaN(cleanText) && Math.abs(Number(cleanText)) >= 10000) {
+                        cellText = formatKoreanNumber(Number(cleanText));
                     }
-                }
+
+                    html += `<td>${cellText}</td>`;
+                });
+                html += '</tr>';
             }
+        });
 
-            const extract = (tag) => { return parsedData[tag] ? parsedData[tag].trim() : ''; };
+        html += '</tbody></table>';
+        document.getElementById('table-container').innerHTML = html;
+        return autoFootnote;
+    }
 
-            let rawType = extract('[종류]').toLowerCase();
-            let mappedType = 'line'; 
-            if (rawType.includes('multi') || rawType.includes('다중')) { mappedType = 'multi-line'; } 
-            else if (rawType.includes('combo') || rawType.includes('혼합')) { mappedType = 'combo'; } 
-            else if (rawType.includes('pie') || rawType.includes('원')) { mappedType = 'pie'; } 
-            else if (rawType.includes('table') || rawType.includes('표')) { mappedType = 'table'; } 
-            else if (rawType.includes('bar') || rawType.includes('막대')) { mappedType = 'bar'; } 
-            else if (rawType.includes('line') || rawType.includes('선')) { mappedType = 'line'; }
-            
-            let data2 = extract('[데이터2수치]');
-            if (data2 !== '' && (mappedType === 'line' || mappedType === 'bar' || mappedType === 'pie')) { mappedType = 'multi-line'; }
-            
-            document.getElementById('chartType').value = mappedType;
-            document.getElementById('titleInput').value = extract('[제목]');
-            document.getElementById('subInput').value = extract('[부제목]');
-            document.getElementById('labelsInput').value = extract('[X축]');
-            document.getElementById('dataName1').value = extract('[데이터1이름]');
-            document.getElementById('dataInput1').value = extract('[데이터1수치]');
-            document.getElementById('dataName2').value = extract('[데이터2이름]');
-            document.getElementById('dataInput2').value = extract('[데이터2수치]');
-            document.getElementById('dataName3').value = extract('[데이터3이름]');
-            document.getElementById('dataInput3').value = extract('[데이터3수치]');
-            document.getElementById('yMin').value = extract('[Y좌측최소]');
-            document.getElementById('yMax').value = extract('[Y좌측최대]');
-            document.getElementById('y1Min').value = extract('[Y우측최소]');
-            document.getElementById('y1Max').value = extract('[Y우측최대]');
-            document.getElementById('footnoteInput').value = extract('[하단주석]');
-            
-            const tableData = extract('[표데이터]');
-            if (tableData) { document.getElementById('tableDataInput').value = tableData; }
-            
-            toggleInputs(); 
+    function renderChart(chartType) {
+        const chartContainer = document.getElementById('chart-container');
+        chartContainer.style.height = chartType === 'pie' ? '540px' : '420px';
 
-            const btn = document.getElementById('autoFillBtn');
-            const originalText = btn.innerText;
-            btn.innerText = '✅ 데이터 맵핑 성공!';
-            btn.style.backgroundColor = '#111';
-            setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = '#0056b3'; }, 2000);
-        }
+        if (myChart != null) myChart.destroy();
+        Chart.register(ChartDataLabels);
 
-        // 🚨 v7.9 표 동시출력 삭제로 인한 UI 토글 간소화 🚨
-        function toggleInputs() {
-            const type = document.getElementById('chartType').value;
-            const ds2Group = document.getElementById('dataset2Group');
-            const ds3Group = document.getElementById('dataset3Group');
-            const axisSettingGroup = document.getElementById('axisSettingGroup');
-            const y1Group = document.getElementById('y1Group');
-            const labelSettingGroup = document.getElementById('labelSettingGroup');
-            const tableSettingGroup = document.getElementById('tableSettingGroup');
-            const downloadSettingGroup = document.getElementById('downloadSettingGroup');
-            
-            if (type === 'table') {
-                document.getElementById('chartInputs').style.display = 'none';
-                document.getElementById('tableInputs').style.display = 'block';
-                labelSettingGroup.style.display = 'none';
-                tableSettingGroup.style.display = 'block'; 
-                document.getElementById('openSheetBtn').style.display = 'none';
-                
-                // 표 모드일 때 다운로드 옵션 숨김
-                if(downloadSettingGroup) downloadSettingGroup.style.display = 'none';
-            } else {
-                document.getElementById('chartInputs').style.display = 'block';
-                document.getElementById('tableInputs').style.display = 'none';
-                tableSettingGroup.style.display = 'none'; 
-                document.getElementById('openSheetBtn').style.display = 'flex';
-                
-                // 그래프 모드일 때 다운로드 옵션 숨김
-                if(downloadSettingGroup) downloadSettingGroup.style.display = 'none';
-                
-                if (type === 'pie') { labelSettingGroup.style.display = 'none'; } 
-                else { labelSettingGroup.style.display = 'block'; }
-                
-                if (type === 'multi-line') {
-                    ds2Group.style.display = 'block'; ds3Group.style.display = 'block'; y1Group.style.display = 'none'; 
-                } else if (type === 'combo') {
-                    ds2Group.style.display = 'block'; ds3Group.style.display = 'none'; y1Group.style.display = 'flex'; 
-                } else {
-                    ds2Group.style.display = 'none'; ds3Group.style.display = 'none'; y1Group.style.display = 'none'; 
-                }
-                
-                if (type === 'pie') { axisSettingGroup.style.display = 'none'; } 
-                else { axisSettingGroup.style.display = 'block'; }
-            }
-            updateOutput();
-        }
+        const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
+        const dataVals1 = document.getElementById('dataInput1').value.split(',').map(item => parseFloat(item.trim()));
+        const name1 = document.getElementById('dataName1').value;
+        let datasets = [];
 
-        function updateOutput() {
-            const type = document.getElementById('chartType').value;
-            
-            document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
-            document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
-            const subText = document.getElementById('subInput').value;
-            const displaySub = document.getElementById('displaySub');
-            if (subText.trim() === '') { displaySub.style.display = 'none'; } 
-            else { displaySub.innerText = subText; displaySub.style.display = 'inline-block'; }
+        if (chartType === 'multi-line' || chartType === 'combo') {
+            const dataVals2 = document.getElementById('dataInput2').value.split(',').map(item => parseFloat(item.trim()));
+            const name2 = document.getElementById('dataName2').value;
 
-            let detectedFootnote = document.getElementById('footnoteInput').value;
-            
-            // 🚨 v7.9 표 동시출력 기능 완전 삭제 (표면 표, 그래프면 그래프만 나옴) 🚨
-            if (type === 'table') { 
-                document.getElementById('chart-container').style.display = 'none';
-                document.getElementById('table-container').style.display = 'block';
-                document.getElementById('topLine').style.display = 'none';
-                document.getElementById('redBar').style.display = 'inline';
-                detectedFootnote = renderTable(detectedFootnote); 
-            } else { 
-                document.getElementById('chart-container').style.display = 'block';
-                document.getElementById('table-container').style.display = 'none'; // 무조건 숨김
-                document.getElementById('topLine').style.display = 'block';
-                document.getElementById('redBar').style.display = 'none';
-                renderChart(type); 
-            }
+            if (chartType === 'multi-line') {
+                datasets.push({
+                    type: 'line',
+                    label: name1,
+                    data: dataVals1,
+                    borderColor: '#111111',
+                    borderWidth: 4,
+                    backgroundColor: 'transparent',
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#111111',
+                    pointBorderWidth: 3,
+                    pointRadius: 6,
+                    tension: 0.1
+                });
 
-            const displayFootnote = document.getElementById('displayFootnote');
-            if (detectedFootnote.trim() === '') {
-                displayFootnote.style.display = 'none';
-            } else {
-                displayFootnote.innerText = detectedFootnote;
-                displayFootnote.style.display = 'block';
-            }
-        }
+                datasets.push({
+                    type: 'line',
+                    label: name2,
+                    data: dataVals2,
+                    borderColor: '#E61E2B',
+                    borderWidth: 4,
+                    backgroundColor: 'rgba(210, 210, 210, 0.4)',
+                    fill: true,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#E61E2B',
+                    pointBorderWidth: 3,
+                    pointRadius: 6,
+                    tension: 0.1
+                });
 
-        function renderTable(manualFootnote) {
-            const tsvData = document.getElementById('tableDataInput').value.trim();
-            const rows = tsvData.split('\n');
-            const fontSize = document.getElementById('tableFontSize') ? document.getElementById('tableFontSize').value : 20;
-            const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
-            
-            let html = `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 15px;">`;
-            let tableRows = [...rows];
-            let autoFootnote = manualFootnote;
-
-            if (tableRows.length > 2) {
-                const lastLine = tableRows[tableRows.length - 1];
-                const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
-                const headerCols = tableRows[0].indexOf('\t') !== -1 ? tableRows[0].split('\t') : tableRows[0].split(',');
-
-                if (lastCols.length === 1 && headerCols.length > 1) {
-                    if (autoFootnote === '') { autoFootnote = lastCols[0].trim(); }
-                    tableRows.pop(); 
-                }
-            }
-
-            tableRows.forEach((row, index) => {
-                const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(','); 
-                if (index === 0) {
-                    html += '<thead><tr>';
-                    cols.forEach(col => html += `<th>${col.trim()}</th>`);
-                    html += '</tr></thead><tbody>';
-                } else {
-                    html += '<tr>';
-                    cols.forEach(col => {
-                        let cellText = col.trim();
-                        let cleanText = cellText.replace(/,/g, ''); 
-                        if (isKoreanNumber && cellText !== '' && !isNaN(cleanText) && Math.abs(Number(cleanText)) >= 10000) {
-                            cellText = formatKoreanNumber(Number(cleanText));
-                        }
-                        html += `<td>${cellText}</td>`;
+                const dataInput3Val = document.getElementById('dataInput3').value.trim();
+                if (dataInput3Val !== "") {
+                    const dataVals3 = dataInput3Val.split(',').map(item => parseFloat(item.trim()));
+                    const name3 = document.getElementById('dataName3').value;
+                    datasets.push({
+                        type: 'line',
+                        label: name3,
+                        data: dataVals3,
+                        borderColor: '#888888',
+                        borderWidth: 4,
+                        backgroundColor: 'transparent',
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#888888',
+                        pointBorderWidth: 3,
+                        pointRadius: 6,
+                        tension: 0.1
                     });
-                    html += '</tr>';
                 }
+            } else if (chartType === 'combo') {
+                datasets.push({
+                    type: 'bar',
+                    label: name1,
+                    data: dataVals1,
+                    backgroundColor: '#bbbbbb',
+                    borderRadius: 4,
+                    barPercentage: 0.55,
+                    yAxisID: 'y',
+                    order: 2
+                });
+
+                datasets.push({
+                    type: 'line',
+                    label: name2,
+                    data: dataVals2,
+                    borderColor: '#E61E2B',
+                    borderWidth: 4,
+                    backgroundColor: 'transparent',
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#E61E2B',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    yAxisID: 'y1',
+                    order: 1
+                });
+            }
+        } else {
+            let bgColors;
+            let borderColors;
+            let datasetType;
+
+            if (chartType === 'pie') {
+                datasetType = 'doughnut';
+                bgColors = getPieColors(dataVals1);
+                borderColors = '#ffffff';
+            } else if (chartType === 'bar') {
+                datasetType = 'bar';
+                bgColors = '#E61E2B';
+                borderColors = '#E61E2B';
+            } else {
+                datasetType = 'line';
+                bgColors = 'rgba(235, 235, 235, 0.8)';
+                borderColors = '#E61E2B';
+            }
+
+            datasets.push({
+                type: datasetType,
+                data: dataVals1,
+                borderColor: borderColors,
+                borderWidth: chartType === 'pie' ? 2 : (chartType === 'line' ? 4 : 0),
+                backgroundColor: bgColors,
+                fill: chartType === 'line',
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#E61E2B',
+                pointBorderWidth: 2,
+                pointRadius: chartType === 'line' ? 5 : 0,
+                borderRadius: chartType === 'bar' ? 4 : 0,
+                barPercentage: 0.55
             });
-            html += '</tbody></table>';
-            document.getElementById('table-container').innerHTML = html;
-            return autoFootnote; 
         }
 
-        function renderChart(chartType) {
-            const chartContainer = document.getElementById('chart-container');
-            chartContainer.style.height = '420px'; 
-            
-            if (myChart != null) myChart.destroy();
-            Chart.register(ChartDataLabels);
-            
-            const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
-            const dataVals1 = document.getElementById('dataInput1').value.split(',').map(item => parseFloat(item.trim()));
-            const name1 = document.getElementById('dataName1').value;
-            let datasets = [];
-            
-            if (chartType === 'multi-line' || chartType === 'combo') {
-                const dataVals2 = document.getElementById('dataInput2').value.split(',').map(item => parseFloat(item.trim()));
-                const name2 = document.getElementById('dataName2').value;
-                if (chartType === 'multi-line') {
-                    datasets.push({ type: 'line', label: name1, data: dataVals1, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
-                    datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: '#E61E2B', borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
-                    const dataInput3Val = document.getElementById('dataInput3').value.trim();
-                    if(dataInput3Val !== "") {
-                        const dataVals3 = dataInput3Val.split(',').map(item => parseFloat(item.trim()));
-                        const name3 = document.getElementById('dataName3').value;
-                        datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: '#888888', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#888888', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
-                    }
-                } else if (chartType === 'combo') {
-                    datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, barPercentage: 0.55, yAxisID: 'y', order: 2 });
-                    datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: '#E61E2B', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
-                }
-            } else {
-                let bgColors = chartType === 'line' ? 'rgba(235, 235, 235, 0.8)' : '#E61E2B';
-                let borderColors = chartType === 'pie' ? '#fff' : '#E61E2B';
-                if (chartType === 'pie') {
-                    const colorPalette = [ '#E61E2B', '#666666', '#999999', '#cccccc', '#eeeeee']; 
-                    const maxVal = Math.max(...dataVals1); const maxIndex = dataVals1.indexOf(maxVal); let greyIndex = 1;
-                    bgColors = labels.map((label, index) => {
-                        if (index === maxIndex) return '#E61E2B';
-                        let color = colorPalette[greyIndex % colorPalette.length];
-                        greyIndex++;
-                        return color;
-                    });
-                }
-                datasets.push({ type: chartType === 'pie' ? 'pie' : (chartType === 'bar' ? 'bar' : 'line'), data: dataVals1, borderColor: borderColors, borderWidth: chartType === 'pie' ? 2 : (chartType === 'line' ? 4 : 0), backgroundColor: bgColors, fill: chartType === 'line', pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 2, pointRadius: chartType === 'line' ? 5 : 0, borderRadius: chartType === 'bar' ? 4 : 0, barPercentage: 0.55 });
-            }
-            
-            let yMin = document.getElementById('yMin').value; let yMax = document.getElementById('yMax').value;
-            let y1Min = document.getElementById('y1Min').value; let y1Max = document.getElementById('y1Max').value;
-            const labelDisplayType = document.getElementById('labelDisplayType') ? document.getElementById('labelDisplayType').value : 'all';
-            const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
-            
-            const ctx = document.getElementById('myChart').getContext('2d');
-            
-            // 🚨 에러 원천 차단된 가장 깔끔한 렌더링 로직 (v6.8 베이스) 🚨
-            myChart = new Chart(ctx, {
-                type: chartType === 'multi-line' || chartType === 'combo' ? 'bar' : chartType, // 다중선/콤보는 bar 베이스로 그림
-                data: { labels: labels, datasets: datasets },
-                options: {
-                    responsive: true, maintainAspectRatio: false, cutout: chartType === 'pie' ? '40%' : '0%',
-                    layout: { 
-                        padding: chartType === 'pie' ? 40 : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) 
-                    },
-                    plugins: { 
-                        title: { display: false },
-                        legend: { display: (chartType === 'multi-line' || chartType === 'combo'), position: 'top', align: 'end', labels: { font: { size: 16, weight: 'bold' }, color: '#111' }, padding: { bottom: 25 } },
-                        tooltip: { enabled: false },
-                        datalabels: {
-                            display: function(context) {
-                                if (labelDisplayType === 'none') return false; if (chartType === 'pie') return true;
-                                if (labelDisplayType === 'last') { return context.dataIndex === context.dataset.data.length - 1; }
-                                return true;
-                            },
-                            align: function(context) { 
-                                if (chartType === 'pie') {
-                                    const val = context.dataset.data[context.dataIndex]; const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
-                                    if (((val / sum) * 100) < 10) return ['end', 'right', 'left', 'start'][context.dataIndex % 4];
-                                    return 'center';
-                                }
-                                if (chartType === 'combo') { return context.datasetIndex === 0 ? 'start' : 'top'; }
-                                if (chartType === 'multi-line') {
-                                    const dataIdx = context.dataIndex; const currentVal = parseFloat(context.dataset.data[dataIdx]) || 0;
-                                    const allVals = context.chart.data.datasets.map(ds => parseFloat(ds.data[dataIdx]) || 0);
-                                    let rank = 0; for (let i = 0; i < allVals.length; i++) { if (allVals[i] > currentVal) rank++; else if (allVals[i] === currentVal && i < context.datasetIndex) rank++; }
-                                    if (labelDisplayType === 'last' && dataIdx === context.dataset.data.length - 1) {
-                                        if (allVals.length === 2) return rank === 0 ? 'top' : 'bottom'; 
-                                        if (allVals.length >= 3) { if (rank === 0) return 'top'; if (rank === 1) return 'right'; return 'bottom'; }
-                                    }
-                                    if (rank === 0) return 'top'; if (rank === 1) return 'bottom'; return 'bottom'; 
-                                }
-                                return 'top'; 
-                            }, 
-                            anchor: function(context) { 
-                                if (chartType === 'pie') {
-                                    const val = context.dataset.data[context.dataIndex]; const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
-                                    return ((val / sum) * 100 < 10) ? 'end' : 'center';
-                                }
-                                if (chartType === 'combo' && context.datasetIndex === 0) return 'end'; if (chartType === 'bar') return 'end'; return 'center'; 
-                            },
-                            offset: function(context) { 
-                                if (chartType === 'pie') {
-                                    const val = context.dataset.data[context.dataIndex]; const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
-                                    if (((val / sum) * 100) < 10) return 10 + (context.dataIndex % 3) * 20; 
-                                    return 0;
-                                }
-                                if (chartType === 'combo') { return context.datasetIndex === 0 ? 6 : 12; }
-                                if (chartType === 'multi-line') {
-                                    const dataIdx = context.dataIndex; const currentVal = parseFloat(context.dataset.data[dataIdx]) || 0;
-                                    const allVals = context.chart.data.datasets.map(ds => parseFloat(ds.data[dataIdx]) || 0);
-                                    let rank = 0; for (let i = 0; i < allVals.length; i++) { if (allVals[i] > currentVal) rank++; else if (allVals[i] === currentVal && i < context.datasetIndex) rank++; }
-                                    if (labelDisplayType === 'last' && dataIdx === context.dataset.data.length - 1) { if (allVals.length >= 3 && rank === 1) return 12; return 10; }
-                                    if (rank === 2) return 25; return 8; 
-                                }
-                                if (chartType === 'bar') return 6; return 10; 
-                            }, 
-                            color: function(context) { 
-                                if (chartType === 'pie') return '#111'; 
-                                if (chartType === 'combo' && context.datasetIndex === 0) return '#333'; 
-                                if (chartType === 'bar') return '#111'; return context.dataset.borderColor; 
-                            }, 
-                            font: function(context) {
-                                if (chartType === 'pie') return { size: 18, weight: '900' };
-                                if (labelDisplayType === 'last') return { size: 22, weight: '900' }; return { size: 18, weight: 'bold' }; 
-                            },
-                            textStrokeColor: '#ffffff', 
-                            textStrokeWidth: 6, 
-                            formatter: (value, ctx) => { 
-                                let displayVal = isKoreanNumber ? formatKoreanNumber(value) : value;
-                                if (chartType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + displayVal; return displayVal; 
-                            },
-                            textAlign: 'center'
-                        }
-                    },
-                    scales: {
-                        x: { display: chartType !== 'pie', grid: { display: false }, ticks: { font: { size: 16, weight: 'bold' }, color: '#333' } },
-                        y: { 
-                            display: chartType !== 'pie', type: 'linear', position: 'left', 
-                            grid: { color: function(context) { return context.tick.value === 0 ? '#000000' : '#e0e0e0'; }, lineWidth: function(context) { return context.tick.value === 0 ? 2 : 1; }, drawBorder: false }, 
-                            ticks: { font: { size: 16 }, color: '#666', callback: function(value) { return isKoreanNumber ? formatKoreanNumber(value) : value; } }, 
-                            beginAtZero: chartType === 'bar' ? true : false, min: yMin !== '' ? parseFloat(yMin) : undefined, max: yMax !== '' ? parseFloat(yMax) : undefined, grace: '15%' 
+        let yMin = document.getElementById('yMin').value;
+        let yMax = document.getElementById('yMax').value;
+        let y1Min = document.getElementById('y1Min').value;
+        let y1Max = document.getElementById('y1Max').value;
+        const labelDisplayType = document.getElementById('labelDisplayType') ? document.getElementById('labelDisplayType').value : 'all';
+        const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        myChart = new Chart(ctx, {
+            type: chartType === 'multi-line' || chartType === 'combo' ? 'bar' : chartType,
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: chartType === 'pie' ? '28%' : '0%',
+                layout: {
+                    padding: chartType === 'pie'
+                        ? { top: getPieTopPadding(labels), right: 48, bottom: 34, left: 48 }
+                        : (labelDisplayType === 'last'
+                            ? { right: 100, top: 40, bottom: 20, left: 10 }
+                            : { right: 30, top: 40, bottom: 20, left: 10 })
+                },
+                plugins: {
+                    title: { display: false },
+                    legend: {
+                        display: (chartType === 'multi-line' || chartType === 'combo'),
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            font: { size: 16, weight: 'bold' },
+                            color: '#111'
                         },
-                        y1: { 
-                            display: chartType === 'combo', type: 'linear', position: 'right', grid: { display: false }, 
-                            ticks: { font: { size: 16, weight: 'bold' }, color: '#E61E2B', callback: function(value) { return isKoreanNumber ? formatKoreanNumber(value) : value; } }, 
-                            beginAtZero: true, min: y1Min !== '' ? parseFloat(y1Min) : undefined, max: y1Max !== '' ? parseFloat(y1Max) : undefined, grace: '15%'
+                        padding: { bottom: 25 }
+                    },
+                    tooltip: { enabled: false },
+                    datalabels: {
+                        display: function(context) {
+                            if (labelDisplayType === 'none') return false;
+                            if (chartType === 'pie') return true;
+                            if (labelDisplayType === 'last') return context.dataIndex === context.dataset.data.length - 1;
+                            return true;
+                        },
+                        align: function(context) {
+                            if (chartType === 'pie') {
+                                return getPieAlign(context);
+                            }
+
+                            if (chartType === 'combo') return context.datasetIndex === 0 ? 'start' : 'top';
+
+                            if (chartType === 'multi-line') {
+                                const dataIdx = context.dataIndex;
+                                const currentVal = parseFloat(context.dataset.data[dataIdx]) || 0;
+                                const allVals = context.chart.data.datasets.map(ds => parseFloat(ds.data[dataIdx]) || 0);
+                                let rank = 0;
+
+                                for (let i = 0; i < allVals.length; i++) {
+                                    if (allVals[i] > currentVal) rank++;
+                                    else if (allVals[i] === currentVal && i < context.datasetIndex) rank++;
+                                }
+
+                                if (labelDisplayType === 'last' && dataIdx === context.dataset.data.length - 1) {
+                                    if (allVals.length === 2) return rank === 0 ? 'top' : 'bottom';
+                                    if (allVals.length >= 3) {
+                                        if (rank === 0) return 'top';
+                                        if (rank === 1) return 'right';
+                                        return 'bottom';
+                                    }
+                                }
+
+                                if (rank === 0) return 'top';
+                                if (rank === 1) return 'bottom';
+                                return 'bottom';
+                            }
+
+                            return 'top';
+                        },
+                        anchor: function(context) {
+                            if (chartType === 'pie') {
+                                return getPieAnchor(context);
+                            }
+
+                            if (chartType === 'combo' && context.datasetIndex === 0) return 'end';
+                            if (chartType === 'bar') return 'end';
+                            return 'center';
+                        },
+                        offset: function(context) {
+                            if (chartType === 'pie') {
+                                return getPieOffset(context);
+                            }
+
+                            if (chartType === 'combo') return context.datasetIndex === 0 ? 6 : 12;
+
+                            if (chartType === 'multi-line') {
+                                const dataIdx = context.dataIndex;
+                                const currentVal = parseFloat(context.dataset.data[dataIdx]) || 0;
+                                const allVals = context.chart.data.datasets.map(ds => parseFloat(ds.data[dataIdx]) || 0);
+                                let rank = 0;
+
+                                for (let i = 0; i < allVals.length; i++) {
+                                    if (allVals[i] > currentVal) rank++;
+                                    else if (allVals[i] === currentVal && i < context.datasetIndex) rank++;
+                                }
+
+                                if (labelDisplayType === 'last' && dataIdx === context.dataset.data.length - 1) {
+                                    if (allVals.length >= 3 && rank === 1) return 12;
+                                    return 10;
+                                }
+
+                                if (rank === 2) return 25;
+                                return 8;
+                            }
+
+                            if (chartType === 'bar') return 6;
+                            return 10;
+                        },
+                        color: function(context) {
+                            if (chartType === 'pie') return '#111';
+                            if (chartType === 'combo' && context.datasetIndex === 0) return '#333';
+                            if (chartType === 'bar') return '#111';
+                            return context.dataset.borderColor;
+                        },
+                        font: function(context) {
+                            if (chartType === 'pie') return getPieFont(context);
+                            if (labelDisplayType === 'last') return { size: 22, weight: '900' };
+                            return { size: 18, weight: 'bold' };
+                        },
+                        textStrokeColor: '#ffffff',
+                        textStrokeWidth: 6,
+                        formatter: (value, ctx) => {
+                            let displayVal = isKoreanNumber ? formatKoreanNumber(value) : value;
+                            if (chartType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + displayVal;
+                            return displayVal;
+                        },
+                        textAlign: function(context) {
+                            if (chartType === 'pie') return getPieTextAlign(context);
+                            return 'center';
+                        },
+                        clamp: true,
+                        clip: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: chartType !== 'pie',
+                        grid: { display: false },
+                        ticks: {
+                            font: { size: 16, weight: 'bold' },
+                            color: '#333'
                         }
+                    },
+                    y: {
+                        display: chartType !== 'pie',
+                        type: 'linear',
+                        position: 'left',
+                        grid: {
+                            color: function(context) {
+                                return context.tick.value === 0 ? '#000000' : '#e0e0e0';
+                            },
+                            lineWidth: function(context) {
+                                return context.tick.value === 0 ? 2 : 1;
+                            },
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: { size: 16 },
+                            color: '#666',
+                            callback: function(value) {
+                                return isKoreanNumber ? formatKoreanNumber(value) : value;
+                            }
+                        },
+                        beginAtZero: chartType === 'bar' ? true : false,
+                        min: yMin !== '' ? parseFloat(yMin) : undefined,
+                        max: yMax !== '' ? parseFloat(yMax) : undefined,
+                        grace: '15%'
+                    },
+                    y1: {
+                        display: chartType === 'combo',
+                        type: 'linear',
+                        position: 'right',
+                        grid: { display: false },
+                        ticks: {
+                            font: { size: 16, weight: 'bold' },
+                            color: '#E61E2B',
+                            callback: function(value) {
+                                return isKoreanNumber ? formatKoreanNumber(value) : value;
+                            }
+                        },
+                        beginAtZero: true,
+                        min: y1Min !== '' ? parseFloat(y1Min) : undefined,
+                        max: y1Max !== '' ? parseFloat(y1Max) : undefined,
+                        grace: '15%'
                     }
                 }
-            });
-        }
+            }
+        });
+    }
 
-        function downloadImage() {
-            const captureDiv = document.getElementById('capture-area');
-            const btn = document.getElementById('downloadBtn');
-            const originalText = btn.innerText;
+    function downloadImage() {
+        const captureDiv = document.getElementById('capture-area');
+        const btn = document.getElementById('downloadBtn');
+        const originalText = btn.innerText;
 
-            btn.innerText = '⏳ 이미지 생성 중...'; btn.style.backgroundColor = '#666';
+        btn.innerText = '⏳ 이미지 생성 중...';
+        btn.style.backgroundColor = '#666';
 
-            html2canvas(captureDiv, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
-                const link = document.createElement('a'); 
-                const type = document.getElementById('chartType').value;
-                let filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
-                link.download = filePrefix + new Date().getTime() + '.png'; 
-                link.href = canvas.toDataURL('image/png'); 
-                link.click();
-                
-                btn.innerText = originalText; btn.style.backgroundColor = '#333';
-            }).catch(err => { 
-                alert("저장 오류가 발생했습니다."); 
-                btn.innerText = originalText; btn.style.backgroundColor = '#333';
-            });
-        }
+        html2canvas(captureDiv, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        }).then(canvas => {
+            const link = document.createElement('a');
+            const type = document.getElementById('chartType').value;
+            let filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
+            link.download = filePrefix + new Date().getTime() + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
 
-        window.onload = function() { loadExampleData(); };
-    </script>
+            btn.innerText = originalText;
+            btn.style.backgroundColor = '#333';
+        }).catch(err => {
+            alert("저장 오류가 발생했습니다.");
+            btn.innerText = originalText;
+            btn.style.backgroundColor = '#333';
+        });
+    }
+
+    window.onload = function() {
+        loadExampleData();
+    };
+</script>
 </body>
 </html>
