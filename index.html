@@ -310,7 +310,7 @@
 
     function getPieTopPadding(labels) {
         const longest = labels.reduce((maxLen, label) => Math.max(maxLen, String(label || '').length), 0);
-        return Math.min(120, 72 + Math.max(0, longest - 6) * 3);
+        return Math.min(110, 64 + Math.max(0, longest - 6) * 2);
     }
 
     function getPieRatio(context) {
@@ -334,28 +334,25 @@
         return 'top';
     }
 
+    function getPieIsOutside(context) {
+        return getPieRatio(context) < 0.05;
+    }
+
     function getPieOffset(context) {
-        const ratio = getPieRatio(context);
-        if (ratio >= 0.22) return 0;
-        if (ratio >= 0.12) return 10;
-        return 18;
+        return getPieIsOutside(context) ? 16 : 0;
     }
 
     function getPieAlign(context) {
-        const ratio = getPieRatio(context);
-        if (ratio >= 0.22) return 'center';
-        if (ratio >= 0.12) return 'end';
+        if (!getPieIsOutside(context)) return 'center';
         return getPieDirectionByAngle(getPieMidAngle(context));
     }
 
     function getPieAnchor(context) {
-        const ratio = getPieRatio(context);
-        return ratio >= 0.22 ? 'center' : 'end';
+        return getPieIsOutside(context) ? 'end' : 'center';
     }
 
     function getPieTextAlign(context) {
-        const ratio = getPieRatio(context);
-        if (ratio >= 0.22) return 'center';
+        if (!getPieIsOutside(context)) return 'center';
 
         const direction = getPieDirectionByAngle(getPieMidAngle(context));
         if (direction === 'left') return 'right';
@@ -365,9 +362,11 @@
 
     function getPieFont(context) {
         const ratio = getPieRatio(context);
-        if (ratio >= 0.22) return { size: 19, weight: '900' };
+
+        if (ratio >= 0.25) return { size: 19, weight: '900' };
         if (ratio >= 0.12) return { size: 17, weight: '900' };
-        return { size: 15, weight: '800' };
+        if (ratio >= 0.05) return { size: 15, weight: '900' };
+        return { size: 14, weight: '800' };
     }
 
     // 📊 데이터 시트 에디터 스크립트
