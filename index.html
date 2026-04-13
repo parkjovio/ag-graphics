@@ -308,6 +308,168 @@
         });
     }
 
+
+    
+    const pieLeaderLinePlugin = {
+        id: 'pieLeaderLinePlugin',
+        afterDraw(chart, args, pluginOptions) {
+            if (!pluginOptions || !pluginOptions.enabled) return;
+
+            try {
+                const dataset = chart.data.datasets && chart.data.datasets[0];
+                if (!dataset) return;
+
+                const meta = chart.getDatasetMeta(0);
+                if (!meta || !meta.data || !meta.data.length) return;
+
+                const ctx = chart.ctx;
+                const chartArea = chart.chartArea;
+                const centerX = meta.data[0].x;
+                const outerRadius = meta.data[0].outerRadius;
+
+                const labelFont = '800 13px Malgun Gothic, sans-serif';
+                const valueFont = '800 13px Malgun Gothic, sans-serif';
+                const lineColor = '#777777';
+                const fillColor = '#111111';
+                const strokeColor = '#ffffff';
+
+                const labelLineHeight = 15;
+                const blockHeight = 31;
+                const minGap = 42;
+                const shortDiagonalLen = 18;
+                const minRise = 14;
+                const textGap = 6;
+                const edgePadding = 10;
+                const topPadding = 12;
+                const bottomPadding = 12;
+
+                const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
+
+                const formatValue = (value) => {
+                    return isKoreanNumber ? String(formatKoreanNumber(value)) : String(value);
+                };
+
+                const measureBlockWidth = (label, value) => {
+                    ctx.save();
+                    ctx.font = labelFont;
+                    const labelWidth = ctx.measureText(String(label)).width;
+                    ctx.font = valueFont;
+                    const valueWidth = ctx.measureText(String(value)).width;
+                    ctx.restore();
+                    return Math.max(labelWidth, valueWidth);
+                };
+
+                const items = meta.data.map((arc, index) => {
+                    const context = {
+                        chart: chart,
+                        dataset: dataset,
+                        datasetIndex: 0,
+                        dataIndex: index
+                    };
+
+                    if (!getPieIsOutside(context)) return null;
+
+                    const angle = getPieMidAngle(context);
+                    const side = Math.cos(angle) >= 0 ? 'right' : 'left';
+                    const label = String(chart.data.labels[index] || '');
+                    const value = formatValue(dataset.data[index]);
+
+                    const startX = arc.x + Math.cos(angle) * (arc.outerRadius + 2);
+                    const startY = arc.y + Math.sin(angle) * (arc.outerRadius + 2);
+
+                    return {
+                        side: side,
+                        label: label,
+                        value: value,
+                        startX: startX,
+                        startY: startY,
+                        maxLineY: startY - minRise,
+                        lineY: 0,
+                        elbowX: 0,
+                        textX: 0,
+                        lineEndX: 0,
+                        boxWidth: measureBlockWidth(label, value)
+                    };
+                }).filter(Boolean);
+
+                const layoutSide = (sideItems, side) => {
+                    if (!sideItems.length) return;
+
+                    sideItems.sort((a, b) => b.maxLineY - a.maxLineY);
+
+                    let nextAllowedY = chartArea.bottom - bottomPadding;
+
+                    for (const item of sideItems) {
+                        item.lineY = Math.min(item.maxLineY, nextAllowedY);
+                        nextAllowedY = item.lineY - minGap;
+                    }
+
+                    const minLineY = chartArea.top + topPadding + blockHeight + 4;
+                    if (sideItems.length && sideItems[sideItems.length - 1].lineY < minLineY) {
+                        const underflow = minLineY - sideItems[sideItems.length - 1].lineY;
+                        for (let i = sideItems.length - 1; i >= 0; i--) {
+                            sideItems[i].lineY += underflow;
+                            if (i < sideItems.length - 1) {
+                                sideItems[i].lineY = Math.min(sideItems[i].lineY, sideItems[i + 1].lineY - minGap);
+                            }
+                            sideItems[i].lineY = Math.min(sideItems[i].lineY, sideItems[i].maxLineY);
+                        }
+                    }
+
+                    const maxWidth = Math.max(...sideItems.map(item => item.boxWidth));
+                    const commonTextX = side === 'right'
+                        ? Math.min(chartArea.right - maxWidth - edgePadding, centerX + outerRadius + 56)
+                        : Math.max(chartArea.left + maxWidth + edgePadding, centerX - outerRadius - 56);
+
+                    sideItems.forEach(item => {
+                        item.textX = commonTextX;
+                        item.lineEndX = side === 'right' ? commonTextX - textGap : commonTextX + textGap;
+                        item.elbowX = item.startX + (side === 'right' ? shortDiagonalLen : -shortDiagonalLen);
+                    });
+                };
+
+                layoutSide(items.filter(item => item.side === 'left'), 'left');
+                layoutSide(items.filter(item => item.side === 'right'), 'right');
+
+                const drawText = (text, x, y, font, align) => {
+                    ctx.save();
+                    ctx.font = font;
+                    ctx.textAlign = align;
+                    ctx.textBaseline = 'top';
+                    ctx.lineJoin = 'round';
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = strokeColor;
+                    ctx.strokeText(String(text), x, y);
+                    ctx.fillStyle = fillColor;
+                    ctx.fillText(String(text), x, y);
+                    ctx.restore();
+                };
+
+                items.forEach(item => {
+                    const textTopY = item.lineY - blockHeight - 2;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(item.startX, item.startY);
+                    ctx.lineTo(item.elbowX, item.lineY);
+                    ctx.lineTo(item.lineEndX, item.lineY);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = lineColor;
+                    ctx.lineCap = 'butt';
+                    ctx.lineJoin = 'miter';
+                    ctx.stroke();
+                    ctx.restore();
+
+                    const align = item.side === 'right' ? 'left' : 'right';
+                    drawText(item.label, item.textX, textTopY, labelFont, align);
+                    drawText(item.value, item.textX, textTopY + labelLineHeight, valueFont, align);
+                });
+            } catch (err) {
+                console.error('pieLeaderLinePlugin error:', err);
+            }
+        }
+    };
+
     function getPieTopPadding(labels) {
         const longest = labels.reduce((maxLen, label) => Math.max(maxLen, String(label || '').length), 0);
         return Math.min(110, 64 + Math.max(0, longest - 6) * 2);
@@ -753,10 +915,10 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
 
     function renderChart(chartType) {
         const chartContainer = document.getElementById('chart-container');
-        chartContainer.style.height = chartType === 'pie' ? '540px' : '420px';
+        chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
 
         if (myChart != null) myChart.destroy();
-        Chart.register(ChartDataLabels);
+        Chart.register(pieLeaderLinePlugin, ChartDataLabels);
 
         const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
         const dataVals1 = document.getElementById('dataInput1').value.split(',').map(item => parseFloat(item.trim()));
@@ -898,12 +1060,15 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
                 cutout: chartType === 'pie' ? '28%' : '0%',
                 layout: {
                     padding: chartType === 'pie'
-                        ? { top: getPieTopPadding(labels), right: 48, bottom: 34, left: 48 }
+                        ? { top: getPieTopPadding(labels), right: 64, bottom: 30, left: 64 }
                         : (labelDisplayType === 'last'
                             ? { right: 100, top: 40, bottom: 20, left: 10 }
                             : { right: 30, top: 40, bottom: 20, left: 10 })
                 },
                 plugins: {
+                    pieLeaderLinePlugin: {
+                        enabled: chartType === 'pie'
+                    },
                     title: { display: false },
                     legend: {
                         display: (chartType === 'multi-line' || chartType === 'combo'),
@@ -919,7 +1084,7 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
                     datalabels: {
                         display: function(context) {
                             if (labelDisplayType === 'none') return false;
-                            if (chartType === 'pie') return true;
+                            if (chartType === 'pie') return !getPieIsOutside(context);
                             if (labelDisplayType === 'last') return context.dataIndex === context.dataset.data.length - 1;
                             return true;
                         },
