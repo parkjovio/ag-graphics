@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>아시아경제 통합 그래픽 대시보드 v7.8 (원그래프 크기 확대)</title>
+    <title>아시아경제 통합 그래픽 대시보드 v7.9 (파서 픽스 및 시트 에디터)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -68,7 +68,7 @@
         .asia-table td:nth-child(3) { background-color: #f2f2f2; }
         .asia-table td:nth-child(4) { background-color: #e8e8e8; }
         
-        #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; position: relative;}
+        #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; position: relative;}
         .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; line-height: 1.4;}
 
         #displayFootnote { font-size: 14px; color: #111; margin-top: 5px; text-align: left; letter-spacing: -0.5px; display: none; font-family: var(--main-font); line-height: 1.4; font-weight: 500;}
@@ -87,12 +87,13 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v7.8</h2>
+        <h2>🛠️ 그래픽 데스크 v7.9</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
-            <textarea id="geminiInput" placeholder="제미나이가 생성한 텍스트를 통째로 붙여넣으세요..."></textarea>
-            <button class="btn-ai" onclick="parseGeminiData()">🪄 AI 데이터 자동 완성</button>
+            <span class="help-text" style="color: #0056b3; margin-bottom:5px;">제미나이가 생성한 텍스트를 통째로 붙여넣으세요.</span>
+            <textarea id="geminiInput" placeholder="[종류] multi-line&#10;[제목] 이태원 참사 이후 여론 흐름&#10;..."></textarea>
+            <button class="btn-ai" id="autoFillBtn" onclick="parseGeminiData()">🪄 AI 데이터 자동 완성하기</button>
         </div>
         
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
@@ -109,14 +110,6 @@
         </select>
 
         <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (엑셀 방식)</button>
-
-        <div class="data-group" id="showTableGroup">
-            <label style="color:var(--ak-red); font-size:14px;">📌 데이터 표 함께 보기</label>
-            <select id="showTableType" onchange="toggleInputs()">
-                <option value="none" selected>표시 안 함 (그래프만)</option>
-                <option value="show">그래프 아래에 표 함께 표시</option>
-            </select>
-        </div>
 
         <div class="data-group" id="labelSettingGroup">
             <label style="color:var(--ak-red); font-size:14px;">📌 수치 표시 방식</label>
@@ -142,7 +135,6 @@
                 <input type="range" id="tableFontSize" min="12" max="26" value="20" oninput="document.getElementById('fontSizeDisplay').innerText = this.value + 'px'; updateOutput();">
                 <span id="fontSizeDisplay" class="font-size-display">20px</span>
             </div>
-            <span class="help-text">글자가 길어 줄바꿈이 생길 경우 크기를 줄여보세요.</span>
         </div>
 
         <label>제목</label>
@@ -199,12 +191,23 @@
         <div class="data-group" style="background-color: #fff; border: 1px solid #ccc;">
             <label style="margin-top:0;">하단 주석 (선택)</label>
             <input type="text" id="footnoteInput" placeholder="예: *보험사들은 대면 영업이 많아..." value="">
+            <span class="help-text">여기에 적거나, 표 데이터 맨 마지막 줄에 한 칸짜리 텍스트를 넣으세요.</span>
         </div>
         
         <label>기자 이름</label>
         <input type="text" id="nameInput" value="박충훈 기자">
         
         <button class="main-btn" onclick="updateOutput()">🔄 수동 적용하기</button>
+
+        <div class="data-group" id="downloadSettingGroup" style="display: none; background: #ffebeb; border-color: #ffcccc; margin-top: 20px;">
+            <label style="color:var(--ak-red); font-size:14px;">📌 저장 영역 선택</label>
+            <select id="downloadTarget">
+                <option value="all" selected>화면 전체 저장 (그래프 + 표)</option>
+                <option value="chart">그래프 영역만 저장</option>
+                <option value="table">텍스트 표 영역만 저장</option>
+            </select>
+        </div>
+
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
     </div>
 
@@ -237,9 +240,9 @@
     <div class="preview-area">
         <div id="capture-area">
             <div class="header-line" id="topLine"></div>
-            
-            <h1 class="chart-title" id="displayTitle">제목입력</h1>
-            <br>
+            <h1 class="chart-title">
+                <span class="title-red-bar" id="redBar" style="display: none;">❙</span><span id="displayTitle">제목입력</span>
+            </h1>
             <span class="chart-subtitle" id="displaySub">(단위 및 출처 입력)</span>
             
             <div id="chart-container">
@@ -247,7 +250,6 @@
             </div>
 
             <div id="table-container" style="display: none;"></div>
-            
             <div id="displayFootnote"></div>
             
             <div class="footer-watermark">
@@ -286,10 +288,10 @@
             return sign + result + decStr;
         }
 
-        // 데이터 시트 열기/닫기/저장
+        // 📊 데이터 시트 에디터 스크립트 
         function openDataSheet() {
             const type = document.getElementById('chartType').value;
-            if (type === 'table') { alert("텍스트 표 모드에서는 좌측 '엑셀 데이터 붙여넣기' 창을 이용해 주세요."); return; }
+            if (type === 'table') { alert("텍스트 표 모드에서는 좌측 입력창을 이용해 주세요."); return; }
 
             document.getElementById('sheetName1').innerText = document.getElementById('dataName1').value || '데이터 1';
             document.getElementById('sheetName2').innerText = document.getElementById('dataName2').value || '데이터 2';
@@ -375,7 +377,6 @@
             document.getElementById('yMax').value = '';
             document.getElementById('y1Min').value = '';
             document.getElementById('y1Max').value = '';
-            document.getElementById('showTableType').value = 'none';
             document.getElementById('footnoteInput').value = '';
             document.getElementById('nameInput').value = '박충훈 기자'; 
 
@@ -429,6 +430,7 @@
             toggleInputs();
         }
 
+        // 🚨 v7.9 파서 완벽 픽스 (하단주석 분리) 🚨
         function parseGeminiData() {
             const text = document.getElementById('geminiInput').value;
             if (!text.trim()) { alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요."); return; }
@@ -436,14 +438,18 @@
             let parsedData = {};
             let currentTag = '';
             
+            // 줄 단위로 쪼개서 확실하게 태그 분리
             const lines = text.split(/\r?\n/);
             for (let line of lines) {
                 const trimmedLine = line.trim();
-                if (/^\[.*\]$/.test(trimmedLine)) {
+                // [태그이름] 이 정확히 일치할 때만 새로운 태그로 인식
+                if (/^\[.+\]$/.test(trimmedLine)) {
                     currentTag = trimmedLine;
                     parsedData[currentTag] = ''; 
                 } else if (currentTag) {
-                    parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine;
+                    if(parsedData[currentTag] !== '' || trimmedLine !== '') {
+                        parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine;
+                    }
                 }
             }
 
@@ -489,16 +495,15 @@
             setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = '#0056b3'; }, 2000);
         }
 
+        // 🚨 v7.9 표 동시출력 삭제로 인한 UI 토글 간소화 🚨
         function toggleInputs() {
             const type = document.getElementById('chartType').value;
-            const showTable = document.getElementById('showTableType').value;
             const ds2Group = document.getElementById('dataset2Group');
             const ds3Group = document.getElementById('dataset3Group');
             const axisSettingGroup = document.getElementById('axisSettingGroup');
             const y1Group = document.getElementById('y1Group');
             const labelSettingGroup = document.getElementById('labelSettingGroup');
             const tableSettingGroup = document.getElementById('tableSettingGroup');
-            const showTableGroup = document.getElementById('showTableGroup');
             const downloadSettingGroup = document.getElementById('downloadSettingGroup');
             
             if (type === 'table') {
@@ -506,28 +511,22 @@
                 document.getElementById('tableInputs').style.display = 'block';
                 labelSettingGroup.style.display = 'none';
                 tableSettingGroup.style.display = 'block'; 
-                showTableGroup.style.display = 'none'; 
-                downloadSettingGroup.style.display = 'none';
-                document.getElementById('downloadTarget').value = 'all';
                 document.getElementById('openSheetBtn').style.display = 'none';
+                
+                // 표 모드일 때 다운로드 옵션 숨김
+                if(downloadSettingGroup) downloadSettingGroup.style.display = 'none';
             } else {
                 document.getElementById('chartInputs').style.display = 'block';
-                showTableGroup.style.display = 'block'; 
+                document.getElementById('tableInputs').style.display = 'none';
+                tableSettingGroup.style.display = 'none'; 
                 document.getElementById('openSheetBtn').style.display = 'flex';
                 
-                if (showTable === 'show') {
-                    document.getElementById('tableInputs').style.display = 'block';
-                    tableSettingGroup.style.display = 'block'; 
-                    downloadSettingGroup.style.display = 'block';
-                } else {
-                    document.getElementById('tableInputs').style.display = 'none';
-                    tableSettingGroup.style.display = 'none'; 
-                    downloadSettingGroup.style.display = 'none'; 
-                    document.getElementById('downloadTarget').value = 'all';
-                }
+                // 그래프 모드일 때 다운로드 옵션 숨김
+                if(downloadSettingGroup) downloadSettingGroup.style.display = 'none';
                 
                 if (type === 'pie') { labelSettingGroup.style.display = 'none'; } 
                 else { labelSettingGroup.style.display = 'block'; }
+                
                 if (type === 'multi-line') {
                     ds2Group.style.display = 'block'; ds3Group.style.display = 'block'; y1Group.style.display = 'none'; 
                 } else if (type === 'combo') {
@@ -535,6 +534,7 @@
                 } else {
                     ds2Group.style.display = 'none'; ds3Group.style.display = 'none'; y1Group.style.display = 'none'; 
                 }
+                
                 if (type === 'pie') { axisSettingGroup.style.display = 'none'; } 
                 else { axisSettingGroup.style.display = 'block'; }
             }
@@ -543,7 +543,7 @@
 
         function updateOutput() {
             const type = document.getElementById('chartType').value;
-            const showTable = document.getElementById('showTableType') ? document.getElementById('showTableType').value : 'none';
+            
             document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
             document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
             const subText = document.getElementById('subInput').value;
@@ -552,27 +552,23 @@
             else { displaySub.innerText = subText; displaySub.style.display = 'inline-block'; }
 
             let detectedFootnote = document.getElementById('footnoteInput').value;
-            const displayFootnote = document.getElementById('displayFootnote');
-
+            
+            // 🚨 v7.9 표 동시출력 기능 완전 삭제 (표면 표, 그래프면 그래프만 나옴) 🚨
             if (type === 'table') { 
                 document.getElementById('chart-container').style.display = 'none';
                 document.getElementById('table-container').style.display = 'block';
                 document.getElementById('topLine').style.display = 'none';
                 document.getElementById('redBar').style.display = 'inline';
-                renderTable(); 
+                detectedFootnote = renderTable(detectedFootnote); 
             } else { 
                 document.getElementById('chart-container').style.display = 'block';
+                document.getElementById('table-container').style.display = 'none'; // 무조건 숨김
                 document.getElementById('topLine').style.display = 'block';
                 document.getElementById('redBar').style.display = 'none';
                 renderChart(type); 
-                if (showTable === 'show') {
-                    document.getElementById('table-container').style.display = 'block';
-                    renderTable();
-                } else {
-                    document.getElementById('table-container').style.display = 'none';
-                }
             }
 
+            const displayFootnote = document.getElementById('displayFootnote');
             if (detectedFootnote.trim() === '') {
                 displayFootnote.style.display = 'none';
             } else {
@@ -584,10 +580,25 @@
         function renderTable(manualFootnote) {
             const tsvData = document.getElementById('tableDataInput').value.trim();
             const rows = tsvData.split('\n');
-            const fontSize = document.getElementById('tableFontSize').value;
+            const fontSize = document.getElementById('tableFontSize') ? document.getElementById('tableFontSize').value : 20;
             const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
+            
             let html = `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 15px;">`;
-            rows.forEach((row, index) => {
+            let tableRows = [...rows];
+            let autoFootnote = manualFootnote;
+
+            if (tableRows.length > 2) {
+                const lastLine = tableRows[tableRows.length - 1];
+                const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
+                const headerCols = tableRows[0].indexOf('\t') !== -1 ? tableRows[0].split('\t') : tableRows[0].split(',');
+
+                if (lastCols.length === 1 && headerCols.length > 1) {
+                    if (autoFootnote === '') { autoFootnote = lastCols[0].trim(); }
+                    tableRows.pop(); 
+                }
+            }
+
+            tableRows.forEach((row, index) => {
                 const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(','); 
                 if (index === 0) {
                     html += '<thead><tr>';
@@ -608,17 +619,12 @@
             });
             html += '</tbody></table>';
             document.getElementById('table-container').innerHTML = html;
+            return autoFootnote; 
         }
 
         function renderChart(chartType) {
             const chartContainer = document.getElementById('chart-container');
-            
-            // 🚨 v7.8: 원그래프일 때만 높이를 키워줌 🚨
-            if (chartType === 'pie') {
-                chartContainer.style.height = '500px'; 
-            } else {
-                chartContainer.style.height = '420px'; 
-            }
+            chartContainer.style.height = '420px'; 
             
             if (myChart != null) myChart.destroy();
             Chart.register(ChartDataLabels);
@@ -628,10 +634,6 @@
             const name1 = document.getElementById('dataName1').value;
             let datasets = [];
             
-            let baseType = chartType;
-            if (chartType === 'multi-line') baseType = 'line';
-            if (chartType === 'combo') baseType = 'bar';
-
             if (chartType === 'multi-line' || chartType === 'combo') {
                 const dataVals2 = document.getElementById('dataInput2').value.split(',').map(item => parseFloat(item.trim()));
                 const name2 = document.getElementById('dataName2').value;
@@ -671,14 +673,14 @@
             
             const ctx = document.getElementById('myChart').getContext('2d');
             
+            // 🚨 에러 원천 차단된 가장 깔끔한 렌더링 로직 (v6.8 베이스) 🚨
             myChart = new Chart(ctx, {
-                type: baseType, 
+                type: chartType === 'multi-line' || chartType === 'combo' ? 'bar' : chartType, // 다중선/콤보는 bar 베이스로 그림
                 data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: chartType === 'pie' ? '40%' : '0%',
                     layout: { 
-                        // 🚨 v7.8: 원그래프의 좌우 여백을 줄여 파이 크기를 시원하게 확장 🚨
-                        padding: chartType === 'pie' ? { top: 40, bottom: 20, left: 20, right: 20 } : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) 
+                        padding: chartType === 'pie' ? 40 : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) 
                     },
                     plugins: { 
                         title: { display: false },
@@ -719,7 +721,7 @@
                             offset: function(context) { 
                                 if (chartType === 'pie') {
                                     const val = context.dataset.data[context.dataIndex]; const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
-                                    if (((val / sum) * 100) < 10) return 10 + (context.dataIndex % 3) * 15; 
+                                    if (((val / sum) * 100) < 10) return 10 + (context.dataIndex % 3) * 20; 
                                     return 0;
                                 }
                                 if (chartType === 'combo') { return context.datasetIndex === 0 ? 6 : 12; }
@@ -772,18 +774,7 @@
             const captureDiv = document.getElementById('capture-area');
             const btn = document.getElementById('downloadBtn');
             const originalText = btn.innerText;
-            const target = document.getElementById('downloadTarget') ? document.getElementById('downloadTarget').value : 'all';
-            const chartContainer = document.getElementById('chart-container');
-            const tableContainer = document.getElementById('table-container');
-            const topLine = document.getElementById('topLine');
-            const redBar = document.getElementById('redBar');
-            const origChartDisplay = chartContainer.style.display;
-            const origTableDisplay = tableContainer.style.display;
-            const origTopLineDisplay = topLine.style.display;
-            const origRedBarDisplay = redBar.style.display;
 
-            if (target === 'chart') { tableContainer.style.display = 'none'; topLine.style.display = 'block'; redBar.style.display = 'none'; } 
-            else if (target === 'table') { chartContainer.style.display = 'none'; topLine.style.display = 'none'; redBar.style.display = 'inline'; }
             btn.innerText = '⏳ 이미지 생성 중...'; btn.style.backgroundColor = '#666';
 
             html2canvas(captureDiv, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
@@ -794,8 +785,6 @@
                 link.href = canvas.toDataURL('image/png'); 
                 link.click();
                 
-                chartContainer.style.display = origChartDisplay; tableContainer.style.display = origTableDisplay;
-                topLine.style.display = origTopLineDisplay; redBar.style.display = origRedBarDisplay;
                 btn.innerText = originalText; btn.style.backgroundColor = '#333';
             }).catch(err => { 
                 alert("저장 오류가 발생했습니다."); 
@@ -803,7 +792,7 @@
             });
         }
 
-        window.onload = function() { setTimeout(loadExampleData, 100); };
+        window.onload = function() { loadExampleData(); };
     </script>
 </body>
 </html>
