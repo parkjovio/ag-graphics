@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>아시아경제 통합 그래픽 대시보드 v7.9 (파서 픽스 및 시트 에디터)</title>
+    <title>아시아경제 통합 그래픽 대시보드 v8.9 (누적혼합 선 최상단 픽스)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -23,7 +23,6 @@
         .btn-ai { background: #0056b3; margin-top: 5px; border: none; color: white; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;}
         .btn-ai:hover { background: #004494; }
 
-        /* 📊 데이터 시트 모달 전용 스타일 */
         .btn-sheet { background: #2E7D32; color: white; margin-top: 15px; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; font-size: 14px;}
         .btn-sheet:hover { background: #1B5E20; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
@@ -57,16 +56,19 @@
         
         .chart-title { font-size: 32px; font-weight: 900; margin: 0 0 8px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
         .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline; line-height: 1.4; word-break: keep-all;}
-        .title-red-bar { color: var(--ak-red); display: none; margin-right: 5px; }
-
+        
         #table-container { display: none; margin-top: 20px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
         .asia-table { width: 100%; border-collapse: collapse; text-align: center; font-family: var(--main-font); margin-bottom: 0; }
         .asia-table th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 15px 5px; font-weight: bold; color: #333; }
-        .asia-table td { border-bottom: 1px solid #ddd; padding: 15px 5px; color: #111; }
-        .asia-table td:first-child { background-color: var(--ak-red); color: white; font-weight: bold; border-bottom: 1px solid #fff; }
-        .asia-table td:nth-child(2) { font-weight: bold; background-color: #ffffff; }
-        .asia-table td:nth-child(3) { background-color: #f2f2f2; }
-        .asia-table td:nth-child(4) { background-color: #e8e8e8; }
+        
+        .asia-table td { border-bottom: 1px solid #ddd; padding: 15px 5px; color: #111; vertical-align: middle; }
+        .asia-table td.col-0 { background-color: var(--ak-red); color: white; font-weight: bold; border-bottom: 1px solid #fff; }
+        .asia-table td.col-1 { font-weight: bold; background-color: #ffffff; }
+        .asia-table td.col-2 { background-color: #f2f2f2; }
+        .asia-table td.col-3 { background-color: #e8e8e8; }
+        .asia-table td.col-4 { background-color: #dedede; }
+        .asia-table td.col-5 { background-color: #d4d4d4; }
+        .asia-table td.col-6 { background-color: #cacaca; }
         
         #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; position: relative;}
         .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; line-height: 1.4;}
@@ -87,7 +89,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v7.9</h2>
+        <h2>🛠️ 그래픽 데스크 v8.9</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -103,8 +105,10 @@
         <select id="chartType" onchange="toggleInputs()">
             <option value="line">📈 단일 꺾은선 그래프</option>
             <option value="bar">📊 단일 막대 그래프</option>
-            <option value="multi-line">📉 다중 선 그래프 (최대 3개)</option>
+            <option value="multi-bar">📊 다중 막대 그래프 (비교형)</option>
+            <option value="multi-line">📉 다중 선 그래프</option>
             <option value="combo">📈 선+막대 혼합 그래프 (이중 Y축)</option>
+            <option value="stacked-combo">📉 누적막대+선 혼합 그래프 (이중 Y축)</option>
             <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
             <option value="table">📋 텍스트 표 (엑셀 연동)</option>
         </select>
@@ -126,15 +130,15 @@
                 <option value="apply" selected>자동 변환 적용 (예: 1조2345억)</option>
                 <option value="none">원래 숫자 유지 (예: 12345678)</option>
             </select>
-            <span class="help-text">1만 이상의 숫자를 아경 표기 원칙에 맞게 교열합니다.</span>
         </div>
 
-        <div class="data-group" id="tableSettingGroup" style="display: none;">
-            <label style="color:var(--ak-red); font-size:14px;">📌 표 글자 크기 미세 조절</label>
+        <div class="data-group" id="fontSizeSettingGroup">
+            <label style="color:var(--ak-red); font-size:14px;">📌 표/그래프 글자 크기 미세 조절</label>
             <div class="slider-group">
-                <input type="range" id="tableFontSize" min="12" max="26" value="20" oninput="document.getElementById('fontSizeDisplay').innerText = this.value + 'px'; updateOutput();">
+                <input type="range" id="globalFontSize" min="12" max="28" value="20" oninput="document.getElementById('fontSizeDisplay').innerText = this.value + 'px'; updateOutput();">
                 <span id="fontSizeDisplay" class="font-size-display">20px</span>
             </div>
+            <span class="help-text">글자가 겹치거나 잘릴 경우 슬라이더를 조절해 보세요.</span>
         </div>
 
         <label>제목</label>
@@ -164,10 +168,17 @@
             </div>
             
             <div class="data-group" id="dataset3Group" style="display: none;">
-                <label id="ds3NameLabel">데이터 3 (이름 - 다중 선 그래프용)</label>
+                <label id="ds3NameLabel">데이터 3 (이름)</label>
                 <input type="text" id="dataName3" value="">
                 <label id="ds3DataLabel">데이터 3 (수치 - 비워두면 숨김)</label>
                 <textarea id="dataInput3" rows="2"></textarea>
+            </div>
+
+            <div class="data-group" id="dataset4Group" style="display: none;">
+                <label id="ds4NameLabel">데이터 4 (이름 - 다중/누적 차트용)</label>
+                <input type="text" id="dataName4" value="">
+                <label id="ds4DataLabel">데이터 4 (수치 - 비워두면 숨김)</label>
+                <textarea id="dataInput4" rows="2"></textarea>
             </div>
             
             <div class="data-group" id="axisSettingGroup" style="display: none;">
@@ -186,28 +197,18 @@
         <div id="tableInputs" style="display: none;">
             <label>엑셀 데이터 붙여넣기</label>
             <textarea id="tableDataInput" rows="8"></textarea>
+            <span class="help-text" style="margin-top: 5px; color: var(--ak-red);">💡 위 칸과 병합(셀 합치기)하려면 해당 칸에 <b>^</b> 기호를 입력하세요.</span>
         </div>
 
         <div class="data-group" style="background-color: #fff; border: 1px solid #ccc;">
             <label style="margin-top:0;">하단 주석 (선택)</label>
             <input type="text" id="footnoteInput" placeholder="예: *보험사들은 대면 영업이 많아..." value="">
-            <span class="help-text">여기에 적거나, 표 데이터 맨 마지막 줄에 한 칸짜리 텍스트를 넣으세요.</span>
         </div>
         
         <label>기자 이름</label>
         <input type="text" id="nameInput" value="박충훈 기자">
         
         <button class="main-btn" onclick="updateOutput()">🔄 수동 적용하기</button>
-
-        <div class="data-group" id="downloadSettingGroup" style="display: none; background: #ffebeb; border-color: #ffcccc; margin-top: 20px;">
-            <label style="color:var(--ak-red); font-size:14px;">📌 저장 영역 선택</label>
-            <select id="downloadTarget">
-                <option value="all" selected>화면 전체 저장 (그래프 + 표)</option>
-                <option value="chart">그래프 영역만 저장</option>
-                <option value="table">텍스트 표 영역만 저장</option>
-            </select>
-        </div>
-
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
     </div>
 
@@ -221,9 +222,10 @@
                 <thead>
                     <tr id="modalTh">
                         <th>X축 항목(라벨)</th>
-                        <th><span id="sheetName1">데이터 1</span> 수치</th>
-                        <th id="sheetTh2" style="display:none;"><span id="sheetName2">데이터 2</span> 수치</th>
-                        <th id="sheetTh3" style="display:none;"><span id="sheetName3">데이터 3</span> 수치</th>
+                        <th><span id="sheetName1">데이터 1</span></th>
+                        <th id="sheetTh2" style="display:none;"><span id="sheetName2">데이터 2</span></th>
+                        <th id="sheetTh3" style="display:none;"><span id="sheetName3">데이터 3</span></th>
+                        <th id="sheetTh4" style="display:none;"><span id="sheetName4">데이터 4</span></th>
                     </tr>
                 </thead>
                 <tbody id="modalTbody">
@@ -240,9 +242,9 @@
     <div class="preview-area">
         <div id="capture-area">
             <div class="header-line" id="topLine"></div>
-            <h1 class="chart-title">
-                <span class="title-red-bar" id="redBar" style="display: none;">❙</span><span id="displayTitle">제목입력</span>
-            </h1>
+            
+            <h1 class="chart-title" id="displayTitle">제목입력</h1>
+            <br>
             <span class="chart-subtitle" id="displaySub">(단위 및 출처 입력)</span>
             
             <div id="chart-container">
@@ -250,6 +252,7 @@
             </div>
 
             <div id="table-container" style="display: none;"></div>
+            
             <div id="displayFootnote"></div>
             
             <div class="footer-watermark">
@@ -291,7 +294,6 @@
         return sign + result + decStr;
     }
 
-    // 원그래프용 색상 생성: 최댓값만 빨강, 나머지는 회색톤
     function getPieColors(values) {
         const grayPalette = ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
         const numericValues = values.map(v => Number(v) || 0);
@@ -308,8 +310,6 @@
         });
     }
 
-
-    
     const pieLeaderLinePlugin = {
         id: 'pieLeaderLinePlugin',
         afterDraw(chart, args, pluginOptions) {
@@ -324,33 +324,34 @@
 
                 const ctx = chart.ctx;
                 const chartArea = chart.chartArea;
+                const centerX = meta.data[0].x;
+                const outerRadius = meta.data[0].outerRadius;
 
-                const labelFont = '900 18px Malgun Gothic, sans-serif';
-                const valueFont = '900 18px Malgun Gothic, sans-serif';
+                const scale = pluginOptions.scale || 1;
+                const fontSize = Math.round(15 * scale);
+                
+                const labelFont = `900 ${fontSize}px Malgun Gothic, sans-serif`;
+                const valueFont = `900 ${fontSize}px Malgun Gothic, sans-serif`;
                 const lineColor = '#777777';
                 const fillColor = '#111111';
                 const strokeColor = '#ffffff';
 
-                const labelLineHeight = 21;
-                const blockHeight = 44;
-                const minGap = 56;
-
-                const minRise = 24;           // 반드시 시작점보다 위로 올라가게
-                const extraRiseStep = 60;     // 작은 값이 여러 개면 사선 높이를 단계적으로 차등 부여
-                const diagonalLen = 22;       // 짧은 사선
-                const horizontalLen = 56;     // 수평선 길이
+                const labelLineHeight = Math.round(18 * scale);
+                const blockHeight = Math.round(36 * scale);
+                const minGap = Math.round(48 * scale);
+                
+                const shortDiagonalLen = 18;
+                const minRise = 14;
+                const textGap = 6;
                 const edgePadding = 10;
-                const topPadding = 18;
-                const bottomPadding = 16;
-                const textOffsetAboveLine = 6;
+                const topPadding = 12;
+                const bottomPadding = 12;
 
                 const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
 
                 const formatValue = (value) => {
                     return isKoreanNumber ? String(formatKoreanNumber(value)) : String(value);
                 };
-
-                const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
                 const measureBlockWidth = (label, value) => {
                     ctx.save();
@@ -373,121 +374,61 @@
                     if (!getPieIsOutside(context)) return null;
 
                     const angle = getPieMidAngle(context);
-                    const cosVal = Math.cos(angle);
+                    const side = Math.cos(angle) >= 0 ? 'right' : 'left';
                     const label = String(chart.data.labels[index] || '');
                     const value = formatValue(dataset.data[index]);
 
                     const startX = arc.x + Math.cos(angle) * (arc.outerRadius + 2);
                     const startY = arc.y + Math.sin(angle) * (arc.outerRadius + 2);
 
-                    const maxAllowedLineY = startY - minRise;
-
                     return {
-                        index: index,
-                        angle: angle,
-                        cosVal: cosVal,
-                        side: null,
+                        side: side,
                         label: label,
                         value: value,
                         startX: startX,
                         startY: startY,
-                        maxAllowedLineY: maxAllowedLineY,   // lineY는 이 값보다 크면 안 됨
+                        maxLineY: startY - minRise,
                         lineY: 0,
                         elbowX: 0,
-                        lineEndX: 0,
                         textX: 0,
+                        lineEndX: 0,
                         boxWidth: measureBlockWidth(label, value)
                     };
                 }).filter(Boolean);
 
-                if (!items.length) return;
-
-                // 12시 근처에 작은 조각이 몰리면 좌우 분산
-                const ambiguous = items
-                    .filter(item => Math.abs(item.cosVal) < 0.35)
-                    .sort((a, b) => a.angle - b.angle);
-
-                ambiguous.forEach((item, idx) => {
-                    item.side = idx % 2 === 0 ? 'left' : 'right';
-                });
-
-                items.forEach(item => {
-                    if (!item.side) item.side = item.cosVal >= 0 ? 'right' : 'left';
-                });
-
                 const layoutSide = (sideItems, side) => {
                     if (!sideItems.length) return;
 
-                    const minCanvasLineY = blockHeight + 18;
-                    const maxCanvasLineY = chart.height - bottomPadding - 8;
+                    sideItems.sort((a, b) => b.maxLineY - a.maxLineY);
 
-                    // 같은 쪽에 작은 값이 여러 개면 값이 같아도 무조건 계단식 높이 차이를 준다.
-                    sideItems.sort((a, b) => {
-                        if (b.startY !== a.startY) return b.startY - a.startY;
-                        if (side === 'left') return a.startX - b.startX;
-                        return b.startX - a.startX;
-                    });
+                    let nextAllowedY = chartArea.bottom - bottomPadding;
 
-                    sideItems.forEach((item, idx) => {
-                        const requiredRise = minRise + (idx * extraRiseStep);
-                        item.lineY = item.startY - requiredRise;
-                    });
-
-                    // 최상단이 너무 높으면 전체를 같은 만큼 아래로 내린다.
-                    const topmost = Math.min(...sideItems.map(item => item.lineY));
-                    if (topmost < minCanvasLineY) {
-                        const shiftDown = minCanvasLineY - topmost;
-                        sideItems.forEach(item => {
-                            item.lineY += shiftDown;
-                        });
+                    for (const item of sideItems) {
+                        item.lineY = Math.min(item.maxLineY, nextAllowedY);
+                        nextAllowedY = item.lineY - minGap;
                     }
 
-                    // 이후에도 lineY 간격이 무조건 벌어지도록 강제한다.
-                    sideItems.sort((a, b) => a.lineY - b.lineY);
-                    for (let i = 1; i < sideItems.length; i++) {
-                        if (sideItems[i].lineY - sideItems[i - 1].lineY < minGap) {
-                            sideItems[i].lineY = sideItems[i - 1].lineY + minGap;
+                    const minLineY = chartArea.top + topPadding + blockHeight + 4;
+                    if (sideItems.length && sideItems[sideItems.length - 1].lineY < minLineY) {
+                        const underflow = minLineY - sideItems[sideItems.length - 1].lineY;
+                        for (let i = sideItems.length - 1; i >= 0; i--) {
+                            sideItems[i].lineY += underflow;
+                            if (i < sideItems.length - 1) {
+                                sideItems[i].lineY = Math.min(sideItems[i].lineY, sideItems[i + 1].lineY - minGap);
+                            }
+                            sideItems[i].lineY = Math.min(sideItems[i].lineY, sideItems[i].maxLineY);
                         }
                     }
 
-                    // 너무 아래까지 내려가면 전체를 다시 위로 당긴다.
-                    const bottommost = sideItems[sideItems.length - 1].lineY;
-                    if (bottommost > maxCanvasLineY) {
-                        const shiftUp = bottommost - maxCanvasLineY;
-                        sideItems.forEach(item => {
-                            item.lineY -= shiftUp;
-                        });
-                    }
-
-                    // lineY는 항상 시작점보다 위에 있도록 마지막 안전장치 적용
-                    sideItems.forEach(item => {
-                        item.lineY = Math.min(item.lineY, item.startY - 12);
-                    });
-
-                    // 마지막으로 한번 더 간격을 보정
-                    sideItems.sort((a, b) => a.lineY - b.lineY);
-                    for (let i = 1; i < sideItems.length; i++) {
-                        if (sideItems[i].lineY - sideItems[i - 1].lineY < minGap) {
-                            sideItems[i].lineY = sideItems[i - 1].lineY + minGap;
-                        }
-                    }
+                    const maxWidth = Math.max(...sideItems.map(item => item.boxWidth));
+                    const commonTextX = side === 'right'
+                        ? Math.min(chartArea.right - maxWidth - edgePadding, centerX + outerRadius + 56)
+                        : Math.max(chartArea.left + maxWidth + edgePadding, centerX - outerRadius - 56);
 
                     sideItems.forEach(item => {
-                        item.elbowX = item.startX + (side === 'right' ? diagonalLen : -diagonalLen);
-
-                        if (side === 'right') {
-                            item.lineEndX = Math.min(
-                                chartArea.right - item.boxWidth - edgePadding,
-                                item.elbowX + horizontalLen
-                            );
-                        } else {
-                            item.lineEndX = Math.max(
-                                chartArea.left + item.boxWidth + edgePadding,
-                                item.elbowX - horizontalLen
-                            );
-                        }
-
-                        item.textX = item.lineEndX;
+                        item.textX = commonTextX;
+                        item.lineEndX = side === 'right' ? commonTextX - textGap : commonTextX + textGap;
+                        item.elbowX = item.startX + (side === 'right' ? shortDiagonalLen : -shortDiagonalLen);
                     });
                 };
 
@@ -509,8 +450,7 @@
                 };
 
                 items.forEach(item => {
-                    const textTopY = item.lineY - blockHeight - textOffsetAboveLine;
-                    const align = item.side === 'right' ? 'left' : 'right';
+                    const textTopY = item.lineY - blockHeight - 2;
 
                     ctx.save();
                     ctx.beginPath();
@@ -524,6 +464,7 @@
                     ctx.stroke();
                     ctx.restore();
 
+                    const align = item.side === 'right' ? 'left' : 'right';
                     drawText(item.label, item.textX, textTopY, labelFont, align);
                     drawText(item.value, item.textX, textTopY + labelLineHeight, valueFont, align);
                 });
@@ -533,9 +474,9 @@
         }
     };
 
-    function getPieTopPadding(labels, values) {
+    function getPieTopPadding(labels, dataVals) {
         const longest = labels.reduce((maxLen, label) => Math.max(maxLen, String(label || '').length), 0);
-        const numericValues = (values || []).map(v => Number(v) || 0);
+        const numericValues = (dataVals || []).map(v => Number(v) || 0);
         const total = numericValues.reduce((a, b) => a + b, 0);
         const outsideCount = total > 0 ? numericValues.filter(v => (v / total) < 0.05).length : 0;
 
@@ -589,16 +530,15 @@
         return 'center';
     }
 
-    function getPieFont(context) {
+    function getPieFont(context, scale = 1) {
         const ratio = getPieRatio(context);
 
-        if (ratio >= 0.25) return { size: 19, weight: '900' };
-        if (ratio >= 0.12) return { size: 17, weight: '900' };
-        if (ratio >= 0.05) return { size: 15, weight: '900' };
-        return { size: 14, weight: '800' };
+        if (ratio >= 0.25) return { size: Math.round(19 * scale), weight: '900' };
+        if (ratio >= 0.12) return { size: Math.round(17 * scale), weight: '900' };
+        if (ratio >= 0.05) return { size: Math.round(15 * scale), weight: '900' };
+        return { size: Math.round(15 * scale), weight: '900' };
     }
 
-    // 📊 데이터 시트 에디터 스크립트
     function openDataSheet() {
         const type = document.getElementById('chartType').value;
         if (type === 'table') {
@@ -609,22 +549,26 @@
         document.getElementById('sheetName1').innerText = document.getElementById('dataName1').value || '데이터 1';
         document.getElementById('sheetName2').innerText = document.getElementById('dataName2').value || '데이터 2';
         document.getElementById('sheetName3').innerText = document.getElementById('dataName3').value || '데이터 3';
+        document.getElementById('sheetName4').innerText = document.getElementById('dataName4').value || '데이터 4';
 
-        const useD2 = (type === 'multi-line' || type === 'combo');
-        const useD3 = (type === 'multi-line');
+        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
+        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
+        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
 
         document.getElementById('sheetTh2').style.display = useD2 ? 'table-cell' : 'none';
         document.getElementById('sheetTh3').style.display = useD3 ? 'table-cell' : 'none';
+        document.getElementById('sheetTh4').style.display = useD4 ? 'table-cell' : 'none';
 
         const labels = document.getElementById('labelsInput').value.split(',').map(s => s.trim());
         const d1 = document.getElementById('dataInput1').value.split(',').map(s => s.trim());
         const d2 = document.getElementById('dataInput2').value.split(',').map(s => s.trim());
         const d3 = document.getElementById('dataInput3').value.split(',').map(s => s.trim());
+        const d4 = document.getElementById('dataInput4').value.split(',').map(s => s.trim());
 
         const tbody = document.getElementById('modalTbody');
         tbody.innerHTML = '';
 
-        let maxLen = Math.max(labels.length, d1.length, (useD2 ? d2.length : 0), (useD3 ? d3.length : 0));
+        let maxLen = Math.max(labels.length, d1.length, (useD2 ? d2.length : 0), (useD3 ? d3.length : 0), (useD4 ? d4.length : 0));
         if (maxLen === 0 || (maxLen === 1 && labels[0] === "")) maxLen = 5;
 
         for (let i = 0; i < maxLen; i++) {
@@ -633,6 +577,7 @@
             rowHtml += `<td><input type="text" class="grid-d1" value="${d1[i] !== undefined ? d1[i] : ''}"></td>`;
             rowHtml += `<td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2" value="${d2[i] !== undefined ? d2[i] : ''}"></td>`;
             rowHtml += `<td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3" value="${d3[i] !== undefined ? d3[i] : ''}"></td>`;
+            rowHtml += `<td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4" value="${d4[i] !== undefined ? d4[i] : ''}"></td>`;
             tr.innerHTML = rowHtml;
             tbody.appendChild(tr);
         }
@@ -642,8 +587,9 @@
 
     function addRow() {
         const type = document.getElementById('chartType').value;
-        const useD2 = (type === 'multi-line' || type === 'combo');
-        const useD3 = (type === 'multi-line');
+        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
+        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
+        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
         const tbody = document.getElementById('modalTbody');
         const tr = document.createElement('tr');
 
@@ -652,6 +598,7 @@
             <td><input type="text" class="grid-d1"></td>
             <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2"></td>
             <td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3"></td>
+            <td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4"></td>
         `;
         tbody.appendChild(tr);
     }
@@ -662,13 +609,15 @@
 
     function saveDataSheet() {
         const type = document.getElementById('chartType').value;
-        const useD2 = (type === 'multi-line' || type === 'combo');
-        const useD3 = (type === 'multi-line');
+        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
+        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
+        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
 
         const labels = [];
         const d1 = [];
         const d2 = [];
         const d3 = [];
+        const d4 = [];
 
         const rows = document.querySelectorAll('#modalTbody tr');
         rows.forEach(row => {
@@ -676,12 +625,14 @@
             const v1 = row.querySelector('.grid-d1').value.trim();
             const v2 = useD2 ? row.querySelector('.grid-d2').value.trim() : '';
             const v3 = useD3 ? row.querySelector('.grid-d3').value.trim() : '';
+            const v4 = useD4 ? row.querySelector('.grid-d4').value.trim() : '';
 
-            if (l !== '' || v1 !== '' || v2 !== '' || v3 !== '') {
+            if (l !== '' || v1 !== '' || v2 !== '' || v3 !== '' || v4 !== '') {
                 labels.push(l);
                 d1.push(v1);
                 if (useD2) d2.push(v2);
                 if (useD3) d3.push(v3);
+                if (useD4) d4.push(v4);
             }
         });
 
@@ -689,6 +640,7 @@
         document.getElementById('dataInput1').value = d1.join(', ');
         if (useD2) document.getElementById('dataInput2').value = d2.join(', ');
         if (useD3) document.getElementById('dataInput3').value = d3.join(', ');
+        if (useD4) document.getElementById('dataInput4').value = d4.join(', ');
 
         closeDataSheet();
         updateOutput();
@@ -701,6 +653,8 @@
         document.getElementById('dataInput2').value = '';
         document.getElementById('dataName3').value = '';
         document.getElementById('dataInput3').value = '';
+        document.getElementById('dataName4').value = '';
+        document.getElementById('dataInput4').value = '';
         document.getElementById('yMin').value = '';
         document.getElementById('yMax').value = '';
         document.getElementById('y1Min').value = '';
@@ -709,15 +663,10 @@
         document.getElementById('nameInput').value = '박충훈 기자';
 
         if (type === 'table') {
-            document.getElementById('titleInput').value = '금융권 조직문화 특이사항';
-            document.getElementById('subInput').value = '(자료:각사)';
-            document.getElementById('tableDataInput').value = `회사\t활동
-하나은행\t근무태만 방지 등 공문 수시 안내, 업무집중시간 안내
-NH농협은행\t오전 10시~점심식사, 오후 2시~퇴근시 업무집중시간 운영
-KB국민은행\t현안 있을 때 주말 부서장급 회의
-신한금융지주\t불필요한 회의 최소화 등 '온타임제' 운영
-삼성금융네트웍스\t그룹 차원 임원 주 6일제 운영 유지`;
-            document.getElementById('footnoteInput').value = '*보험사들은 대면 영업이 많아 고객 요청에 따라 수시로 식사시간 조정';
+            document.getElementById('titleInput').value = '주요 지역별 부동산 시장 동향';
+            document.getElementById('subInput').value = '';
+            document.getElementById('tableDataInput').value = `구분\t지역\t주요 이슈\n서울 한강 이남\t강남구\t서울 25개 자치구 중 가장 높은 상승률 기록\n^\t서초구\t분양시장 중심으로 주택가격 크게 상승\n^\t송파구\t재건축 사업이 탄력 받으며 기대감 상승\n서울 한강 이북\t마포구\t강북 최고 분양가를 기록하는 등 상승세 지속\n^\t용산구\t한남 뉴타운 등 개발 사업 진행에 따른 기대감`;
+            document.getElementById('footnoteInput').value = '*자료: 한국부동산원';
         } else if (type === 'line') {
             document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
             document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
@@ -759,12 +708,37 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
             document.getElementById('dataName2').value = '계절조정 실업률';
             document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
             document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'multi-bar') {
+            document.getElementById('titleInput').value = '주택 유형별 전세가격 변동률';
+            document.getElementById('subInput').value = '(단위: %, 자료: KB국민은행)';
+            document.getElementById('labelsInput').value = '2022, 2023, 2024';
+            document.getElementById('dataName1').value = '전체';
+            document.getElementById('dataInput1').value = '-2.5, -5.4, 1.4';
+            document.getElementById('dataName2').value = '아파트';
+            document.getElementById('dataInput2').value = '-3.8, -7.8, 2.2';
+            document.getElementById('dataName3').value = '단독';
+            document.getElementById('dataInput3').value = '0.8, -0.2, 0.5';
+            document.getElementById('dataName4').value = '연립';
+            document.getElementById('dataInput4').value = '1.9, -0.9, -0.4';
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'stacked-combo') {
+            document.getElementById('titleInput').value = '지역별 입주물량 추이';
+            document.getElementById('subInput').value = '(단위: 천호, %, 자료: 부동산114)';
+            document.getElementById('labelsInput').value = "'14, '15, '16, '17, '18, '19, '20, '21, '22, '23, '24, '25";
+            document.getElementById('dataName1').value = '수도권';
+            document.getElementById('dataInput1').value = '100, 110, 130, 180, 230, 210, 190, 160, 220, 190, 200, 160';
+            document.getElementById('dataName2').value = '5개 광역시';
+            document.getElementById('dataInput2').value = '60, 50, 70, 140, 50, 70, 60, 50, 50, 50, 60, 60';
+            document.getElementById('dataName3').value = '기타지방';
+            document.getElementById('dataInput3').value = '110, 110, 100, 70, 180, 130, 110, 150, 20, 120, 90, 110';
+            document.getElementById('dataName4').value = '전국 증감률(우)';
+            document.getElementById('dataInput4').value = '38, 5, 12, 28, 15, -10, -14, -20, 16, 8, -2, -25';
+            document.getElementById('labelDisplayType').value = 'none';
         }
 
         toggleInputs();
     }
 
-    // 🚨 v7.9 파서 완벽 픽스 (하단주석 분리) 🚨
     function parseGeminiData() {
         const text = document.getElementById('geminiInput').value;
         if (!text.trim()) {
@@ -795,17 +769,14 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
         let rawType = extract('[종류]').toLowerCase();
         let mappedType = 'line';
 
-        if (rawType.includes('multi') || rawType.includes('다중')) mappedType = 'multi-line';
+        if (rawType.includes('stacked-combo') || rawType.includes('누적막대+선')) mappedType = 'stacked-combo';
+        else if (rawType.includes('multi-bar') || rawType.includes('다중막대')) mappedType = 'multi-bar';
+        else if (rawType.includes('multi') || rawType.includes('다중')) mappedType = 'multi-line';
         else if (rawType.includes('combo') || rawType.includes('혼합')) mappedType = 'combo';
         else if (rawType.includes('pie') || rawType.includes('원')) mappedType = 'pie';
         else if (rawType.includes('table') || rawType.includes('표')) mappedType = 'table';
         else if (rawType.includes('bar') || rawType.includes('막대')) mappedType = 'bar';
         else if (rawType.includes('line') || rawType.includes('선')) mappedType = 'line';
-
-        let data2 = extract('[데이터2수치]');
-        if (data2 !== '' && (mappedType === 'line' || mappedType === 'bar' || mappedType === 'pie')) {
-            mappedType = 'multi-line';
-        }
 
         document.getElementById('chartType').value = mappedType;
         document.getElementById('titleInput').value = extract('[제목]');
@@ -817,6 +788,8 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
         document.getElementById('dataInput2').value = extract('[데이터2수치]');
         document.getElementById('dataName3').value = extract('[데이터3이름]');
         document.getElementById('dataInput3').value = extract('[데이터3수치]');
+        document.getElementById('dataName4').value = extract('[데이터4이름]');
+        document.getElementById('dataInput4').value = extract('[데이터4수치]');
         document.getElementById('yMin').value = extract('[Y좌측최소]');
         document.getElementById('yMax').value = extract('[Y좌측최대]');
         document.getElementById('y1Min').value = extract('[Y우측최소]');
@@ -839,52 +812,54 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
         }, 2000);
     }
 
-    // 🚨 v7.9 표 동시출력 삭제로 인한 UI 토글 간소화 🚨
     function toggleInputs() {
         const type = document.getElementById('chartType').value;
         const ds2Group = document.getElementById('dataset2Group');
         const ds3Group = document.getElementById('dataset3Group');
+        const ds4Group = document.getElementById('dataset4Group');
         const axisSettingGroup = document.getElementById('axisSettingGroup');
         const y1Group = document.getElementById('y1Group');
         const labelSettingGroup = document.getElementById('labelSettingGroup');
-        const tableSettingGroup = document.getElementById('tableSettingGroup');
-        const downloadSettingGroup = document.getElementById('downloadSettingGroup');
+        const openSheetBtn = document.getElementById('openSheetBtn');
 
         if (type === 'table') {
-            document.getElementById('chartInputs').style.display = 'none';
-            document.getElementById('tableInputs').style.display = 'block';
-            labelSettingGroup.style.display = 'none';
-            tableSettingGroup.style.display = 'block';
-            document.getElementById('openSheetBtn').style.display = 'none';
-
-            if (downloadSettingGroup) downloadSettingGroup.style.display = 'none';
+            if(document.getElementById('chartInputs')) document.getElementById('chartInputs').style.display = 'none';
+            if(document.getElementById('tableInputs')) document.getElementById('tableInputs').style.display = 'block';
+            if(labelSettingGroup) labelSettingGroup.style.display = 'none';
+            if(openSheetBtn) openSheetBtn.style.display = 'none';
         } else {
-            document.getElementById('chartInputs').style.display = 'block';
-            document.getElementById('tableInputs').style.display = 'none';
-            tableSettingGroup.style.display = 'none';
-            document.getElementById('openSheetBtn').style.display = 'flex';
+            if(document.getElementById('chartInputs')) document.getElementById('chartInputs').style.display = 'block';
+            if(document.getElementById('tableInputs')) document.getElementById('tableInputs').style.display = 'none';
+            if(openSheetBtn) openSheetBtn.style.display = 'flex';
 
-            if (downloadSettingGroup) downloadSettingGroup.style.display = 'none';
-
-            if (type === 'pie') labelSettingGroup.style.display = 'none';
-            else labelSettingGroup.style.display = 'block';
-
-            if (type === 'multi-line') {
-                ds2Group.style.display = 'block';
-                ds3Group.style.display = 'block';
-                y1Group.style.display = 'none';
-            } else if (type === 'combo') {
-                ds2Group.style.display = 'block';
-                ds3Group.style.display = 'none';
-                y1Group.style.display = 'flex';
+            if (type === 'pie') {
+                if(labelSettingGroup) labelSettingGroup.style.display = 'none';
             } else {
-                ds2Group.style.display = 'none';
-                ds3Group.style.display = 'none';
-                y1Group.style.display = 'none';
+                if(labelSettingGroup) labelSettingGroup.style.display = 'block';
             }
 
-            if (type === 'pie') axisSettingGroup.style.display = 'none';
-            else axisSettingGroup.style.display = 'block';
+            if (type === 'multi-line' || type === 'multi-bar') {
+                if(ds2Group) ds2Group.style.display = 'block';
+                if(ds3Group) ds3Group.style.display = 'block';
+                if(ds4Group) ds4Group.style.display = 'block';
+                if(y1Group) y1Group.style.display = 'none';
+            } else if (type === 'combo' || type === 'stacked-combo') {
+                if(ds2Group) ds2Group.style.display = 'block';
+                if(ds3Group) ds3Group.style.display = 'block';
+                if(ds4Group) ds4Group.style.display = 'block';
+                if(y1Group) y1Group.style.display = 'flex';
+            } else {
+                if(ds2Group) ds2Group.style.display = 'none';
+                if(ds3Group) ds3Group.style.display = 'none';
+                if(ds4Group) ds4Group.style.display = 'none';
+                if(y1Group) y1Group.style.display = 'none';
+            }
+
+            if (type === 'pie') {
+                if(axisSettingGroup) axisSettingGroup.style.display = 'none';
+            } else {
+                if(axisSettingGroup) axisSettingGroup.style.display = 'block';
+            }
         }
 
         updateOutput();
@@ -893,49 +868,55 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
     function updateOutput() {
         const type = document.getElementById('chartType').value;
 
-        document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
-        document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
+        if(document.getElementById('displayTitle')) document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
+        if(document.getElementById('displayName')) document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
 
         const subText = document.getElementById('subInput').value;
         const displaySub = document.getElementById('displaySub');
 
-        if (subText.trim() === '') {
-            displaySub.style.display = 'none';
-        } else {
-            displaySub.innerText = subText;
-            displaySub.style.display = 'inline-block';
+        if(displaySub) {
+            if (subText.trim() === '') {
+                displaySub.style.display = 'none';
+            } else {
+                displaySub.innerText = subText;
+                displaySub.style.display = 'inline-block';
+            }
         }
 
         let detectedFootnote = document.getElementById('footnoteInput').value;
 
         if (type === 'table') {
-            document.getElementById('chart-container').style.display = 'none';
-            document.getElementById('table-container').style.display = 'block';
-            document.getElementById('topLine').style.display = 'none';
-            document.getElementById('redBar').style.display = 'inline';
+            if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'none';
+            if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'block';
+            if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'none';
             detectedFootnote = renderTable(detectedFootnote);
         } else {
-            document.getElementById('chart-container').style.display = 'block';
-            document.getElementById('table-container').style.display = 'none';
-            document.getElementById('topLine').style.display = 'block';
-            document.getElementById('redBar').style.display = 'none';
+            if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'block';
+            if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'none';
+            if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'block';
             renderChart(type);
         }
 
         const displayFootnote = document.getElementById('displayFootnote');
-        if (detectedFootnote.trim() === '') {
-            displayFootnote.style.display = 'none';
-        } else {
-            displayFootnote.innerText = detectedFootnote;
-            displayFootnote.style.display = 'block';
+        if(displayFootnote) {
+            if (detectedFootnote.trim() === '') {
+                displayFootnote.style.display = 'none';
+            } else {
+                displayFootnote.innerText = detectedFootnote;
+                displayFootnote.style.display = 'block';
+            }
         }
     }
 
     function renderTable(manualFootnote) {
         const tsvData = document.getElementById('tableDataInput').value.trim();
         const rows = tsvData.split('\n');
-        const fontSize = document.getElementById('tableFontSize') ? document.getElementById('tableFontSize').value : 20;
-        const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
+        
+        const fontSizeElem = document.getElementById('globalFontSize');
+        const fontSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
+        
+        const isKoreanNumberElem = document.getElementById('koreanNumberType');
+        const isKoreanNumber = isKoreanNumberElem ? isKoreanNumberElem.value === 'apply' : false;
 
         let html = `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 15px;">`;
         let tableRows = [...rows];
@@ -952,37 +933,64 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
             }
         }
 
-        tableRows.forEach((row, index) => {
-            const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',');
+        const matrix = tableRows.map(row => {
+            return (row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',')).map(c => c.trim());
+        });
 
-            if (index === 0) {
+        const cells = matrix.map(row => row.map(col => ({ text: col, rowspan: 1, hide: false })));
+
+        if (cells.length > 0) {
+            const numCols = cells[0].length;
+            for (let c = 0; c < numCols; c++) {
+                let mergeStartRow = 0;
+                for (let r = 1; r < cells.length; r++) {
+                    if (cells[r][c] && cells[r][c].text === '^') {
+                        cells[mergeStartRow][c].rowspan++;
+                        cells[r][c].hide = true;
+                    } else {
+                        mergeStartRow = r;
+                    }
+                }
+            }
+        }
+
+        cells.forEach((row, rIdx) => {
+            if (rIdx === 0) {
                 html += '<thead><tr>';
-                cols.forEach(col => html += `<th>${col.trim()}</th>`);
+                row.forEach((cell, cIdx) => {
+                    if (!cell.hide) {
+                        const rs = cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : '';
+                        html += `<th${rs} class="col-${cIdx}">${cell.text}</th>`;
+                    }
+                });
                 html += '</tr></thead><tbody>';
             } else {
                 html += '<tr>';
-                cols.forEach(col => {
-                    let cellText = col.trim();
-                    let cleanText = cellText.replace(/,/g, '');
+                row.forEach((cell, cIdx) => {
+                    if (!cell.hide) {
+                        let cellText = cell.text;
+                        let cleanText = cellText.replace(/,/g, '');
 
-                    if (isKoreanNumber && cellText !== '' && !isNaN(cleanText) && Math.abs(Number(cleanText)) >= 10000) {
-                        cellText = formatKoreanNumber(Number(cleanText));
+                        if (isKoreanNumber && cellText !== '' && !isNaN(cleanText) && Math.abs(Number(cleanText)) >= 10000) {
+                            cellText = formatKoreanNumber(Number(cleanText));
+                        }
+
+                        const rs = cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : '';
+                        html += `<td${rs} class="col-${cIdx}">${cellText}</td>`;
                     }
-
-                    html += `<td>${cellText}</td>`;
                 });
                 html += '</tr>';
             }
         });
 
         html += '</tbody></table>';
-        document.getElementById('table-container').innerHTML = html;
+        if(document.getElementById('table-container')) document.getElementById('table-container').innerHTML = html;
         return autoFootnote;
     }
 
     function renderChart(chartType) {
         const chartContainer = document.getElementById('chart-container');
-        chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
+        if(chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
 
         if (myChart != null) myChart.destroy();
         Chart.register(pieLeaderLinePlugin, ChartDataLabels);
@@ -992,84 +1000,33 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
         const name1 = document.getElementById('dataName1').value;
         let datasets = [];
 
-        if (chartType === 'multi-line' || chartType === 'combo') {
-            const dataVals2 = document.getElementById('dataInput2').value.split(',').map(item => parseFloat(item.trim()));
-            const name2 = document.getElementById('dataName2').value;
+        const dataVals2 = document.getElementById('dataInput2') && document.getElementById('dataInput2').value ? document.getElementById('dataInput2').value.split(',').map(item => parseFloat(item.trim())) : null;
+        const name2 = document.getElementById('dataName2') ? document.getElementById('dataName2').value : '';
+        const dataVals3 = document.getElementById('dataInput3') && document.getElementById('dataInput3').value ? document.getElementById('dataInput3').value.split(',').map(item => parseFloat(item.trim())) : null;
+        const name3 = document.getElementById('dataName3') ? document.getElementById('dataName3').value : '';
+        const dataVals4 = document.getElementById('dataInput4') && document.getElementById('dataInput4').value ? document.getElementById('dataInput4').value.split(',').map(item => parseFloat(item.trim())) : null;
+        const name4 = document.getElementById('dataName4') ? document.getElementById('dataName4').value : '';
 
+        if (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-bar' || chartType === 'stacked-combo') {
             if (chartType === 'multi-line') {
-                datasets.push({
-                    type: 'line',
-                    label: name1,
-                    data: dataVals1,
-                    borderColor: '#111111',
-                    borderWidth: 4,
-                    backgroundColor: 'transparent',
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#111111',
-                    pointBorderWidth: 3,
-                    pointRadius: 6,
-                    tension: 0.1
-                });
-
-                datasets.push({
-                    type: 'line',
-                    label: name2,
-                    data: dataVals2,
-                    borderColor: '#E61E2B',
-                    borderWidth: 4,
-                    backgroundColor: 'rgba(210, 210, 210, 0.4)',
-                    fill: true,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#E61E2B',
-                    pointBorderWidth: 3,
-                    pointRadius: 6,
-                    tension: 0.1
-                });
-
-                const dataInput3Val = document.getElementById('dataInput3').value.trim();
-                if (dataInput3Val !== "") {
-                    const dataVals3 = dataInput3Val.split(',').map(item => parseFloat(item.trim()));
-                    const name3 = document.getElementById('dataName3').value;
-                    datasets.push({
-                        type: 'line',
-                        label: name3,
-                        data: dataVals3,
-                        borderColor: '#888888',
-                        borderWidth: 4,
-                        backgroundColor: 'transparent',
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#888888',
-                        pointBorderWidth: 3,
-                        pointRadius: 6,
-                        tension: 0.1
-                    });
-                }
+                datasets.push({ type: 'line', label: name1, data: dataVals1, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: '#E61E2B', borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: '#888888', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#888888', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#bbbbbb', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#bbbbbb', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
             } else if (chartType === 'combo') {
-                datasets.push({
-                    type: 'bar',
-                    label: name1,
-                    data: dataVals1,
-                    backgroundColor: '#bbbbbb',
-                    borderRadius: 4,
-                    barPercentage: 0.55,
-                    yAxisID: 'y',
-                    order: 2
-                });
-
-                datasets.push({
-                    type: 'line',
-                    label: name2,
-                    data: dataVals2,
-                    borderColor: '#E61E2B',
-                    borderWidth: 4,
-                    backgroundColor: 'transparent',
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#E61E2B',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    yAxisID: 'y1',
-                    order: 1
-                });
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, barPercentage: 0.55, yAxisID: 'y', order: 2 });
+                if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: '#E61E2B', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
+            } else if (chartType === 'multi-bar') {
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#888888', borderRadius: 4 });
+                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#444444', borderRadius: 4 });
+                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: '#111111', borderRadius: 4 });
+                if(dataVals4) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: '#E61E2B', borderRadius: 4 });
+            } else if (chartType === 'stacked-combo') {
+                // 🚨 선이 막대 위로 오도록 order 속성 추가 (낮은 숫자가 위로 옴) 🚨
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#E61E2B', yAxisID: 'y', order: 2 });
+                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#bbbbbb', yAxisID: 'y', order: 2 });
+                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: '#888888', yAxisID: 'y', order: 2 });
+                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
             }
         } else {
             let bgColors;
@@ -1110,13 +1067,22 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
         let yMax = document.getElementById('yMax').value;
         let y1Min = document.getElementById('y1Min').value;
         let y1Max = document.getElementById('y1Max').value;
-        const labelDisplayType = document.getElementById('labelDisplayType') ? document.getElementById('labelDisplayType').value : 'all';
-        const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
+        const labelDisplayTypeElem = document.getElementById('labelDisplayType');
+        const labelDisplayType = labelDisplayTypeElem ? labelDisplayTypeElem.value : 'all';
+        const isKoreanNumberElem = document.getElementById('koreanNumberType');
+        const isKoreanNumber = isKoreanNumberElem ? isKoreanNumberElem.value === 'apply' : false;
+
+        const fontSizeElem = document.getElementById('globalFontSize');
+        const baseSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
+        const scale = baseSize / 20; 
 
         const ctx = document.getElementById('myChart').getContext('2d');
 
+        let baseChartType = chartType;
+        if(chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-bar' || chartType === 'stacked-combo') baseChartType = 'bar';
+
         myChart = new Chart(ctx, {
-            type: chartType === 'multi-line' || chartType === 'combo' ? 'bar' : chartType,
+            type: baseChartType,
             data: {
                 labels: labels,
                 datasets: datasets
@@ -1134,15 +1100,16 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
                 },
                 plugins: {
                     pieLeaderLinePlugin: {
-                        enabled: chartType === 'pie'
+                        enabled: chartType === 'pie',
+                        scale: scale 
                     },
                     title: { display: false },
                     legend: {
-                        display: (chartType === 'multi-line' || chartType === 'combo'),
+                        display: (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-bar' || chartType === 'stacked-combo'),
                         position: 'top',
                         align: 'end',
                         labels: {
-                            font: { size: 16, weight: 'bold' },
+                            font: { size: Math.round(16 * scale), weight: 'bold' },
                             color: '#111'
                         },
                         padding: { bottom: 25 }
@@ -1156,11 +1123,9 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
                             return true;
                         },
                         align: function(context) {
-                            if (chartType === 'pie') {
-                                return getPieAlign(context);
-                            }
-
-                            if (chartType === 'combo') return context.datasetIndex === 0 ? 'start' : 'top';
+                            if (chartType === 'pie') return getPieAlign(context);
+                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 'center';
+                            if (chartType === 'combo' && context.datasetIndex === 0) return 'start';
 
                             if (chartType === 'multi-line') {
                                 const dataIdx = context.dataIndex;
@@ -1187,22 +1152,20 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
                                 return 'bottom';
                             }
 
+                            if (chartType === 'bar' || chartType === 'multi-bar') return 'end';
                             return 'top';
                         },
                         anchor: function(context) {
-                            if (chartType === 'pie') {
-                                return getPieAnchor(context);
-                            }
-
+                            if (chartType === 'pie') return getPieAnchor(context);
+                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 'center';
                             if (chartType === 'combo' && context.datasetIndex === 0) return 'end';
-                            if (chartType === 'bar') return 'end';
+                            if (chartType === 'bar' || chartType === 'multi-bar') return 'end';
                             return 'center';
                         },
                         offset: function(context) {
-                            if (chartType === 'pie') {
-                                return getPieOffset(context);
-                            }
-
+                            if (chartType === 'pie') return getPieOffset(context);
+                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 0;
+                            if (chartType === 'multi-bar') return 4;
                             if (chartType === 'combo') return context.datasetIndex === 0 ? 6 : 12;
 
                             if (chartType === 'multi-line') {
@@ -1229,18 +1192,27 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
                             return 10;
                         },
                         color: function(context) {
-                            if (chartType === 'pie') return '#111';
+                            if (chartType === 'pie') return '#ffffff';
+                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return '#ffffff';
                             if (chartType === 'combo' && context.datasetIndex === 0) return '#333';
-                            if (chartType === 'bar') return '#111';
+                            if (chartType === 'bar' || chartType === 'multi-bar') return '#111';
                             return context.dataset.borderColor;
                         },
                         font: function(context) {
-                            if (chartType === 'pie') return getPieFont(context);
-                            if (labelDisplayType === 'last') return { size: 22, weight: '900' };
-                            return { size: 18, weight: 'bold' };
+                            if (chartType === 'pie') return getPieFont(context, scale); 
+                            if (labelDisplayType === 'last') return { size: Math.round(22 * scale), weight: '900' };
+                            return { size: Math.round(18 * scale), weight: 'bold' };
                         },
-                        textStrokeColor: '#ffffff',
-                        textStrokeWidth: 6,
+                        textStrokeColor: function(context) {
+                            if (chartType === 'pie') return 'rgba(0,0,0,0)'; 
+                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 'rgba(0,0,0,0)';
+                            return '#ffffff';
+                        },
+                        textStrokeWidth: function(context) {
+                            if (chartType === 'pie') return 0;
+                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 0;
+                            return 6;
+                        },
                         formatter: (value, ctx) => {
                             let displayVal = isKoreanNumber ? formatKoreanNumber(value) : value;
                             if (chartType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + displayVal;
@@ -1257,9 +1229,10 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
                 scales: {
                     x: {
                         display: chartType !== 'pie',
+                        stacked: chartType === 'stacked-combo', // 누적 막대 여부
                         grid: { display: false },
                         ticks: {
-                            font: { size: 16, weight: 'bold' },
+                            font: { size: Math.round(16 * scale), weight: 'bold' },
                             color: '#333'
                         }
                     },
@@ -1267,6 +1240,7 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
                         display: chartType !== 'pie',
                         type: 'linear',
                         position: 'left',
+                        stacked: chartType === 'stacked-combo', // 누적 막대 여부
                         grid: {
                             color: function(context) {
                                 return context.tick.value === 0 ? '#000000' : '#e0e0e0';
@@ -1277,24 +1251,24 @@ KB국민은행\t현안 있을 때 주말 부서장급 회의
                             drawBorder: false
                         },
                         ticks: {
-                            font: { size: 16 },
+                            font: { size: Math.round(16 * scale) },
                             color: '#666',
                             callback: function(value) {
                                 return isKoreanNumber ? formatKoreanNumber(value) : value;
                             }
                         },
-                        beginAtZero: chartType === 'bar' ? true : false,
+                        beginAtZero: (chartType === 'bar' || chartType === 'multi-bar') ? true : false,
                         min: yMin !== '' ? parseFloat(yMin) : undefined,
                         max: yMax !== '' ? parseFloat(yMax) : undefined,
                         grace: '15%'
                     },
                     y1: {
-                        display: chartType === 'combo',
+                        display: chartType === 'combo' || chartType === 'stacked-combo',
                         type: 'linear',
                         position: 'right',
                         grid: { display: false },
                         ticks: {
-                            font: { size: 16, weight: 'bold' },
+                            font: { size: Math.round(16 * scale), weight: 'bold' },
                             color: '#E61E2B',
                             callback: function(value) {
                                 return isKoreanNumber ? formatKoreanNumber(value) : value;
