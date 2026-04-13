@@ -3,25 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>아시아경제 통합 그래픽 대시보드 (v6.8 원본 + 시트 에디터 추가)</title>
+    <title>아시아경제 통합 그래픽 대시보드 v7.8 (원그래프 크기 확대)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --main-font: 'Malgun Gothic', sans-serif; }
+        :root { --main-font: 'Malgun Gothic', sans-serif; --ak-red: #E61E2B; }
         body { font-family: var(--main-font); background-color: #eef2f5; padding: 20px; display: flex; gap: 25px; margin: 0; align-items: flex-start;}
         
         .control-panel { background: white; padding: 25px; border-radius: 10px; width: 380px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: fit-content; flex-shrink: 0; box-sizing: border-box;}
-        .control-panel h2 { margin-top: 0; font-size: 20px; color: #333; border-bottom: 2px solid #E61E2B; padding-bottom: 10px; margin-bottom: 20px; }
+        .control-panel h2 { margin-top: 0; font-size: 20px; color: #333; border-bottom: 2px solid var(--ak-red); padding-bottom: 10px; margin-bottom: 20px; }
         .control-panel label { font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 5px; margin-top: 15px;}
         .control-panel select, .control-panel input[type="text"], .control-panel textarea { width: 100%; margin-bottom: 5px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; font-family: var(--main-font); }
-        .control-panel select { background-color: #f9f9f9; font-weight: bold; color: #E61E2B;}
+        .control-panel select { background-color: #f9f9f9; font-weight: bold; color: var(--ak-red);}
         
         .ai-input-group { background: #e8f0fe; padding: 15px; border-radius: 8px; border: 1px solid #b6d4fe; margin-bottom: 20px; }
         .ai-input-group h3 { margin: 0 0 10px 0; font-size: 15px; color: #0056b3; }
-        .ai-input-group textarea { border: 1px solid #a3c7fc; height: 80px; font-size: 12px; }
-        .btn-ai { background: #0056b3; margin-top: 5px; }
+        .ai-input-group textarea { border: 1px solid #a3c7fc; height: 60px; font-size: 12px; }
+        .btn-ai { background: #0056b3; margin-top: 5px; border: none; color: white; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;}
         .btn-ai:hover { background: #004494; }
+
+        /* 📊 데이터 시트 모달 전용 스타일 */
+        .btn-sheet { background: #2E7D32; color: white; margin-top: 15px; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; font-size: 14px;}
+        .btn-sheet:hover { background: #1B5E20; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 85%; max-width: 800px; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--ak-red); padding-bottom: 10px; color: #333;}
+        .modal-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .modal-table th, .modal-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .modal-table th { background: #f4f4f4; font-size: 13px; color: #555;}
+        .modal-table input { width: 90%; border: 1px solid #ccc; border-radius: 3px; text-align: center; padding: 6px; font-family: var(--main-font); }
+        .modal-table input:focus { border-color: var(--ak-red); outline: none; background: #fffafa;}
+        .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;}
+        .modal-btns button { width: auto; margin: 0; padding: 10px 20px;}
 
         .data-group { background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #e0e0e0; margin-top: 10px; }
         .data-group label { margin-top: 5px; color: #333; }
@@ -29,52 +43,32 @@
         .axis-inputs input { width: 48%; }
 
         .slider-group { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .slider-group input[type="range"] { flex: 1; cursor: pointer; accent-color: #E61E2B; }
-        .font-size-display { font-size: 14px; font-weight: bold; color: #E61E2B; width: 40px; text-align: right; }
+        .slider-group input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--ak-red); }
+        .font-size-display { font-size: 14px; font-weight: bold; color: var(--ak-red); width: 40px; text-align: right; }
 
-        button { background: #E61E2B; color: white; border: none; padding: 12px; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; margin-top: 15px; font-family: var(--main-font);}
-        button:hover { background: #c51824; }
-        .btn-download { background: #333; margin-top: 10px; }
+        button.main-btn { background: var(--ak-red); color: white; border: none; padding: 12px; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; margin-top: 15px; font-family: var(--main-font);}
+        button.main-btn:hover { background: #c51824; }
+        .btn-download { background: #333; margin-top: 10px; border: none; color: white; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;}
         .btn-download:hover { background: #111; }
         
-        /* 🚨 추가된 데이터 시트 버튼 및 모달 스타일 🚨 */
-        .btn-sheet { background: #2E7D32; color: white; margin-top: 15px; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; font-size: 14px;}
-        .btn-sheet:hover { background: #1B5E20; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 85%; max-width: 800px; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .modal-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #E61E2B; padding-bottom: 10px; color: #333;}
-        .modal-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .modal-table th, .modal-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        .modal-table th { background: #f4f4f4; font-size: 13px; color: #555;}
-        .modal-table input { width: 90%; border: 1px solid #ccc; border-radius: 3px; text-align: center; padding: 6px; font-family: var(--main-font); }
-        .modal-table input:focus { border-color: #E61E2B; outline: none; background: #fffafa;}
-        .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;}
-        .modal-btns button { width: auto; margin: 0; padding: 10px 20px;}
-
         .preview-area { flex: 1; display: flex; justify-content: flex-start; align-items: flex-start; width: 100%;}
         #capture-area { background: white; width: 750px; padding: 40px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         .header-line { border-top: 3px solid #000; margin-bottom: 15px; }
         
         .chart-title { font-size: 32px; font-weight: 900; margin: 0 0 8px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
-        
         .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline; line-height: 1.4; word-break: keep-all;}
-        .title-red-bar { color: #E61E2B; display: none; margin-right: 5px; }
+        .title-red-bar { color: var(--ak-red); display: none; margin-right: 5px; }
 
         #table-container { display: none; margin-top: 20px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
         .asia-table { width: 100%; border-collapse: collapse; text-align: center; font-family: var(--main-font); margin-bottom: 0; }
         .asia-table th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 15px 5px; font-weight: bold; color: #333; }
         .asia-table td { border-bottom: 1px solid #ddd; padding: 15px 5px; color: #111; }
-        .asia-table td:first-child { background-color: #E61E2B; color: white; font-weight: bold; border-bottom: 1px solid #fff; }
+        .asia-table td:first-child { background-color: var(--ak-red); color: white; font-weight: bold; border-bottom: 1px solid #fff; }
         .asia-table td:nth-child(2) { font-weight: bold; background-color: #ffffff; }
-        
         .asia-table td:nth-child(3) { background-color: #f2f2f2; }
         .asia-table td:nth-child(4) { background-color: #e8e8e8; }
-        .asia-table td:nth-child(5) { background-color: #dedede; }
-        .asia-table td:nth-child(6) { background-color: #d4d4d4; }
-        .asia-table td:nth-child(7) { background-color: #cacaca; }
-        .asia-table td:nth-child(8) { background-color: #c0c0c0; }
         
-        #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; }
+        #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; position: relative;}
         .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; line-height: 1.4;}
 
         #displayFootnote { font-size: 14px; color: #111; margin-top: 5px; text-align: left; letter-spacing: -0.5px; display: none; font-family: var(--main-font); line-height: 1.4; font-weight: 500;}
@@ -93,18 +87,17 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 데스크 v6.8 (시트 추가)</h2>
+        <h2>🛠️ 그래픽 데스크 v7.8</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
-            <span class="help-text" style="color: #0056b3; margin-bottom:5px;">제미나이가 만들어준 텍스트 전체를 복사해서 붙여넣으세요.</span>
-            <textarea id="geminiInput" placeholder="[종류] multi-line&#10;[제목] 이태원 참사 이후 여론 흐름&#10;..."></textarea>
-            <button class="btn-ai" id="autoFillBtn" onclick="parseGeminiData()">🪄 AI 데이터 자동 완성하기</button>
+            <textarea id="geminiInput" placeholder="제미나이가 생성한 텍스트를 통째로 붙여넣으세요..."></textarea>
+            <button class="btn-ai" onclick="parseGeminiData()">🪄 AI 데이터 자동 완성</button>
         </div>
         
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
             <label style="margin-bottom: 0;">종류 선택</label>
-            <span style="font-size: 12px; cursor: pointer; color: #E61E2B; font-weight: bold; text-decoration: underline;" onclick="loadExampleData()">📝 예시 불러오기</span>
+            <span style="font-size: 12px; cursor: pointer; color: var(--ak-red); font-weight: bold; text-decoration: underline;" onclick="loadExampleData()">📝 예시 불러오기</span>
         </div>
         <select id="chartType" onchange="toggleInputs()">
             <option value="line">📈 단일 꺾은선 그래프</option>
@@ -118,7 +111,7 @@
         <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (엑셀 방식)</button>
 
         <div class="data-group" id="showTableGroup">
-            <label style="color:#E61E2B; font-size:14px;">📌 데이터 표 함께 보기</label>
+            <label style="color:var(--ak-red); font-size:14px;">📌 데이터 표 함께 보기</label>
             <select id="showTableType" onchange="toggleInputs()">
                 <option value="none" selected>표시 안 함 (그래프만)</option>
                 <option value="show">그래프 아래에 표 함께 표시</option>
@@ -126,7 +119,7 @@
         </div>
 
         <div class="data-group" id="labelSettingGroup">
-            <label style="color:#E61E2B; font-size:14px;">📌 수치 표시 방식</label>
+            <label style="color:var(--ak-red); font-size:14px;">📌 수치 표시 방식</label>
             <select id="labelDisplayType" onchange="updateOutput()">
                 <option value="all" selected>모든 데이터에 표시</option>
                 <option value="last">맨 끝 데이터만 표시 (강조)</option>
@@ -135,7 +128,7 @@
         </div>
 
         <div class="data-group" id="koreanNumberGroup">
-            <label style="color:#E61E2B; font-size:14px;">📌 숫자 한글 변환 (조·억·만)</label>
+            <label style="color:var(--ak-red); font-size:14px;">📌 숫자 한글 변환 (조·억·만)</label>
             <select id="koreanNumberType" onchange="updateOutput()">
                 <option value="apply" selected>자동 변환 적용 (예: 1조2345억)</option>
                 <option value="none">원래 숫자 유지 (예: 12345678)</option>
@@ -144,7 +137,7 @@
         </div>
 
         <div class="data-group" id="tableSettingGroup" style="display: none;">
-            <label style="color:#E61E2B; font-size:14px;">📌 표 글자 크기 미세 조절</label>
+            <label style="color:var(--ak-red); font-size:14px;">📌 표 글자 크기 미세 조절</label>
             <div class="slider-group">
                 <input type="range" id="tableFontSize" min="12" max="26" value="20" oninput="document.getElementById('fontSizeDisplay').innerText = this.value + 'px'; updateOutput();">
                 <span id="fontSizeDisplay" class="font-size-display">20px</span>
@@ -206,23 +199,12 @@
         <div class="data-group" style="background-color: #fff; border: 1px solid #ccc;">
             <label style="margin-top:0;">하단 주석 (선택)</label>
             <input type="text" id="footnoteInput" placeholder="예: *보험사들은 대면 영업이 많아..." value="">
-            <span class="help-text">여기에 적거나, 표 데이터 맨 마지막 줄에 한 칸짜리 텍스트를 넣으세요.</span>
         </div>
         
         <label>기자 이름</label>
         <input type="text" id="nameInput" value="박충훈 기자">
         
-        <button onclick="updateOutput()">🔄 수동 적용하기</button>
-
-        <div class="data-group" id="downloadSettingGroup" style="display: none; background: #ffebeb; border-color: #ffcccc; margin-top: 20px;">
-            <label style="color:#E61E2B; font-size:14px;">📌 저장 영역 선택</label>
-            <select id="downloadTarget">
-                <option value="all" selected>화면 전체 저장 (그래프 + 표)</option>
-                <option value="chart">그래프 영역만 저장</option>
-                <option value="table">텍스트 표 영역만 저장</option>
-            </select>
-        </div>
-
+        <button class="main-btn" onclick="updateOutput()">🔄 수동 적용하기</button>
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
     </div>
 
@@ -247,7 +229,7 @@
             <button onclick="addRow()" style="margin-bottom:20px; cursor:pointer; background:#555; border:none; padding:8px 12px; color:white; border-radius:4px; font-size:12px;">+ 행 추가하기</button>
             <div class="modal-btns">
                 <button class="btn-close" onclick="closeDataSheet()" style="background:#888; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">취소</button>
-                <button class="btn-save" onclick="saveDataSheet()" style="background:#E61E2B; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">✅ 적용 및 닫기</button>
+                <button class="btn-save" onclick="saveDataSheet()" style="background:var(--ak-red); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">✅ 적용 및 닫기</button>
             </div>
         </div>
     </div>
@@ -255,9 +237,9 @@
     <div class="preview-area">
         <div id="capture-area">
             <div class="header-line" id="topLine"></div>
-            <h1 class="chart-title">
-                <span class="title-red-bar" id="redBar" style="display: none;">❙</span><span id="displayTitle">제목입력</span>
-            </h1>
+            
+            <h1 class="chart-title" id="displayTitle">제목입력</h1>
+            <br>
             <span class="chart-subtitle" id="displaySub">(단위 및 출처 입력)</span>
             
             <div id="chart-container">
@@ -265,6 +247,7 @@
             </div>
 
             <div id="table-container" style="display: none;"></div>
+            
             <div id="displayFootnote"></div>
             
             <div class="footer-watermark">
@@ -303,7 +286,7 @@
             return sign + result + decStr;
         }
 
-        // 🚨 새로 추가된 데이터 시트 편집기 자바스크립트 기능 🚨
+        // 데이터 시트 열기/닫기/저장
         function openDataSheet() {
             const type = document.getElementById('chartType').value;
             if (type === 'table') { alert("텍스트 표 모드에서는 좌측 '엑셀 데이터 붙여넣기' 창을 이용해 주세요."); return; }
@@ -372,10 +355,10 @@
                 }
             });
 
-            document.getElementById('labelsInput').value = labels.join(',');
-            document.getElementById('dataInput1').value = d1.join(',');
-            if(useD2) document.getElementById('dataInput2').value = d2.join(',');
-            if(useD3) document.getElementById('dataInput3').value = d3.join(',');
+            document.getElementById('labelsInput').value = labels.join(', ');
+            document.getElementById('dataInput1').value = d1.join(', ');
+            if(useD2) document.getElementById('dataInput2').value = d2.join(', ');
+            if(useD3) document.getElementById('dataInput3').value = d3.join(', ');
             
             closeDataSheet();
             updateOutput();
@@ -450,16 +433,21 @@
             const text = document.getElementById('geminiInput').value;
             if (!text.trim()) { alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요."); return; }
             
-            const extract = (tag) => {
-                if (tag === '[표데이터]') {
-                    const match = text.match(/\[표데이터\]([\s\S]*)/);
-                    return match ? match[1].trim() : '';
+            let parsedData = {};
+            let currentTag = '';
+            
+            const lines = text.split(/\r?\n/);
+            for (let line of lines) {
+                const trimmedLine = line.trim();
+                if (/^\[.*\]$/.test(trimmedLine)) {
+                    currentTag = trimmedLine;
+                    parsedData[currentTag] = ''; 
+                } else if (currentTag) {
+                    parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine;
                 }
-                const escapedTag = tag.replace(/\[/g, '\\[').replace(/\]/g, '\\]');
-                const regex = new RegExp(escapedTag + '[:\\s]*([^\\n\\[]+)'); 
-                const match = text.match(regex);
-                return match ? match[1].trim() : '';
-            };
+            }
+
+            const extract = (tag) => { return parsedData[tag] ? parsedData[tag].trim() : ''; };
 
             let rawType = extract('[종류]').toLowerCase();
             let mappedType = 'line'; 
@@ -490,10 +478,8 @@
             document.getElementById('footnoteInput').value = extract('[하단주석]');
             
             const tableData = extract('[표데이터]');
-            if (tableData) {
-                document.getElementById('tableDataInput').value = tableData;
-                if (mappedType !== 'table') { document.getElementById('showTableType').value = 'show'; }
-            }
+            if (tableData) { document.getElementById('tableDataInput').value = tableData; }
+            
             toggleInputs(); 
 
             const btn = document.getElementById('autoFillBtn');
@@ -523,11 +509,11 @@
                 showTableGroup.style.display = 'none'; 
                 downloadSettingGroup.style.display = 'none';
                 document.getElementById('downloadTarget').value = 'all';
-                document.getElementById('openSheetBtn').style.display = 'none'; // 표 모드 시 숨김
+                document.getElementById('openSheetBtn').style.display = 'none';
             } else {
                 document.getElementById('chartInputs').style.display = 'block';
                 showTableGroup.style.display = 'block'; 
-                document.getElementById('openSheetBtn').style.display = 'flex'; // 일반 모드 시 표시
+                document.getElementById('openSheetBtn').style.display = 'flex';
                 
                 if (showTable === 'show') {
                     document.getElementById('tableInputs').style.display = 'block';
@@ -595,7 +581,7 @@
             }
         }
 
-        function renderTable() {
+        function renderTable(manualFootnote) {
             const tsvData = document.getElementById('tableDataInput').value.trim();
             const rows = tsvData.split('\n');
             const fontSize = document.getElementById('tableFontSize').value;
@@ -626,14 +612,26 @@
 
         function renderChart(chartType) {
             const chartContainer = document.getElementById('chart-container');
-            if (chartType === 'pie') { chartContainer.style.height = '550px'; } 
-            else { chartContainer.style.height = '420px'; }
+            
+            // 🚨 v7.8: 원그래프일 때만 높이를 키워줌 🚨
+            if (chartType === 'pie') {
+                chartContainer.style.height = '500px'; 
+            } else {
+                chartContainer.style.height = '420px'; 
+            }
+            
             if (myChart != null) myChart.destroy();
             Chart.register(ChartDataLabels);
+            
             const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
             const dataVals1 = document.getElementById('dataInput1').value.split(',').map(item => parseFloat(item.trim()));
             const name1 = document.getElementById('dataName1').value;
             let datasets = [];
+            
+            let baseType = chartType;
+            if (chartType === 'multi-line') baseType = 'line';
+            if (chartType === 'combo') baseType = 'bar';
+
             if (chartType === 'multi-line' || chartType === 'combo') {
                 const dataVals2 = document.getElementById('dataInput2').value.split(',').map(item => parseFloat(item.trim()));
                 const name2 = document.getElementById('dataName2').value;
@@ -654,25 +652,34 @@
                 let bgColors = chartType === 'line' ? 'rgba(235, 235, 235, 0.8)' : '#E61E2B';
                 let borderColors = chartType === 'pie' ? '#fff' : '#E61E2B';
                 if (chartType === 'pie') {
-                    const colorPalette = [ '#333333', '#666666', '#999999', '#cccccc', '#eeeeee']; 
-                    const maxVal = Math.max(...dataVals1); const maxIndex = dataVals1.indexOf(maxVal); let greyIndex = 0;
+                    const colorPalette = [ '#E61E2B', '#666666', '#999999', '#cccccc', '#eeeeee']; 
+                    const maxVal = Math.max(...dataVals1); const maxIndex = dataVals1.indexOf(maxVal); let greyIndex = 1;
                     bgColors = labels.map((label, index) => {
                         if (index === maxIndex) return '#E61E2B';
-                        return colorPalette[(greyIndex++) % colorPalette.length]; 
+                        let color = colorPalette[greyIndex % colorPalette.length];
+                        greyIndex++;
+                        return color;
                     });
                 }
                 datasets.push({ type: chartType === 'pie' ? 'pie' : (chartType === 'bar' ? 'bar' : 'line'), data: dataVals1, borderColor: borderColors, borderWidth: chartType === 'pie' ? 2 : (chartType === 'line' ? 4 : 0), backgroundColor: bgColors, fill: chartType === 'line', pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 2, pointRadius: chartType === 'line' ? 5 : 0, borderRadius: chartType === 'bar' ? 4 : 0, barPercentage: 0.55 });
             }
+            
             let yMin = document.getElementById('yMin').value; let yMax = document.getElementById('yMax').value;
             let y1Min = document.getElementById('y1Min').value; let y1Max = document.getElementById('y1Max').value;
             const labelDisplayType = document.getElementById('labelDisplayType') ? document.getElementById('labelDisplayType').value : 'all';
             const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
+            
             const ctx = document.getElementById('myChart').getContext('2d');
+            
             myChart = new Chart(ctx, {
+                type: baseType, 
                 data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: chartType === 'pie' ? '40%' : '0%',
-                    layout: { padding: chartType === 'pie' ? 40 : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) },
+                    layout: { 
+                        // 🚨 v7.8: 원그래프의 좌우 여백을 줄여 파이 크기를 시원하게 확장 🚨
+                        padding: chartType === 'pie' ? { top: 40, bottom: 20, left: 20, right: 20 } : (labelDisplayType === 'last' ? {right: 100, top: 40, bottom: 20, left: 10} : {right: 30, top: 40, bottom: 20, left: 10}) 
+                    },
                     plugins: { 
                         title: { display: false },
                         legend: { display: (chartType === 'multi-line' || chartType === 'combo'), position: 'top', align: 'end', labels: { font: { size: 16, weight: 'bold' }, color: '#111' }, padding: { bottom: 25 } },
@@ -712,7 +719,8 @@
                             offset: function(context) { 
                                 if (chartType === 'pie') {
                                     const val = context.dataset.data[context.dataIndex]; const sum = context.dataset.data.reduce((a, b) => a + parseFloat(b), 0);
-                                    if (((val / sum) * 100) < 10) return 10 + (context.dataIndex % 3) * 20; return 0;
+                                    if (((val / sum) * 100) < 10) return 10 + (context.dataIndex % 3) * 15; 
+                                    return 0;
                                 }
                                 if (chartType === 'combo') { return context.datasetIndex === 0 ? 6 : 12; }
                                 if (chartType === 'multi-line') {
@@ -725,14 +733,16 @@
                                 if (chartType === 'bar') return 6; return 10; 
                             }, 
                             color: function(context) { 
-                                if (chartType === 'pie') return '#111'; if (chartType === 'combo' && context.datasetIndex === 0) return '#333'; 
+                                if (chartType === 'pie') return '#111'; 
+                                if (chartType === 'combo' && context.datasetIndex === 0) return '#333'; 
                                 if (chartType === 'bar') return '#111'; return context.dataset.borderColor; 
                             }, 
                             font: function(context) {
                                 if (chartType === 'pie') return { size: 18, weight: '900' };
                                 if (labelDisplayType === 'last') return { size: 22, weight: '900' }; return { size: 18, weight: 'bold' }; 
                             },
-                            textStrokeColor: '#ffffff', textStrokeWidth: 6, 
+                            textStrokeColor: '#ffffff', 
+                            textStrokeWidth: 6, 
                             formatter: (value, ctx) => { 
                                 let displayVal = isKoreanNumber ? formatKoreanNumber(value) : value;
                                 if (chartType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + displayVal; return displayVal; 
@@ -775,17 +785,25 @@
             if (target === 'chart') { tableContainer.style.display = 'none'; topLine.style.display = 'block'; redBar.style.display = 'none'; } 
             else if (target === 'table') { chartContainer.style.display = 'none'; topLine.style.display = 'none'; redBar.style.display = 'inline'; }
             btn.innerText = '⏳ 이미지 생성 중...'; btn.style.backgroundColor = '#666';
+
             html2canvas(captureDiv, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
-                const link = document.createElement('a'); let filePrefix = 'asia_graphic_';
-                if (target === 'chart') filePrefix = 'asia_chart_'; if (target === 'table') filePrefix = 'asia_table_';
-                link.download = filePrefix + new Date().getTime() + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+                const link = document.createElement('a'); 
+                const type = document.getElementById('chartType').value;
+                let filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
+                link.download = filePrefix + new Date().getTime() + '.png'; 
+                link.href = canvas.toDataURL('image/png'); 
+                link.click();
+                
                 chartContainer.style.display = origChartDisplay; tableContainer.style.display = origTableDisplay;
                 topLine.style.display = origTopLineDisplay; redBar.style.display = origRedBarDisplay;
                 btn.innerText = originalText; btn.style.backgroundColor = '#333';
-            }).catch(err => { alert("저장 오류"); btn.innerText = originalText; btn.style.backgroundColor = '#333'; });
+            }).catch(err => { 
+                alert("저장 오류가 발생했습니다."); 
+                btn.innerText = originalText; btn.style.backgroundColor = '#333';
+            });
         }
 
-        window.onload = function() { loadExampleData(); };
+        window.onload = function() { setTimeout(loadExampleData, 100); };
     </script>
 </body>
 </html>
