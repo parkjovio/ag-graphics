@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.5</title>
+    <title>그래픽 보조 데스크 V 1.6</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --main-font: 'Malgun Gothic', sans-serif; --ak-red: #E61E2B; --ak-orange: #F48F1F; }
+        /* 🚨 폰트를 바른고딕 계열로 전면 교체 🚨 */
+        :root { --main-font: 'NanumBarunGothic', '나눔바른고딕', 'Barun Gothic', '바른고딕', sans-serif; --ak-red: #E61E2B; --ak-orange: #F48F1F; }
         body { font-family: var(--main-font); background-color: #eef2f5; padding: 20px; display: flex; gap: 25px; margin: 0; align-items: flex-start;}
         
         .control-panel { background: white; padding: 25px; border-radius: 10px; width: 380px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: fit-content; flex-shrink: 0; box-sizing: border-box;}
@@ -95,7 +96,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.5</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.6</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -214,7 +215,7 @@
         </div>
         
         <label>기자 이름</label>
-        <input type="text" id="nameInput" value="박조비 기자">
+        <input type="text" id="nameInput" value="박충훈 기자">
         
         <button class="main-btn" onclick="updateOutput()">🔄 수동 적용하기</button>
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
@@ -268,7 +269,7 @@
             <div id="displayFootnote"></div>
             
             <div class="footer-watermark">
-                그래픽&nbsp;&nbsp;<span id="displayName">박조비 기자</span>
+                그래픽&nbsp;&nbsp;<span id="displayName">박충훈 기자</span>
                 <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
             </div>
         </div>
@@ -361,7 +362,6 @@
         });
     }
 
-    // 🚨 꺾은선 숫자 겹침 방지를 위한 범용 Rank 헬퍼 함수 🚨
     const getLineRank = (context) => {
         const dataIdx = context.dataIndex;
         const currentVal = parseFloat(context.dataset.data[dataIdx]) || 0;
@@ -398,8 +398,9 @@
                 const scale = pluginOptions.scale || 1;
                 const fontSize = Math.round(15 * scale);
                 
-                const labelFont = `900 ${fontSize}px Malgun Gothic, sans-serif`;
-                const valueFont = `900 ${fontSize}px Malgun Gothic, sans-serif`;
+                // 🚨 파이차트 꺾은선 라벨 폰트 연동 🚨
+                const labelFont = `900 ${fontSize}px ${globalFont}`;
+                const valueFont = `900 ${fontSize}px ${globalFont}`;
                 const lineColor = '#777777';
                 const fillColor = '#111111';
                 const strokeColor = '#ffffff';
@@ -783,7 +784,6 @@
             document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'multi-combo') {
-            // 🚨 신규 예시: 다중 막대+선 혼합 🚨
             document.getElementById('titleInput').value = '한국 에너지 자급도 추이';
             document.getElementById('subInput').value = '(단위: Mtoe, %)';
             document.getElementById('labelsInput').value = '2020년, 2021년, 2022년, 2023년, 2024년';
@@ -857,7 +857,6 @@
         let mappedType = 'line';
 
         if (rawType.includes('stacked-combo') || rawType.includes('누적막대+선')) mappedType = 'stacked-combo';
-        // 🚨 신규 타입 매핑 🚨
         else if (rawType.includes('multi-combo') || rawType.includes('다중막대+선')) mappedType = 'multi-combo';
         else if (rawType.includes('multi-bar') || rawType.includes('다중막대')) mappedType = 'multi-bar';
         else if (rawType.includes('multi') || rawType.includes('다중')) mappedType = 'multi-line';
@@ -933,7 +932,7 @@
                 if(ds3Group) ds3Group.style.display = 'block';
                 if(ds4Group) ds4Group.style.display = 'block';
                 if(y1Group) y1Group.style.display = 'none';
-            } else if (type === 'combo' || type === 'stacked-combo' || type === 'multi-combo') {
+            } else if (type === 'combo' || type === 'multi-combo' || type === 'stacked-combo') {
                 if(ds2Group) ds2Group.style.display = 'block';
                 if(ds3Group) ds3Group.style.display = 'block';
                 if(ds4Group) ds4Group.style.display = 'block';
@@ -1159,20 +1158,18 @@
         const akGray1 = '#888888';
         const akGray2 = '#444444';
 
-        if (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-bar' || chartType === 'stacked-combo' || chartType === 'multi-combo') {
+        if (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-combo' || chartType === 'multi-bar' || chartType === 'stacked-combo') {
             if (chartType === 'multi-line') {
                 datasets.push({ type: 'line', label: name1, data: dataVals1, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akGray1, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akGray1, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#bbbbbb', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#bbbbbb', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
             } else if (chartType === 'combo') {
-                // 🚨 기존 Combo: 막대 1개 + 선 다중 🚨
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, barPercentage: 0.55, yAxisID: 'y', order: 2 });
                 if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
                 if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
                 if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
             } else if (chartType === 'multi-combo') {
-                // 🚨 신규 Multi-Combo: 막대 2개 + 선 다중 🚨
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, yAxisID: 'y', order: 2 });
                 if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#888888', borderRadius: 4, yAxisID: 'y', order: 2 });
                 if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
@@ -1185,7 +1182,7 @@
             } else if (chartType === 'stacked-combo') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, yAxisID: 'y', order: 2 });
                 if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#bbbbbb', yAxisID: 'y', order: 2 });
-                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: '#888888', yAxisID: 'y', order: 2 });
+                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, yAxisID: 'y', order: 2 });
                 if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
             }
         } else {
