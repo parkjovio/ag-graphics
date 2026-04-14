@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.0</title>
+    <title>그래픽 보조 데스크 V 1.1</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -89,7 +89,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.0</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.1</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -206,7 +206,7 @@
         </div>
         
         <label>기자 이름</label>
-        <input type="text" id="nameInput" value="김수한무 기자">
+        <input type="text" id="nameInput" value="박충훈 기자">
         
         <button class="main-btn" onclick="updateOutput()">🔄 수동 적용하기</button>
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
@@ -260,7 +260,7 @@
             <div id="displayFootnote"></div>
             
             <div class="footer-watermark">
-                그래픽&nbsp;&nbsp;<span id="displayName">김수한무 기자</span>
+                그래픽&nbsp;&nbsp;<span id="displayName">박충훈 기자</span>
                 <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
             </div>
         </div>
@@ -273,29 +273,69 @@
 
     let myChart = null;
 
-    function formatKoreanNumber(num) {
+    // 🚨 단위 자동 인식 및 한글 변환 지능형 로직 🚨
+    function formatKoreanNumber(num, subText = '') {
         if (isNaN(num) || num === 0) return num;
+
         let absNum = Math.abs(num);
-        if (absNum < 10000) return num;
         let sign = num < 0 ? '-' : '';
-        let intPart = Math.floor(absNum);
-        let decPart = absNum - intPart;
-        let decStr = decPart > 0 ? String(decPart).substring(1) : '';
-        let result = '';
-        let units = ['', '만', '억', '조', '경'];
-        let chunks = [];
-        let tempNum = intPart;
 
-        while (tempNum > 0) {
-            chunks.push(tempNum % 10000);
-            tempNum = Math.floor(tempNum / 10000);
+        // 10,000 미만은 그대로 반환
+        if (absNum < 10000) return num;
+
+        // 부제목에서 '억', '만' 기본 단위가 있는지 파악 (백억, 천만 등은 제외)
+        let isUck = /단위.*억/.test(subText) && !/십억|백억|천억/.test(subText);
+        let isMan = /단위.*만/.test(subText) && !/십만|백만|천만/.test(subText);
+
+        // 기본 단위가 '억'이나 '만'일 경우 스케일을 올려서 조/억 단위를 계산
+        if (isUck || isMan) {
+            let scale = isUck ? 100000000 : 10000;
+            let scaledNum = absNum * scale;
+            
+            let intPart = Math.floor(scaledNum);
+            let result = '';
+            let units = ['', '만', '억', '조', '경', '해'];
+            let chunks = [];
+            let tempNum = intPart;
+
+            while (tempNum > 0) {
+                chunks.push(tempNum % 10000);
+                tempNum = Math.floor(tempNum / 10000);
+            }
+
+            for (let i = chunks.length - 1; i >= 0; i--) {
+                if (chunks[i] > 0) result += chunks[i] + units[i];
+            }
+
+            // 기본 단위(억, 만)로 끝날 경우 뒤에 붙은 중복 단위를 제거해줌 (예: 11조 6478억 -> 11조 6478)
+            if (isUck && result.endsWith('억')) {
+                result = result.slice(0, -1);
+            } else if (isMan && result.endsWith('만')) {
+                result = result.slice(0, -1);
+            }
+
+            return sign + result;
+        } else {
+            // 기본 단위가 없으면 기존 일반 변환 방식
+            let intPart = Math.floor(absNum);
+            let decPart = absNum - intPart;
+            let decStr = decPart > 0 ? String(decPart).substring(1) : '';
+            let result = '';
+            let units = ['', '만', '억', '조', '경'];
+            let chunks = [];
+            let tempNum = intPart;
+
+            while (tempNum > 0) {
+                chunks.push(tempNum % 10000);
+                tempNum = Math.floor(tempNum / 10000);
+            }
+
+            for (let i = chunks.length - 1; i >= 0; i--) {
+                if (chunks[i] > 0) result += chunks[i] + units[i];
+            }
+
+            return sign + result + decStr;
         }
-
-        for (let i = chunks.length - 1; i >= 0; i--) {
-            if (chunks[i] > 0) result += chunks[i] + units[i];
-        }
-
-        return sign + result + decStr;
     }
 
     function getPieColors(values) {
@@ -352,9 +392,10 @@
                 const bottomPadding = 12;
 
                 const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
+                const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
 
                 const formatValue = (value) => {
-                    return isKoreanNumber ? String(formatKoreanNumber(value)) : String(value);
+                    return isKoreanNumber ? String(formatKoreanNumber(value, subText)) : String(value);
                 };
 
                 const measureBlockWidth = (label, value) => {
@@ -664,7 +705,7 @@
         document.getElementById('y1Min').value = '';
         document.getElementById('y1Max').value = '';
         document.getElementById('footnoteInput').value = '';
-        document.getElementById('nameInput').value = '김수한무 기자';
+        document.getElementById('nameInput').value = '박충훈 기자';
 
         if (type === 'table') {
             document.getElementById('titleInput').value = '주요 지역별 부동산 시장 동향';
@@ -921,6 +962,7 @@
         
         const isKoreanNumberElem = document.getElementById('koreanNumberType');
         const isKoreanNumber = isKoreanNumberElem ? isKoreanNumberElem.value === 'apply' : false;
+        const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
 
         let html = `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 15px;">`;
         let tableRows = [...rows];
@@ -975,8 +1017,8 @@
                         let cellText = cell.text;
                         let cleanText = cellText.replace(/,/g, '');
 
-                        if (isKoreanNumber && cellText !== '' && !isNaN(cleanText) && Math.abs(Number(cleanText)) >= 10000) {
-                            cellText = formatKoreanNumber(Number(cleanText));
+                        if (isKoreanNumber && cellText !== '' && !isNaN(cleanText)) {
+                            cellText = formatKoreanNumber(Number(cleanText), subText);
                         }
 
                         const rs = cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : '';
@@ -1072,8 +1114,10 @@
         let y1Max = document.getElementById('y1Max').value;
         const labelDisplayTypeElem = document.getElementById('labelDisplayType');
         const labelDisplayType = labelDisplayTypeElem ? labelDisplayTypeElem.value : 'all';
+        
         const isKoreanNumberElem = document.getElementById('koreanNumberType');
         const isKoreanNumber = isKoreanNumberElem ? isKoreanNumberElem.value === 'apply' : false;
+        const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
 
         const fontSizeElem = document.getElementById('globalFontSize');
         const baseSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
@@ -1217,7 +1261,7 @@
                             return 6;
                         },
                         formatter: (value, ctx) => {
-                            let displayVal = isKoreanNumber ? formatKoreanNumber(value) : value;
+                            let displayVal = isKoreanNumber ? formatKoreanNumber(value, subText) : value;
                             if (chartType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + displayVal;
                             return displayVal;
                         },
@@ -1232,7 +1276,7 @@
                 scales: {
                     x: {
                         display: chartType !== 'pie',
-                        stacked: chartType === 'stacked-combo', // 누적 막대 여부
+                        stacked: chartType === 'stacked-combo',
                         grid: { display: false },
                         ticks: {
                             font: { size: Math.round(16 * scale), weight: 'bold' },
@@ -1243,7 +1287,7 @@
                         display: chartType !== 'pie',
                         type: 'linear',
                         position: 'left',
-                        stacked: chartType === 'stacked-combo', // 누적 막대 여부
+                        stacked: chartType === 'stacked-combo',
                         grid: {
                             color: function(context) {
                                 return context.tick.value === 0 ? '#000000' : '#e0e0e0';
@@ -1257,7 +1301,7 @@
                             font: { size: Math.round(16 * scale) },
                             color: '#666',
                             callback: function(value) {
-                                return isKoreanNumber ? formatKoreanNumber(value) : value;
+                                return isKoreanNumber ? formatKoreanNumber(value, subText) : value;
                             }
                         },
                         beginAtZero: (chartType === 'bar' || chartType === 'multi-bar') ? true : false,
@@ -1274,7 +1318,7 @@
                             font: { size: Math.round(16 * scale), weight: 'bold' },
                             color: '#E61E2B',
                             callback: function(value) {
-                                return isKoreanNumber ? formatKoreanNumber(value) : value;
+                                return isKoreanNumber ? formatKoreanNumber(value, subText) : value;
                             }
                         },
                         beginAtZero: true,
