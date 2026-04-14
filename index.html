@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.1</title>
+    <title>그래픽 보조 데스크 V 1.3</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* 🚨 아경 오렌지 컬러코드 추가 🚨 */
         :root { --main-font: 'Malgun Gothic', sans-serif; --ak-red: #E61E2B; --ak-orange: #F48F1F; }
         body { font-family: var(--main-font); background-color: #eef2f5; padding: 20px; display: flex; gap: 25px; margin: 0; align-items: flex-start;}
         
@@ -51,7 +50,8 @@
         .btn-download { background: #333; margin-top: 10px; border: none; color: white; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;}
         .btn-download:hover { background: #111; }
         
-        .preview-area { flex: 1; display: flex; justify-content: flex-start; align-items: flex-start; width: 100%;}
+        /* 🚨 스크롤을 따라오도록 position: sticky 추가 🚨 */
+        .preview-area { flex: 1; display: flex; justify-content: flex-start; align-items: flex-start; width: 100%; position: sticky; top: 20px;}
         #capture-area { background: white; width: 750px; padding: 40px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         .header-line { border-top: 3px solid #000; margin-bottom: 15px; }
         
@@ -88,7 +88,8 @@
         @media screen and (max-width: 768px) {
             body { flex-direction: column; padding: 10px; gap: 15px; }
             .control-panel { width: 100%; padding: 20px; }
-            .preview-area { width: 100%; overflow-x: auto; padding-bottom: 10px; }
+            /* 모바일에서는 스크롤 따라오는 기능 해제 */
+            .preview-area { width: 100%; overflow-x: auto; padding-bottom: 10px; position: relative; top: auto; }
             #capture-area { min-width: 750px; }
         }
     </style>
@@ -96,7 +97,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.1</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.3</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -214,7 +215,7 @@
         </div>
         
         <label>기자 이름</label>
-        <input type="text" id="nameInput" value="김수한무 기자">
+        <input type="text" id="nameInput" value="박조비 기자">
         
         <button class="main-btn" onclick="updateOutput()">🔄 수동 적용하기</button>
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
@@ -268,7 +269,7 @@
             <div id="displayFootnote"></div>
             
             <div class="footer-watermark">
-                그래픽&nbsp;&nbsp;<span id="displayName">김수한무 기자</span>
+                그래픽&nbsp;&nbsp;<span id="displayName">박조비 기자</span>
                 <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
             </div>
         </div>
@@ -707,7 +708,7 @@
         document.getElementById('y1Min').value = '';
         document.getElementById('y1Max').value = '';
         document.getElementById('footnoteInput').value = '';
-        document.getElementById('nameInput').value = '김수한무 기자';
+        document.getElementById('nameInput').value = '박조비 기자';
 
         if (type === 'table') {
             document.getElementById('titleInput').value = '주요 지역별 부동산 시장 동향';
@@ -1113,7 +1114,6 @@
         const dataVals4 = document.getElementById('dataInput4') && document.getElementById('dataInput4').value ? document.getElementById('dataInput4').value.split(',').map(item => parseFloat(item.trim())) : null;
         const name4 = document.getElementById('dataName4') ? document.getElementById('dataName4').value : '';
 
-        // 🚨 정의된 아경 테마 색상 🚨
         const akRed = '#E61E2B';
         const akOrange = '#F48F1F';
         const akGray1 = '#888888';
@@ -1129,7 +1129,6 @@
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, barPercentage: 0.55, yAxisID: 'y', order: 2 });
                 if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
             } else if (chartType === 'multi-bar') {
-                // 🚨 다중 막대 그래프 컬러 변경 🚨
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, borderRadius: 4 });
                 if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akOrange, borderRadius: 4 });
                 if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, borderRadius: 4 });
@@ -1151,7 +1150,6 @@
                 borderColors = '#ffffff';
             } else if (chartType === 'bar') {
                 datasetType = 'bar';
-                // 🚨 단일 막대인데 데이터가 2개면 오렌지, 레드 순서로 배치 🚨
                 if (dataVals1.length === 2) {
                     bgColors = [akOrange, akRed];
                     borderColors = [akOrange, akRed];
