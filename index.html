@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.4</title>
+    <title>그래픽 보조 데스크 V 1.5</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -95,7 +95,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.4</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.5</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -113,8 +113,9 @@
             <option value="bar">📊 단일 막대 그래프</option>
             <option value="multi-bar">📊 다중 막대 그래프 (비교형)</option>
             <option value="multi-line">📉 다중 선 그래프</option>
-            <option value="combo">📈 선+막대 혼합 그래프 (이중 Y축)</option>
-            <option value="stacked-combo">📉 누적막대+선 혼합 그래프 (이중 Y축)</option>
+            <option value="combo">📈 선+막대 혼합 (막대 1 + 선 최대 3)</option>
+            <option value="multi-combo">📈 다중 막대+선 혼합 (막대 2 + 선 최대 2)</option>
+            <option value="stacked-combo">📉 누적막대+선 혼합 (막대 다중 + 선 1)</option>
             <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
             <option value="table">📋 텍스트 표 (엑셀 연동)</option>
             <option value="list">📝 리스트형 인포그래픽 (카드형)</option>
@@ -213,7 +214,7 @@
         </div>
         
         <label>기자 이름</label>
-        <input type="text" id="nameInput" value="박충훈 기자">
+        <input type="text" id="nameInput" value="박조비 기자">
         
         <button class="main-btn" onclick="updateOutput()">🔄 수동 적용하기</button>
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
@@ -267,7 +268,7 @@
             <div id="displayFootnote"></div>
             
             <div class="footer-watermark">
-                그래픽&nbsp;&nbsp;<span id="displayName">박충훈 기자</span>
+                그래픽&nbsp;&nbsp;<span id="displayName">박조비 기자</span>
                 <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
             </div>
         </div>
@@ -280,7 +281,6 @@
 
     let myChart = null;
 
-    // 🚨 부동소수점 오차가 완벽히 해결된 숫자 포맷 로직 🚨
     function formatKoreanNumber(num, subText = '') {
         if (isNaN(num) || num === 0) return num;
 
@@ -324,7 +324,6 @@
         } else {
             let intPart = Math.floor(absNum);
             
-            // 문자열 스플릿 방식으로 부동소수점 오차 완벽 회피
             let numStr = String(absNum);
             let decStr = numStr.includes('.') ? '.' + numStr.split('.')[1] : '';
             
@@ -361,6 +360,23 @@
             return color;
         });
     }
+
+    // 🚨 꺾은선 숫자 겹침 방지를 위한 범용 Rank 헬퍼 함수 🚨
+    const getLineRank = (context) => {
+        const dataIdx = context.dataIndex;
+        const currentVal = parseFloat(context.dataset.data[dataIdx]) || 0;
+        const lineDatasets = context.chart.data.datasets.filter(ds => ds.type === 'line');
+        const allVals = lineDatasets.map(ds => parseFloat(ds.data[dataIdx]) || 0);
+        
+        let rank = 0;
+        let myIndex = lineDatasets.findIndex(ds => ds.label === context.dataset.label);
+        
+        for (let i = 0; i < allVals.length; i++) {
+            if (allVals[i] > currentVal) rank++;
+            else if (allVals[i] === currentVal && i < myIndex) rank++;
+        }
+        return { rank, totalLines: allVals.length };
+    };
 
     const pieLeaderLinePlugin = {
         id: 'pieLeaderLinePlugin',
@@ -604,9 +620,9 @@
         document.getElementById('sheetName3').innerText = document.getElementById('dataName3').value || '데이터 3';
         document.getElementById('sheetName4').innerText = document.getElementById('dataName4').value || '데이터 4';
 
-        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
-        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
-        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
+        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
+        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
+        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
 
         document.getElementById('sheetTh2').style.display = useD2 ? 'table-cell' : 'none';
         document.getElementById('sheetTh3').style.display = useD3 ? 'table-cell' : 'none';
@@ -640,9 +656,9 @@
 
     function addRow() {
         const type = document.getElementById('chartType').value;
-        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
-        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
-        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
+        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
+        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
+        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
         const tbody = document.getElementById('modalTbody');
         const tr = document.createElement('tr');
 
@@ -662,9 +678,9 @@
 
     function saveDataSheet() {
         const type = document.getElementById('chartType').value;
-        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
-        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
-        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'stacked-combo');
+        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
+        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
+        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
 
         const labels = [];
         const d1 = [];
@@ -713,7 +729,7 @@
         document.getElementById('y1Min').value = '';
         document.getElementById('y1Max').value = '';
         document.getElementById('footnoteInput').value = '';
-        document.getElementById('nameInput').value = '박충훈 기자';
+        document.getElementById('nameInput').value = '박조비 기자';
 
         if (type === 'table') {
             document.getElementById('titleInput').value = '주요 지역별 부동산 시장 동향';
@@ -765,6 +781,23 @@
             document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
             document.getElementById('dataName2').value = '계절조정 실업률';
             document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'multi-combo') {
+            // 🚨 신규 예시: 다중 막대+선 혼합 🚨
+            document.getElementById('titleInput').value = '한국 에너지 자급도 추이';
+            document.getElementById('subInput').value = '(단위: Mtoe, %)';
+            document.getElementById('labelsInput').value = '2020년, 2021년, 2022년, 2023년, 2024년';
+            document.getElementById('dataName1').value = '국내 에너지 공급량';
+            document.getElementById('dataInput1').value = '269.336, 285.438, 279.651, 275.986, 281.463';
+            document.getElementById('dataName2').value = '국내 에너지 생산량';
+            document.getElementById('dataInput2').value = '52.660, 52.394, 57.804, 59.190, 62.224';
+            document.getElementById('dataName3').value = '에너지 자급도';
+            document.getElementById('dataInput3').value = '19.6, 18.4, 20.7, 21.4, 22.1';
+            document.getElementById('yMin').value = '0';
+            document.getElementById('yMax').value = '300';
+            document.getElementById('y1Min').value = '0';
+            document.getElementById('y1Max').value = '30';
+            document.getElementById('footnoteInput').value = '출처:국제에너지기구(IEA), 에너지경제연구원';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'multi-bar') {
             document.getElementById('titleInput').value = '삼성·SK하이닉스 연간 영업이익 전망';
@@ -824,6 +857,8 @@
         let mappedType = 'line';
 
         if (rawType.includes('stacked-combo') || rawType.includes('누적막대+선')) mappedType = 'stacked-combo';
+        // 🚨 신규 타입 매핑 🚨
+        else if (rawType.includes('multi-combo') || rawType.includes('다중막대+선')) mappedType = 'multi-combo';
         else if (rawType.includes('multi-bar') || rawType.includes('다중막대')) mappedType = 'multi-bar';
         else if (rawType.includes('multi') || rawType.includes('다중')) mappedType = 'multi-line';
         else if (rawType.includes('combo') || rawType.includes('혼합')) mappedType = 'combo';
@@ -898,7 +933,7 @@
                 if(ds3Group) ds3Group.style.display = 'block';
                 if(ds4Group) ds4Group.style.display = 'block';
                 if(y1Group) y1Group.style.display = 'none';
-            } else if (type === 'combo' || type === 'stacked-combo') {
+            } else if (type === 'combo' || type === 'stacked-combo' || type === 'multi-combo') {
                 if(ds2Group) ds2Group.style.display = 'block';
                 if(ds3Group) ds3Group.style.display = 'block';
                 if(ds4Group) ds4Group.style.display = 'block';
@@ -1124,15 +1159,24 @@
         const akGray1 = '#888888';
         const akGray2 = '#444444';
 
-        if (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-bar' || chartType === 'stacked-combo') {
+        if (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-bar' || chartType === 'stacked-combo' || chartType === 'multi-combo') {
             if (chartType === 'multi-line') {
                 datasets.push({ type: 'line', label: name1, data: dataVals1, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akGray1, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akGray1, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#bbbbbb', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#bbbbbb', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
             } else if (chartType === 'combo') {
+                // 🚨 기존 Combo: 막대 1개 + 선 다중 🚨
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, barPercentage: 0.55, yAxisID: 'y', order: 2 });
                 if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
+                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
+                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
+            } else if (chartType === 'multi-combo') {
+                // 🚨 신규 Multi-Combo: 막대 2개 + 선 다중 🚨
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, yAxisID: 'y', order: 2 });
+                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#888888', borderRadius: 4, yAxisID: 'y', order: 2 });
+                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
+                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
             } else if (chartType === 'multi-bar') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, borderRadius: 4 });
                 if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akOrange, borderRadius: 4 });
@@ -1141,7 +1185,7 @@
             } else if (chartType === 'stacked-combo') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, yAxisID: 'y', order: 2 });
                 if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#bbbbbb', yAxisID: 'y', order: 2 });
-                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, yAxisID: 'y', order: 2 });
+                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: '#888888', yAxisID: 'y', order: 2 });
                 if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
             }
         } else {
@@ -1202,7 +1246,7 @@
         const ctx = document.getElementById('myChart').getContext('2d');
 
         let baseChartType = chartType;
-        if(chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-bar' || chartType === 'stacked-combo') baseChartType = 'bar';
+        if(chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-combo' || chartType === 'multi-bar' || chartType === 'stacked-combo') baseChartType = 'bar';
 
         myChart = new Chart(ctx, {
             type: baseChartType,
@@ -1228,7 +1272,7 @@
                     },
                     title: { display: false },
                     legend: {
-                        display: (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-bar' || chartType === 'stacked-combo'),
+                        display: (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-combo' || chartType === 'multi-bar' || chartType === 'stacked-combo'),
                         position: 'top',
                         align: 'end',
                         labels: {
@@ -1248,22 +1292,14 @@
                         align: function(context) {
                             if (chartType === 'pie') return getPieAlign(context);
                             if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 'center';
-                            if (chartType === 'combo' && context.datasetIndex === 0) return 'start';
+                            if ((chartType === 'combo' || chartType === 'multi-combo') && context.dataset.type === 'bar') return 'start';
 
-                            if (chartType === 'multi-line') {
-                                const dataIdx = context.dataIndex;
-                                const currentVal = parseFloat(context.dataset.data[dataIdx]) || 0;
-                                const allVals = context.chart.data.datasets.map(ds => parseFloat(ds.data[dataIdx]) || 0);
-                                let rank = 0;
+                            if (chartType === 'multi-line' || ((chartType === 'combo' || chartType === 'multi-combo' || chartType === 'stacked-combo') && context.dataset.type === 'line')) {
+                                const { rank, totalLines } = getLineRank(context);
 
-                                for (let i = 0; i < allVals.length; i++) {
-                                    if (allVals[i] > currentVal) rank++;
-                                    else if (allVals[i] === currentVal && i < context.datasetIndex) rank++;
-                                }
-
-                                if (labelDisplayType === 'last' && dataIdx === context.dataset.data.length - 1) {
-                                    if (allVals.length === 2) return rank === 0 ? 'top' : 'bottom';
-                                    if (allVals.length >= 3) {
+                                if (labelDisplayType === 'last' && context.dataIndex === context.dataset.data.length - 1) {
+                                    if (totalLines === 2) return rank === 0 ? 'top' : 'bottom';
+                                    if (totalLines >= 3) {
                                         if (rank === 0) return 'top';
                                         if (rank === 1) return 'right';
                                         return 'bottom';
@@ -1281,7 +1317,7 @@
                         anchor: function(context) {
                             if (chartType === 'pie') return getPieAnchor(context);
                             if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 'center';
-                            if (chartType === 'combo' && context.datasetIndex === 0) return 'end';
+                            if ((chartType === 'combo' || chartType === 'multi-combo') && context.dataset.type === 'bar') return 'end';
                             if (chartType === 'bar' || chartType === 'multi-bar') return 'end';
                             return 'center';
                         },
@@ -1289,21 +1325,13 @@
                             if (chartType === 'pie') return getPieOffset(context);
                             if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 0;
                             if (chartType === 'multi-bar') return 4;
-                            if (chartType === 'combo') return context.datasetIndex === 0 ? 6 : 12;
+                            if ((chartType === 'combo' || chartType === 'multi-combo') && context.dataset.type === 'bar') return 6;
 
-                            if (chartType === 'multi-line') {
-                                const dataIdx = context.dataIndex;
-                                const currentVal = parseFloat(context.dataset.data[dataIdx]) || 0;
-                                const allVals = context.chart.data.datasets.map(ds => parseFloat(ds.data[dataIdx]) || 0);
-                                let rank = 0;
+                            if (chartType === 'multi-line' || ((chartType === 'combo' || chartType === 'multi-combo' || chartType === 'stacked-combo') && context.dataset.type === 'line')) {
+                                const { rank, totalLines } = getLineRank(context);
 
-                                for (let i = 0; i < allVals.length; i++) {
-                                    if (allVals[i] > currentVal) rank++;
-                                    else if (allVals[i] === currentVal && i < context.datasetIndex) rank++;
-                                }
-
-                                if (labelDisplayType === 'last' && dataIdx === context.dataset.data.length - 1) {
-                                    if (allVals.length >= 3 && rank === 1) return 12;
+                                if (labelDisplayType === 'last' && context.dataIndex === context.dataset.data.length - 1) {
+                                    if (totalLines >= 3 && rank === 1) return 12;
                                     return 10;
                                 }
 
@@ -1317,7 +1345,7 @@
                         color: function(context) {
                             if (chartType === 'pie') return '#ffffff';
                             if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return '#ffffff';
-                            if (chartType === 'combo' && context.datasetIndex === 0) return '#333';
+                            if ((chartType === 'combo' || chartType === 'multi-combo') && context.dataset.type === 'bar') return '#333';
                             if (chartType === 'bar' || chartType === 'multi-bar') return '#111';
                             return context.dataset.borderColor;
                         },
@@ -1386,7 +1414,7 @@
                         grace: '15%'
                     },
                     y1: {
-                        display: chartType === 'combo' || chartType === 'stacked-combo',
+                        display: chartType === 'combo' || chartType === 'multi-combo' || chartType === 'stacked-combo',
                         type: 'linear',
                         position: 'right',
                         grid: { display: false },
