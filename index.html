@@ -8,7 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --main-font: 'Malgun Gothic', sans-serif; --ak-red: #E61E2B; }
+        /* 🚨 아경 오렌지 컬러코드 추가 🚨 */
+        :root { --main-font: 'Malgun Gothic', sans-serif; --ak-red: #E61E2B; --ak-orange: #F48F1F; }
         body { font-family: var(--main-font); background-color: #eef2f5; padding: 20px; display: flex; gap: 25px; margin: 0; align-items: flex-start;}
         
         .control-panel { background: white; padding: 25px; border-radius: 10px; width: 380px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: fit-content; flex-shrink: 0; box-sizing: border-box;}
@@ -69,6 +70,12 @@
         .asia-table td.col-4 { background-color: #dedede; }
         .asia-table td.col-5 { background-color: #d4d4d4; }
         .asia-table td.col-6 { background-color: #cacaca; }
+
+        .list-info-container { width: 100%; display: flex; flex-direction: column; gap: 15px; font-family: var(--main-font); margin-top: 10px;}
+        .list-header-box { background-color: var(--ak-red); color: white; border-radius: 20px; padding: 12px 25px; font-weight: 900; letter-spacing: -1px; width: 100%; box-sizing: border-box; word-break: keep-all; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 5px;}
+        .list-item-group { display: flex; flex-direction: column; gap: 10px; padding-left: 25px; margin-bottom: 15px; }
+        .list-item { color: #111; line-height: 1.4; display: flex; align-items: flex-start; gap: 8px; font-weight: 600; letter-spacing: -0.5px; word-break: keep-all;}
+        .list-item::before { content: '▶'; color: var(--ak-red); font-size: 0.85em; margin-top: 3px; }
         
         #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; position: relative;}
         .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; line-height: 1.4;}
@@ -111,6 +118,7 @@
             <option value="stacked-combo">📉 누적막대+선 혼합 그래프 (이중 Y축)</option>
             <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
             <option value="table">📋 텍스트 표 (엑셀 연동)</option>
+            <option value="list">📝 리스트형 인포그래픽 (카드형)</option>
         </select>
 
         <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (엑셀 방식)</button>
@@ -135,7 +143,7 @@
         <div class="data-group" id="fontSizeSettingGroup">
             <label style="color:var(--ak-red); font-size:14px;">📌 표/그래프 글자 크기 미세 조절</label>
             <div class="slider-group">
-                <input type="range" id="globalFontSize" min="12" max="28" value="20" oninput="document.getElementById('fontSizeDisplay').innerText = this.value + 'px'; updateOutput();">
+                <input type="range" id="globalFontSize" min="12" max="32" value="20" oninput="document.getElementById('fontSizeDisplay').innerText = this.value + 'px'; updateOutput();">
                 <span id="fontSizeDisplay" class="font-size-display">20px</span>
             </div>
             <span class="help-text">글자가 겹치거나 잘릴 경우 슬라이더를 조절해 보세요.</span>
@@ -195,9 +203,9 @@
         </div>
 
         <div id="tableInputs" style="display: none;">
-            <label>엑셀 데이터 붙여넣기</label>
-            <textarea id="tableDataInput" rows="8"></textarea>
-            <span class="help-text" style="margin-top: 5px; color: var(--ak-red);">💡 위 칸과 병합(셀 합치기)하려면 해당 칸에 <b>^</b> 기호를 입력하세요.</span>
+            <label id="tableDataLabel">엑셀/리스트 데이터 붙여넣기</label>
+            <textarea id="tableDataInput" rows="10"></textarea>
+            <span class="help-text" id="tableHelpText" style="margin-top: 5px; color: var(--ak-red);">💡 위 칸과 병합(셀 합치기)하거나 리스트 하위 항목으로 넣으려면 해당 칸(왼쪽)에 <b>^</b> 기호를 입력하세요.</span>
         </div>
 
         <div class="data-group" style="background-color: #fff; border: 1px solid #ccc;">
@@ -273,21 +281,17 @@
 
     let myChart = null;
 
-    // 🚨 단위 자동 인식 및 한글 변환 지능형 로직 🚨
     function formatKoreanNumber(num, subText = '') {
         if (isNaN(num) || num === 0) return num;
 
         let absNum = Math.abs(num);
         let sign = num < 0 ? '-' : '';
 
-        // 10,000 미만은 그대로 반환
         if (absNum < 10000) return num;
 
-        // 부제목에서 '억', '만' 기본 단위가 있는지 파악 (백억, 천만 등은 제외)
         let isUck = /단위.*억/.test(subText) && !/십억|백억|천억/.test(subText);
         let isMan = /단위.*만/.test(subText) && !/십만|백만|천만/.test(subText);
 
-        // 기본 단위가 '억'이나 '만'일 경우 스케일을 올려서 조/억 단위를 계산
         if (isUck || isMan) {
             let scale = isUck ? 100000000 : 10000;
             let scaledNum = absNum * scale;
@@ -307,7 +311,6 @@
                 if (chunks[i] > 0) result += chunks[i] + units[i];
             }
 
-            // 기본 단위(억, 만)로 끝날 경우 뒤에 붙은 중복 단위를 제거해줌 (예: 11조 6478억 -> 11조 6478)
             if (isUck && result.endsWith('억')) {
                 result = result.slice(0, -1);
             } else if (isMan && result.endsWith('만')) {
@@ -316,7 +319,6 @@
 
             return sign + result;
         } else {
-            // 기본 단위가 없으면 기존 일반 변환 방식
             let intPart = Math.floor(absNum);
             let decPart = absNum - intPart;
             let decStr = decPart > 0 ? String(decPart).substring(1) : '';
@@ -586,8 +588,8 @@
 
     function openDataSheet() {
         const type = document.getElementById('chartType').value;
-        if (type === 'table') {
-            alert("텍스트 표 모드에서는 좌측 입력창을 이용해 주세요.");
+        if (type === 'table' || type === 'list') {
+            alert("텍스트 표 또는 리스트 모드에서는 좌측 입력창을 이용해 주세요.");
             return;
         }
 
@@ -712,6 +714,11 @@
             document.getElementById('subInput').value = '';
             document.getElementById('tableDataInput').value = `구분\t지역\t주요 이슈\n서울 한강 이남\t강남구\t서울 25개 자치구 중 가장 높은 상승률 기록\n^\t서초구\t분양시장 중심으로 주택가격 크게 상승\n^\t송파구\t재건축 사업이 탄력 받으며 기대감 상승\n서울 한강 이북\t마포구\t강북 최고 분양가를 기록하는 등 상승세 지속\n^\t용산구\t한남 뉴타운 등 개발 사업 진행에 따른 기대감`;
             document.getElementById('footnoteInput').value = '*자료: 한국부동산원';
+        } else if (type === 'list') {
+            document.getElementById('titleInput').value = '2026년도 서울시 제1회 추가경정예산안';
+            document.getElementById('subInput').value = '(주요 사업비 편성내역)';
+            document.getElementById('tableDataInput').value = `피해계층 밀착지원: 1202억원\t소상공인 지원: 811억원\n^\t수출 중소기업 등 지원: 88억원\n^\t취약계층 지원: 303억원\n고유가 대응 체질개선: 4976억원\t대중교통 이용 활성화: 4695억원\n^\t내연차량 친환경 전환: 281억원\n고유가 피해지원금 매칭지원: 1529억원\t고유가피해지원금: 1529억원\n자치구 지원: 3530억원\t자치구 조정교부금: 3530억원`;
+            document.getElementById('footnoteInput').value = '';
         } else if (type === 'line') {
             document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
             document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
@@ -754,17 +761,13 @@
             document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'multi-bar') {
-            document.getElementById('titleInput').value = '주택 유형별 전세가격 변동률';
-            document.getElementById('subInput').value = '(단위: %, 자료: KB국민은행)';
-            document.getElementById('labelsInput').value = '2022, 2023, 2024';
-            document.getElementById('dataName1').value = '전체';
-            document.getElementById('dataInput1').value = '-2.5, -5.4, 1.4';
-            document.getElementById('dataName2').value = '아파트';
-            document.getElementById('dataInput2').value = '-3.8, -7.8, 2.2';
-            document.getElementById('dataName3').value = '단독';
-            document.getElementById('dataInput3').value = '0.8, -0.2, 0.5';
-            document.getElementById('dataName4').value = '연립';
-            document.getElementById('dataInput4').value = '1.9, -0.9, -0.4';
+            document.getElementById('titleInput').value = '삼성·SK하이닉스 연간 영업이익 전망';
+            document.getElementById('subInput').value = '(단위: 억원, 출처: 시장 컨센서스)';
+            document.getElementById('labelsInput').value = '2026년, 2027년, 2028년';
+            document.getElementById('dataName1').value = '삼성전자';
+            document.getElementById('dataInput1').value = '2975478, 3606812, 3505234';
+            document.getElementById('dataName2').value = 'SK하이닉스';
+            document.getElementById('dataInput2').value = '1944330, 2355562, 2567822';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'stacked-combo') {
             document.getElementById('titleInput').value = '지역별 입주물량 추이';
@@ -819,6 +822,7 @@
         else if (rawType.includes('multi') || rawType.includes('다중')) mappedType = 'multi-line';
         else if (rawType.includes('combo') || rawType.includes('혼합')) mappedType = 'combo';
         else if (rawType.includes('pie') || rawType.includes('원')) mappedType = 'pie';
+        else if (rawType.includes('list') || rawType.includes('리스트')) mappedType = 'list';
         else if (rawType.includes('table') || rawType.includes('표')) mappedType = 'table';
         else if (rawType.includes('bar') || rawType.includes('막대')) mappedType = 'bar';
         else if (rawType.includes('line') || rawType.includes('선')) mappedType = 'line';
@@ -867,7 +871,7 @@
         const labelSettingGroup = document.getElementById('labelSettingGroup');
         const openSheetBtn = document.getElementById('openSheetBtn');
 
-        if (type === 'table') {
+        if (type === 'table' || type === 'list') {
             if(document.getElementById('chartInputs')) document.getElementById('chartInputs').style.display = 'none';
             if(document.getElementById('tableInputs')) document.getElementById('tableInputs').style.display = 'block';
             if(labelSettingGroup) labelSettingGroup.style.display = 'none';
@@ -935,6 +939,11 @@
             if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'block';
             if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'none';
             detectedFootnote = renderTable(detectedFootnote);
+        } else if (type === 'list') {
+            if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'none';
+            if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'block';
+            if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'block';
+            detectedFootnote = renderList(detectedFootnote);
         } else {
             if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'block';
             if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'none';
@@ -951,6 +960,57 @@
                 displayFootnote.style.display = 'block';
             }
         }
+    }
+
+    function renderList(manualFootnote) {
+        const tsvData = document.getElementById('tableDataInput').value.trim();
+        const rows = tsvData.split('\n');
+        
+        const fontSizeElem = document.getElementById('globalFontSize');
+        const fontSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
+
+        let html = `<div class="list-info-container" style="font-size: ${fontSize}px;">`;
+        let autoFootnote = manualFootnote;
+        let currentListHTML = '';
+
+        for (let i = 0; i < rows.length; i++) {
+            let cols = rows[i].indexOf('\t') !== -1 ? rows[i].split('\t') : rows[i].split(',');
+            cols = cols.map(c => c.trim());
+
+            if (cols.length === 1 && i === rows.length - 1 && autoFootnote === '') {
+                autoFootnote = cols[0];
+                break;
+            }
+
+            let cat = cols[0];
+            let val = cols[1] || '';
+
+            if (i === 0 && (cat === '구분' || cat === '카테고리') && (val === '내용' || val === '주요 이슈')) continue;
+
+            if (cat && cat !== '^') {
+                if (currentListHTML !== '') {
+                    html += `<div class="list-item-group">${currentListHTML}</div>`;
+                    currentListHTML = '';
+                }
+                let headerFontSize = Math.round(fontSize * 1.1);
+                html += `<div class="list-header-box" style="font-size: ${headerFontSize}px;">${cat}</div>`;
+                if (val) {
+                    currentListHTML += `<div class="list-item" style="font-size: ${fontSize}px;">${val}</div>`;
+                }
+            } else if (cat === '^' || cat === '') {
+                if (val) {
+                    currentListHTML += `<div class="list-item" style="font-size: ${fontSize}px;">${val}</div>`;
+                }
+            }
+        }
+        
+        if (currentListHTML !== '') {
+            html += `<div class="list-item-group">${currentListHTML}</div>`;
+        }
+
+        html += `</div>`;
+        if(document.getElementById('table-container')) document.getElementById('table-container').innerHTML = html;
+        return autoFootnote;
     }
 
     function renderTable(manualFootnote) {
@@ -1053,24 +1113,31 @@
         const dataVals4 = document.getElementById('dataInput4') && document.getElementById('dataInput4').value ? document.getElementById('dataInput4').value.split(',').map(item => parseFloat(item.trim())) : null;
         const name4 = document.getElementById('dataName4') ? document.getElementById('dataName4').value : '';
 
+        // 🚨 정의된 아경 테마 색상 🚨
+        const akRed = '#E61E2B';
+        const akOrange = '#F48F1F';
+        const akGray1 = '#888888';
+        const akGray2 = '#444444';
+
         if (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-bar' || chartType === 'stacked-combo') {
             if (chartType === 'multi-line') {
                 datasets.push({ type: 'line', label: name1, data: dataVals1, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
-                if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: '#E61E2B', borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
-                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: '#888888', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#888888', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akGray1, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akGray1, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#bbbbbb', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#bbbbbb', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
             } else if (chartType === 'combo') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, barPercentage: 0.55, yAxisID: 'y', order: 2 });
-                if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: '#E61E2B', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#E61E2B', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
+                if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
             } else if (chartType === 'multi-bar') {
-                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#888888', borderRadius: 4 });
-                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#444444', borderRadius: 4 });
-                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: '#111111', borderRadius: 4 });
-                if(dataVals4) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: '#E61E2B', borderRadius: 4 });
+                // 🚨 다중 막대 그래프 컬러 변경 🚨
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, borderRadius: 4 });
+                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akOrange, borderRadius: 4 });
+                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, borderRadius: 4 });
+                if(dataVals4) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: akGray2, borderRadius: 4 });
             } else if (chartType === 'stacked-combo') {
-                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#E61E2B', yAxisID: 'y', order: 2 });
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, yAxisID: 'y', order: 2 });
                 if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#bbbbbb', yAxisID: 'y', order: 2 });
-                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: '#888888', yAxisID: 'y', order: 2 });
+                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, yAxisID: 'y', order: 2 });
                 if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
             }
         } else {
@@ -1084,12 +1151,18 @@
                 borderColors = '#ffffff';
             } else if (chartType === 'bar') {
                 datasetType = 'bar';
-                bgColors = '#E61E2B';
-                borderColors = '#E61E2B';
+                // 🚨 단일 막대인데 데이터가 2개면 오렌지, 레드 순서로 배치 🚨
+                if (dataVals1.length === 2) {
+                    bgColors = [akOrange, akRed];
+                    borderColors = [akOrange, akRed];
+                } else {
+                    bgColors = akRed;
+                    borderColors = akRed;
+                }
             } else {
                 datasetType = 'line';
                 bgColors = 'rgba(235, 235, 235, 0.8)';
-                borderColors = '#E61E2B';
+                borderColors = akRed;
             }
 
             datasets.push({
@@ -1100,7 +1173,7 @@
                 backgroundColor: bgColors,
                 fill: chartType === 'line',
                 pointBackgroundColor: '#fff',
-                pointBorderColor: '#E61E2B',
+                pointBorderColor: akRed,
                 pointBorderWidth: 2,
                 pointRadius: chartType === 'line' ? 5 : 0,
                 borderRadius: chartType === 'bar' ? 4 : 0,
