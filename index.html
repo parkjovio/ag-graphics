@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.6</title>
+    <title>그래픽 보조 데스크 V 1.7</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* 🚨 폰트를 바른고딕 계열로 전면 교체 🚨 */
         :root { --main-font: 'NanumBarunGothic', '나눔바른고딕', 'Barun Gothic', '바른고딕', sans-serif; --ak-red: #E61E2B; --ak-orange: #F48F1F; }
         body { font-family: var(--main-font); background-color: #eef2f5; padding: 20px; display: flex; gap: 25px; margin: 0; align-items: flex-start;}
         
@@ -96,7 +95,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.6</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.7</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -398,7 +397,6 @@
                 const scale = pluginOptions.scale || 1;
                 const fontSize = Math.round(15 * scale);
                 
-                // 🚨 파이차트 꺾은선 라벨 폰트 연동 🚨
                 const labelFont = `900 ${fontSize}px ${globalFont}`;
                 const valueFont = `900 ${fontSize}px ${globalFont}`;
                 const lineColor = '#777777';
@@ -867,6 +865,14 @@
         else if (rawType.includes('bar') || rawType.includes('막대')) mappedType = 'bar';
         else if (rawType.includes('line') || rawType.includes('선')) mappedType = 'line';
 
+        // 🚨 지능형 자동 보정 로직 복구 및 업그레이드 🚨
+        let data2 = extract('[데이터2수치]');
+        if (data2 !== '') {
+            if (mappedType === 'line') mappedType = 'multi-line';
+            else if (mappedType === 'bar') mappedType = 'multi-bar';
+            else if (mappedType === 'pie') mappedType = 'multi-line';
+        }
+
         document.getElementById('chartType').value = mappedType;
         document.getElementById('titleInput').value = extract('[제목]');
         document.getElementById('subInput').value = extract('[부제목]');
@@ -1182,7 +1188,7 @@
             } else if (chartType === 'stacked-combo') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, yAxisID: 'y', order: 2 });
                 if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#bbbbbb', yAxisID: 'y', order: 2 });
-                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, yAxisID: 'y', order: 2 });
+                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: '#888888', yAxisID: 'y', order: 2 });
                 if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
             }
         } else {
