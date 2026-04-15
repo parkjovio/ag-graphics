@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.12</title>
+    <title>그래픽 보조 데스크 V 1.18</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -52,12 +52,14 @@
         
         .preview-area { flex: 1; display: flex; justify-content: flex-start; align-items: flex-start; width: 100%; position: sticky; top: 20px;}
         #capture-area { background: white; width: 750px; padding: 40px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
-        .header-line { border-top: 3px solid #000; margin-bottom: 15px; }
         
-        .chart-title { font-size: 32px; font-weight: 900; margin: 0 0 8px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
+        /* 🚨 제목과 그래프 사이 간격 대폭 좁힘 🚨 */
+        .header-line { border-top: 3px solid #000; margin-bottom: 12px; }
+        .chart-title { font-size: 32px; font-weight: 900; margin: 0 0 5px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
         .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline; line-height: 1.4; word-break: keep-all;}
         
-        #table-container { display: none; margin-top: 20px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
+        #chart-container { height: 420px; margin-top: 0px; flex-shrink: 0; transition: height 0.3s ease; position: relative;}
+        #table-container { display: none; margin-top: 5px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
         
         /* 일반 엑셀 표 */
         .asia-table { width: 100%; border-collapse: collapse; text-align: center; font-family: var(--main-font); margin-bottom: 0; }
@@ -76,18 +78,13 @@
         .timeline-container { width: 100%; display: flex; flex-direction: column; font-family: var(--main-font); margin-top: 10px; border-top: 2px solid #000; }
         .timeline-row { display: flex; width: 100%; min-height: 50px; }
         .timeline-left { background-color: var(--ak-red); color: white; width: 33%; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 900; position: relative; border-bottom: 2px solid #ffffff; padding: 15px 10px; word-break: keep-all; letter-spacing: -0.5px;}
-        
-        /* 화살표 흰색 테두리 (바탕) */
         .timeline-left::before { content: ''; position: absolute; bottom: -12px; left: 50%; margin-left: -12px; border-width: 12px 12px 0 12px; border-style: solid; border-color: #ffffff transparent transparent transparent; z-index: 10; }
-        /* 화살표 빨간색 알맹이 */
         .timeline-left::after { content: ''; position: absolute; bottom: -10px; left: 50%; margin-left: -10px; border-width: 10px 10px 0 10px; border-style: solid; border-color: var(--ak-red) transparent transparent transparent; z-index: 11; }
-        
         .timeline-row:last-child .timeline-left::before,
         .timeline-row:last-child .timeline-left::after { display: none; }
         .timeline-row:last-child .timeline-left { border-bottom: none; }
         .timeline-right { width: 67%; display: flex; align-items: center; padding: 15px 20px; border-bottom: 1px solid #ccc; color: #111; word-break: keep-all; line-height: 1.4; font-weight: 500;}
         
-        #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; position: relative;}
         .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; line-height: 1.4;}
 
         #displayFootnote { font-size: 14px; color: #111; margin-top: 5px; text-align: left; letter-spacing: -0.5px; display: none; font-family: var(--main-font); line-height: 1.4; font-weight: 500;}
@@ -106,7 +103,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.12</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.18</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -234,7 +231,7 @@
         <label>기자 이름</label>
         <input type="text" id="nameInput" value="박조비 기자">
         
-        <button class="main-btn" onclick="updateOutput()">🔄 수동 적용하기</button>
+        <button class="main-btn" onclick="handleApplyClick()">🔄 수동 적용하기</button>
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
         
         <div style="margin-top: 20px; font-size: 13px; color: #888; text-align: center; font-weight: bold;">
@@ -367,79 +364,83 @@
         return { rank, totalLines: allVals.length };
     };
 
-    const pieLeaderLinePlugin = {
-        id: 'pieLeaderLinePlugin',
+    function getPieRatio(context) { 
+        const value = Number(context.dataset.data[context.dataIndex]) || 0; 
+        const total = context.dataset.data.reduce((a, b) => a + (Number(b) || 0), 0); 
+        return total > 0 ? value / total : 0; 
+    }
+
+    // 🚨 5% 미만 조각을 리스트업 대상으로 판별 🚨
+    function getPieIsOutside(context) { return getPieRatio(context) < 0.02; }
+    
+    function getPieFont(context, scale = 1) { 
+        const ratio = getPieRatio(context); 
+        if (ratio >= 0.25) return { size: Math.round(19 * scale), weight: '900' }; 
+        if (ratio >= 0.12) return { size: Math.round(17 * scale), weight: '900' }; 
+        if (ratio >= 0.05) return { size: Math.round(15 * scale), weight: '900' }; 
+        return { size: Math.round(13 * scale), weight: '900' }; 
+    }
+
+    // 🚨 우측 리스트업 커스텀 플러그인 🚨
+    const pieRightSideListPlugin = {
+        id: 'pieRightSideListPlugin',
         afterDraw(chart, args, pluginOptions) {
             if (!pluginOptions || !pluginOptions.enabled) return;
-            try {
-                const dataset = chart.data.datasets && chart.data.datasets[0];
-                if (!dataset) return;
-                const meta = chart.getDatasetMeta(0);
-                if (!meta || !meta.data || !meta.data.length) return;
-                const ctx = chart.ctx; const chartArea = chart.chartArea;
-                const centerX = meta.data[0].x; const outerRadius = meta.data[0].outerRadius;
-                const scale = pluginOptions.scale || 1; const fontSize = Math.round(15 * scale);
-                const labelFont = `900 ${fontSize}px ${globalFont}`; const valueFont = `900 ${fontSize}px ${globalFont}`;
-                const lineColor = '#777777'; const fillColor = '#111111'; const strokeColor = '#ffffff';
-                const labelLineHeight = Math.round(18 * scale); const blockHeight = Math.round(36 * scale); const minGap = Math.round(48 * scale);
-                const shortDiagonalLen = 18; const minRise = 14; const textGap = 6; const edgePadding = 10; const topPadding = 12; const bottomPadding = 12;
-                const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
-                const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
-                const formatValue = (value) => { return isKoreanNumber ? String(formatKoreanNumber(value, subText)) : String(value); };
-                const measureBlockWidth = (label, value) => { ctx.save(); ctx.font = labelFont; const labelWidth = ctx.measureText(String(label)).width; ctx.font = valueFont; const valueWidth = ctx.measureText(String(value)).width; ctx.restore(); return Math.max(labelWidth, valueWidth); };
-                const items = meta.data.map((arc, index) => {
-                    const context = { chart: chart, dataset: dataset, datasetIndex: 0, dataIndex: index };
-                    if (!getPieIsOutside(context)) return null;
-                    const angle = getPieMidAngle(context); const side = Math.cos(angle) >= 0 ? 'right' : 'left';
-                    const label = String(chart.data.labels[index] || ''); const value = formatValue(dataset.data[index]);
-                    const startX = arc.x + Math.cos(angle) * (arc.outerRadius + 2); const startY = arc.y + Math.sin(angle) * (arc.outerRadius + 2);
-                    return { side: side, label: label, value: value, startX: startX, startY: startY, maxLineY: startY - minRise, lineY: 0, elbowX: 0, textX: 0, lineEndX: 0, boxWidth: measureBlockWidth(label, value) };
-                }).filter(Boolean);
-                const layoutSide = (sideItems, side) => {
-                    if (!sideItems.length) return;
-                    sideItems.sort((a, b) => b.maxLineY - a.maxLineY);
-                    let nextAllowedY = chartArea.bottom - bottomPadding;
-                    for (const item of sideItems) { item.lineY = Math.min(item.maxLineY, nextAllowedY); nextAllowedY = item.lineY - minGap; }
-                    const minLineY = chartArea.top + topPadding + blockHeight + 4;
-                    if (sideItems.length && sideItems[sideItems.length - 1].lineY < minLineY) {
-                        const underflow = minLineY - sideItems[sideItems.length - 1].lineY;
-                        for (let i = sideItems.length - 1; i >= 0; i--) {
-                            sideItems[i].lineY += underflow;
-                            if (i < sideItems.length - 1) { sideItems[i].lineY = Math.min(sideItems[i].lineY, sideItems[i + 1].lineY - minGap); }
-                            sideItems[i].lineY = Math.min(sideItems[i].lineY, sideItems[i].maxLineY);
-                        }
-                    }
-                    const maxWidth = Math.max(...sideItems.map(item => item.boxWidth));
-                    const commonTextX = side === 'right' ? Math.min(chartArea.right - maxWidth - edgePadding, centerX + outerRadius + 56) : Math.max(chartArea.left + maxWidth + edgePadding, centerX - outerRadius - 56);
-                    sideItems.forEach(item => { item.textX = commonTextX; item.lineEndX = side === 'right' ? commonTextX - textGap : commonTextX + textGap; item.elbowX = item.startX + (side === 'right' ? shortDiagonalLen : -shortDiagonalLen); });
-                };
-                layoutSide(items.filter(item => item.side === 'left'), 'left'); layoutSide(items.filter(item => item.side === 'right'), 'right');
-                const drawText = (text, x, y, font, align) => { ctx.save(); ctx.font = font; ctx.textAlign = align; ctx.textBaseline = 'top'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = strokeColor; ctx.strokeText(String(text), x, y); ctx.fillStyle = fillColor; ctx.fillText(String(text), x, y); ctx.restore(); };
-                items.forEach(item => {
-                    const textTopY = item.lineY - blockHeight - 2;
-                    ctx.save(); ctx.beginPath(); ctx.moveTo(item.startX, item.startY); ctx.lineTo(item.elbowX, item.lineY); ctx.lineTo(item.lineEndX, item.lineY); ctx.lineWidth = 2; ctx.strokeStyle = lineColor; ctx.lineCap = 'butt'; ctx.lineJoin = 'miter'; ctx.stroke(); ctx.restore();
-                    const align = item.side === 'right' ? 'left' : 'right'; drawText(item.label, item.textX, textTopY, labelFont, align); drawText(item.value, item.textX, textTopY + labelLineHeight, valueFont, align);
-                });
-            } catch (err) { console.error('pieLeaderLinePlugin error:', err); }
+            const dataset = chart.data.datasets[0];
+            if (!dataset) return;
+            
+            const ctx = chart.ctx;
+            const scale = pluginOptions.scale || 1;
+            const fontSize = Math.round(14 * scale);
+            const font = `900 ${fontSize}px ${globalFont}`;
+            const lineHeight = Math.round(22 * scale);
+            
+            const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
+            const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
+
+            let smallItems = [];
+            let totalVal = dataset.data.reduce((a,b) => a + (Number(b)||0), 0);
+            
+            dataset.data.forEach((val, i) => {
+                let num = Number(val) || 0;
+                if (totalVal > 0 && (num / totalVal) < 0.02) {
+                    let label = chart.data.labels[i] ? chart.data.labels[i].trim() : '';
+                    let formattedVal = isKoreanNumber ? formatKoreanNumber(num, subText) : num;
+                    smallItems.push({ label, value: formattedVal, color: dataset.backgroundColor[i] });
+                }
+            });
+
+            if (smallItems.length === 0) return;
+
+            ctx.save();
+            ctx.font = font;
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'left';
+            
+            const totalHeight = smallItems.length * lineHeight;
+            let startY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2 - totalHeight / 2 + (lineHeight / 2);
+            
+            // 리스트 X좌표: 차트 영역(pie가 그려진 구역)의 우측 끝부분
+            const startX = chart.chartArea.right + 20 * scale; 
+            
+            smallItems.forEach((item, index) => {
+                let y = startY + index * lineHeight;
+                let text = item.label ? `${item.label}  ${item.value}` : `${item.value}`;
+                
+                // 컬러 점(Dot) 그리기
+                ctx.fillStyle = item.color;
+                ctx.beginPath();
+                ctx.arc(startX - 12 * scale, y, 6 * scale, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 텍스트 그리기
+                ctx.fillStyle = '#111111';
+                ctx.fillText(text, startX, y);
+            });
+            
+            ctx.restore();
         }
     };
-
-    function getPieTopPadding(labels, dataVals) {
-        const longest = labels.reduce((maxLen, label) => Math.max(maxLen, String(label || '').length), 0);
-        const numericValues = (dataVals || []).map(v => Number(v) || 0);
-        const total = numericValues.reduce((a, b) => a + b, 0);
-        const outsideCount = total > 0 ? numericValues.filter(v => (v / total) < 0.05).length : 0;
-        return Math.min(260, 96 + Math.max(0, longest - 6) * 2 + Math.max(0, outsideCount - 1) * 54);
-    }
-    function getPieRatio(context) { const value = Number(context.dataset.data[context.dataIndex]) || 0; const total = context.dataset.data.reduce((a, b) => a + (Number(b) || 0), 0); return total > 0 ? value / total : 0; }
-    function getPieMidAngle(context) { const meta = context.chart.getDatasetMeta(context.datasetIndex); const arc = meta && meta.data ? meta.data[context.dataIndex] : null; if (!arc) return -Math.PI / 2; return (arc.startAngle + arc.endAngle) / 2; }
-    function getPieDirectionByAngle(angle) { const deg = ((angle * 180 / Math.PI) + 360) % 360; if (deg >= 330 || deg < 30) return 'right'; if (deg >= 30 && deg < 150) return 'bottom'; if (deg >= 150 && deg < 210) return 'left'; return 'top'; }
-    function getPieIsOutside(context) { return getPieRatio(context) < 0.05; }
-    function getPieOffset(context) { return getPieIsOutside(context) ? 16 : 0; }
-    function getPieAlign(context) { return !getPieIsOutside(context) ? 'center' : getPieDirectionByAngle(getPieMidAngle(context)); }
-    function getPieAnchor(context) { return getPieIsOutside(context) ? 'end' : 'center'; }
-    function getPieTextAlign(context) { if (!getPieIsOutside(context)) return 'center'; const direction = getPieDirectionByAngle(getPieMidAngle(context)); if (direction === 'left') return 'right'; if (direction === 'right') return 'left'; return 'center'; }
-    function getPieFont(context, scale = 1) { const ratio = getPieRatio(context); if (ratio >= 0.25) return { size: Math.round(19 * scale), weight: '900' }; if (ratio >= 0.12) return { size: Math.round(17 * scale), weight: '900' }; if (ratio >= 0.05) return { size: Math.round(15 * scale), weight: '900' }; return { size: Math.round(15 * scale), weight: '900' }; }
 
     function openDataSheet() {
         const type = document.getElementById('chartType').value;
@@ -672,7 +673,6 @@
         if (data2 !== '') {
             if (mappedType === 'line') mappedType = 'multi-line';
             else if (mappedType === 'bar') mappedType = 'multi-bar';
-            else if (mappedType === 'pie') mappedType = 'multi-line';
             else if (mappedType === 'h-bar') mappedType = 'h-multi-bar';
         }
 
@@ -738,6 +738,27 @@
             if (type === 'pie') axisSettingGroup.style.display = 'none';
             else axisSettingGroup.style.display = 'block';
         }
+        updateOutput();
+    }
+
+    function validateReporterName() {
+        const nameInput = document.getElementById('nameInput');
+        if (!nameInput) return true;
+
+        const currentName = nameInput.value.trim();
+        const defaultNames = ['박조비 기자', '기자 이름', '기자이름'];
+
+        if (currentName === '' || defaultNames.includes(currentName)) {
+            alert('기자 이름을 수정해주세요');
+            nameInput.focus();
+            nameInput.select();
+            return false;
+        }
+        return true;
+    }
+
+    function handleApplyClick() {
+        if (!validateReporterName()) return;
         updateOutput();
     }
 
@@ -937,8 +958,7 @@
         if(chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
 
         if (myChart != null) myChart.destroy();
-        Chart.register(pieLeaderLinePlugin, ChartDataLabels);
-
+        
         const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
         const dataVals1 = document.getElementById('dataInput1').value.split(',').map(item => parseFloat(item.trim()));
         const name1 = document.getElementById('dataName1').value;
@@ -1035,20 +1055,23 @@
         let baseChartType = (normType === 'line' || normType === 'pie') ? normType : 'bar';
         let isStacked = normType.includes('stacked');
 
+        // 🚨 플러그인 리스트에서 pieRightSideListPlugin도 등록 🚨
         myChart = new Chart(ctx, {
             type: baseChartType,
             data: { labels: labels, datasets: datasets },
+            plugins: [pieRightSideListPlugin, ChartDataLabels], 
             options: {
                 indexAxis: isHorizontal ? 'y' : 'x',
                 responsive: true, maintainAspectRatio: false,
                 cutout: normType === 'pie' ? '28%' : '0%',
                 layout: {
                     padding: normType === 'pie'
-                        ? { top: getPieTopPadding(labels, dataVals1), right: 64, bottom: 30, left: 64 }
+                        // 🚨 리스트형 플러그인을 위해 우측 여백을 넉넉히 확보 (160px) 🚨
+                        ? { top: 30, right: 160, bottom: 30, left: 30 }
                         : (labelDisplayType === 'last' ? { right: 100, top: 40, bottom: 20, left: 10 } : { right: 50, top: 40, bottom: 20, left: 10 })
                 },
                 plugins: {
-                    pieLeaderLinePlugin: { enabled: normType === 'pie', scale: scale },
+                    pieRightSideListPlugin: { enabled: normType === 'pie', scale: scale },
                     title: { display: false },
                     legend: {
                         display: (normType === 'multi-line' || normType === 'combo' || normType === 'multi-combo' || normType === 'multi-bar' || normType === 'stacked-combo' || normType === 'stacked-bar'),
@@ -1060,12 +1083,15 @@
                     datalabels: {
                         display: function(context) {
                             if (labelDisplayType === 'none') return false;
-                            if (normType === 'pie') return !getPieIsOutside(context);
-                            if (labelDisplayType === 'last') return context.dataIndex === context.dataset.data.length - 1;
-                            return true;
+                            if (normType === 'pie') {
+                                // 🚨 5% 미만인 데이터는 우측 리스트업 플러그인이 그리므로 기본 라벨에선 숨김 처리 🚨
+                                return getPieRatio(context) >= 0.02; 
+                            }
+                            if (labelDisplayType === 'last' && normType !== 'pie') return context.dataIndex === context.dataset.data.length - 1;
+                            return true; 
                         },
                         align: function(context) {
-                            if (normType === 'pie') return getPieAlign(context);
+                            if (normType === 'pie') return 'center'; // 5% 이상인 큰 조각은 가운데 정렬
                             if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 'center'; return 'right'; }
                             if (isStacked && context.dataset.type === 'bar') return 'center';
                             if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'start';
@@ -1081,7 +1107,7 @@
                             return 'top';
                         },
                         anchor: function(context) {
-                            if (normType === 'pie') return getPieAnchor(context);
+                            if (normType === 'pie') return 'center'; // 5% 이상 큰 조각은 중앙 앵커
                             if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 'center'; return 'end'; }
                             if (isStacked && context.dataset.type === 'bar') return 'center';
                             if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'end';
@@ -1089,7 +1115,7 @@
                             return 'center';
                         },
                         offset: function(context) {
-                            if (normType === 'pie') return getPieOffset(context);
+                            if (normType === 'pie') return 0; // 큰 조각은 가운데 딱 맞춤
                             if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 0; return 6; }
                             if (isStacked && context.dataset.type === 'bar') return 0;
                             if (normType === 'multi-bar') return 4;
@@ -1104,7 +1130,7 @@
                             if (normType === 'bar') return 6; return 10;
                         },
                         color: function(context) {
-                            if (normType === 'pie') return '#ffffff';
+                            if (normType === 'pie') return '#ffffff'; // 큰 조각은 무조건 흰 글씨
                             if (isStacked && context.dataset.type === 'bar') return '#ffffff';
                             if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return '#333';
                             if (normType === 'bar' || normType === 'multi-bar') return '#111';
@@ -1130,11 +1156,15 @@
                         },
                         formatter: (value, ctx) => {
                             let displayVal = isKoreanNumber ? formatKoreanNumber(value, subText) : value;
-                            if (normType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + displayVal;
+                            if (normType === 'pie') {
+                                let label = ctx.chart.data.labels[ctx.dataIndex];
+                                label = label ? label.trim() : '';
+                                if (label === '') return displayVal;
+                                return label + '\n' + displayVal;
+                            }
                             return displayVal;
                         },
                         textAlign: function(context) {
-                            if (normType === 'pie') return getPieTextAlign(context);
                             return 'center';
                         },
                         clamp: true, clip: false
@@ -1202,6 +1232,8 @@
     }
 
     function downloadImage() {
+        if (!validateReporterName()) return;
+
         const captureDiv = document.getElementById('capture-area');
         const btn = document.getElementById('downloadBtn');
         const originalText = btn.innerText;
@@ -1219,7 +1251,6 @@
     window.onload = function() { 
         loadExampleData(); 
         
-        // 🚨 탭 키 입력 시 포커스 이동 방지 및 탭 문자 삽입 🚨
         document.getElementById('tableDataInput').addEventListener('keydown', function(e) {
             if (e.key === 'Tab') {
                 e.preventDefault();
