@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.11</title>
+    <title>그래픽 보조 데스크 V 1.12</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -72,7 +72,7 @@
         .list-item { color: #111; line-height: 1.4; display: flex; align-items: flex-start; gap: 8px; font-weight: 600; letter-spacing: -0.5px; word-break: keep-all;}
         .list-item::before { content: '▶'; color: var(--ak-red); font-size: 0.85em; margin-top: 3px; }
 
-        /* 🚨 타임라인(흐름도) 표 전용 CSS 완벽 보완 (화살표 시인성 강화) 🚨 */
+        /* 타임라인(흐름도) 표 전용 CSS */
         .timeline-container { width: 100%; display: flex; flex-direction: column; font-family: var(--main-font); margin-top: 10px; border-top: 2px solid #000; }
         .timeline-row { display: flex; width: 100%; min-height: 50px; }
         .timeline-left { background-color: var(--ak-red); color: white; width: 33%; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 900; position: relative; border-bottom: 2px solid #ffffff; padding: 15px 10px; word-break: keep-all; letter-spacing: -0.5px;}
@@ -106,12 +106,12 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.11</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.12</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
             <span class="help-text" style="color: #0056b3; margin-bottom:5px;">제미나이가 생성한 텍스트를 통째로 붙여넣으세요.</span>
-            <textarea id="geminiInput" placeholder="[종류] multi-line&#10;[제목] 월별 서울 아파트 가격 추이&#10;..."></textarea>
+            <textarea id="geminiInput" placeholder="[종류] multi-line&#10;[제목] 이태원 참사 이후 여론 흐름&#10;..."></textarea>
             <button class="btn-ai" id="autoFillBtn" onclick="parseGeminiData()">🪄 AI 데이터 자동 완성하기</button>
         </div>
         
@@ -223,7 +223,7 @@
         <div id="tableInputs" style="display: none;">
             <label id="tableDataLabel">엑셀/리스트 데이터 붙여넣기</label>
             <textarea id="tableDataInput" rows="10"></textarea>
-            <span class="help-text" id="tableHelpText" style="margin-top: 5px; color: var(--ak-red);">💡 팁1: 위 칸과 병합할 땐 <b>^</b> 기호 입력.<br>💡 팁2: 표를 나눌 땐 맨 앞칸에 <b>## 소제목</b> 입력.</span>
+            <span class="help-text" id="tableHelpText" style="margin-top: 5px; color: var(--ak-red);">💡 팁1: 위 칸과 병합할 땐 <b>^</b> 기호 입력.<br>💡 팁2: 표를 나눌 땐 맨 앞칸에 <b>## 소제목</b> 입력.<br>⌨️ (이제 입력창 안에서 탭(Tab) 키를 누르면 바로 탭이 삽입됩니다!)</span>
         </div>
 
         <div class="data-group" style="background-color: #fff; border: 1px solid #ccc;">
@@ -1216,7 +1216,20 @@
         }).catch(err => { alert("저장 오류가 발생했습니다."); btn.innerText = originalText; btn.style.backgroundColor = '#333'; });
     }
 
-    window.onload = function() { loadExampleData(); };
+    window.onload = function() { 
+        loadExampleData(); 
+        
+        // 🚨 탭 키 입력 시 포커스 이동 방지 및 탭 문자 삽입 🚨
+        document.getElementById('tableDataInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + '\t' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 1;
+            }
+        });
+    };
 </script>
 </body>
 </html>
