@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.9</title>
+    <title>그래픽 보조 데스크 V 1.11</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -58,23 +58,34 @@
         .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline; line-height: 1.4; word-break: keep-all;}
         
         #table-container { display: none; margin-top: 20px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
+        
+        /* 일반 엑셀 표 */
         .asia-table { width: 100%; border-collapse: collapse; text-align: center; font-family: var(--main-font); margin-bottom: 0; }
         .asia-table th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 15px 5px; font-weight: bold; color: #333; }
-        
         .asia-table td { border-bottom: 1px solid #ddd; padding: 15px 5px; color: #111; vertical-align: middle; }
         .asia-table td.col-0 { background-color: var(--ak-red); color: white; font-weight: bold; border-bottom: 1px solid #fff; }
-        .asia-table td.col-1 { font-weight: bold; background-color: #ffffff; }
-        .asia-table td.col-2 { background-color: #f2f2f2; }
-        .asia-table td.col-3 { background-color: #e8e8e8; }
-        .asia-table td.col-4 { background-color: #dedede; }
-        .asia-table td.col-5 { background-color: #d4d4d4; }
-        .asia-table td.col-6 { background-color: #cacaca; }
-
+        
+        /* 카드형 리스트 표 */
         .list-info-container { width: 100%; display: flex; flex-direction: column; gap: 15px; font-family: var(--main-font); margin-top: 10px;}
         .list-header-box { background-color: var(--ak-red); color: white; border-radius: 20px; padding: 12px 25px; font-weight: 900; letter-spacing: -1px; width: 100%; box-sizing: border-box; word-break: keep-all; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 5px;}
         .list-item-group { display: flex; flex-direction: column; gap: 10px; padding-left: 25px; margin-bottom: 15px; }
         .list-item { color: #111; line-height: 1.4; display: flex; align-items: flex-start; gap: 8px; font-weight: 600; letter-spacing: -0.5px; word-break: keep-all;}
         .list-item::before { content: '▶'; color: var(--ak-red); font-size: 0.85em; margin-top: 3px; }
+
+        /* 🚨 타임라인(흐름도) 표 전용 CSS 완벽 보완 (화살표 시인성 강화) 🚨 */
+        .timeline-container { width: 100%; display: flex; flex-direction: column; font-family: var(--main-font); margin-top: 10px; border-top: 2px solid #000; }
+        .timeline-row { display: flex; width: 100%; min-height: 50px; }
+        .timeline-left { background-color: var(--ak-red); color: white; width: 33%; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 900; position: relative; border-bottom: 2px solid #ffffff; padding: 15px 10px; word-break: keep-all; letter-spacing: -0.5px;}
+        
+        /* 화살표 흰색 테두리 (바탕) */
+        .timeline-left::before { content: ''; position: absolute; bottom: -12px; left: 50%; margin-left: -12px; border-width: 12px 12px 0 12px; border-style: solid; border-color: #ffffff transparent transparent transparent; z-index: 10; }
+        /* 화살표 빨간색 알맹이 */
+        .timeline-left::after { content: ''; position: absolute; bottom: -10px; left: 50%; margin-left: -10px; border-width: 10px 10px 0 10px; border-style: solid; border-color: var(--ak-red) transparent transparent transparent; z-index: 11; }
+        
+        .timeline-row:last-child .timeline-left::before,
+        .timeline-row:last-child .timeline-left::after { display: none; }
+        .timeline-row:last-child .timeline-left { border-bottom: none; }
+        .timeline-right { width: 67%; display: flex; align-items: center; padding: 15px 20px; border-bottom: 1px solid #ccc; color: #111; word-break: keep-all; line-height: 1.4; font-weight: 500;}
         
         #chart-container { height: 420px; margin-top: 20px; flex-shrink: 0; transition: height 0.3s ease; position: relative;}
         .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; line-height: 1.4;}
@@ -95,7 +106,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.9</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.11</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -123,6 +134,7 @@
             <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
             <option value="table">📋 텍스트 표 (엑셀 연동/이중표 지원)</option>
             <option value="list">📝 리스트형 인포그래픽 (카드형)</option>
+            <option value="timeline">⏳ 타임라인형 표 (흐름 추이)</option>
             <option disabled>──────────</option>
             <option value="chart-table">📊+📋 혼합그래프 + 텍스트 표 동시 출력</option>
         </select>
@@ -211,7 +223,7 @@
         <div id="tableInputs" style="display: none;">
             <label id="tableDataLabel">엑셀/리스트 데이터 붙여넣기</label>
             <textarea id="tableDataInput" rows="10"></textarea>
-            <span class="help-text" id="tableHelpText" style="margin-top: 5px; color: var(--ak-red);">💡 팁1: 위 칸과 병합(셀 합치기)할 땐 <b>^</b> 기호 입력.<br>💡 팁2: 표를 나누고 싶을 땐 맨 앞칸에 <b>## 소제목</b> 입력.</span>
+            <span class="help-text" id="tableHelpText" style="margin-top: 5px; color: var(--ak-red);">💡 팁1: 위 칸과 병합할 땐 <b>^</b> 기호 입력.<br>💡 팁2: 표를 나눌 땐 맨 앞칸에 <b>## 소제목</b> 입력.</span>
         </div>
 
         <div class="data-group" style="background-color: #fff; border: 1px solid #ccc;">
@@ -300,7 +312,6 @@
             let scale = isUck ? 100000000 : 10000;
             let scaledNum = Number((absNum * scale).toFixed(4));
             let intPart = Math.floor(scaledNum);
-            
             let scaledStr = String(scaledNum);
             let decStr = scaledStr.includes('.') ? '.' + scaledStr.split('.')[1] : '';
             
@@ -308,40 +319,22 @@
             let units = ['', '만', '억', '조', '경', '해'];
             let chunks = [];
             let tempNum = intPart;
+            while (tempNum > 0) { chunks.push(tempNum % 10000); tempNum = Math.floor(tempNum / 10000); }
+            for (let i = chunks.length - 1; i >= 0; i--) { if (chunks[i] > 0) result += chunks[i] + units[i]; }
 
-            while (tempNum > 0) {
-                chunks.push(tempNum % 10000);
-                tempNum = Math.floor(tempNum / 10000);
-            }
-
-            for (let i = chunks.length - 1; i >= 0; i--) {
-                if (chunks[i] > 0) result += chunks[i] + units[i];
-            }
-
-            if (isUck && result.endsWith('억')) {
-                result = result.slice(0, -1);
-            } else if (isMan && result.endsWith('만')) {
-                result = result.slice(0, -1);
-            }
+            if (isUck && result.endsWith('억')) result = result.slice(0, -1);
+            else if (isMan && result.endsWith('만')) result = result.slice(0, -1);
             return sign + result + decStr;
         } else {
             let intPart = Math.floor(absNum);
             let numStr = String(absNum);
             let decStr = numStr.includes('.') ? '.' + numStr.split('.')[1] : '';
-            
             let result = '';
             let units = ['', '만', '억', '조', '경'];
             let chunks = [];
             let tempNum = intPart;
-
-            while (tempNum > 0) {
-                chunks.push(tempNum % 10000);
-                tempNum = Math.floor(tempNum / 10000);
-            }
-
-            for (let i = chunks.length - 1; i >= 0; i--) {
-                if (chunks[i] > 0) result += chunks[i] + units[i];
-            }
+            while (tempNum > 0) { chunks.push(tempNum % 10000); tempNum = Math.floor(tempNum / 10000); }
+            for (let i = chunks.length - 1; i >= 0; i--) { if (chunks[i] > 0) result += chunks[i] + units[i]; }
             return sign + result + decStr;
         }
     }
@@ -352,7 +345,6 @@
         const maxValue = Math.max(...numericValues);
         const maxIndex = numericValues.indexOf(maxValue);
         let grayCursor = 0;
-
         return numericValues.map((_, index) => {
             if (index === maxIndex) return '#E61E2B';
             const color = grayPalette[grayCursor % grayPalette.length];
@@ -366,10 +358,8 @@
         const currentVal = parseFloat(context.dataset.data[dataIdx]) || 0;
         const lineDatasets = context.chart.data.datasets.filter(ds => ds.type === 'line');
         const allVals = lineDatasets.map(ds => parseFloat(ds.data[dataIdx]) || 0);
-        
         let rank = 0;
         let myIndex = lineDatasets.findIndex(ds => ds.label === context.dataset.label);
-        
         for (let i = 0; i < allVals.length; i++) {
             if (allVals[i] > currentVal) rank++;
             else if (allVals[i] === currentVal && i < myIndex) rank++;
@@ -378,7 +368,6 @@
     };
 
     const pieLeaderLinePlugin = {
-        // ... (이전 버전과 동일한 파이 차트 리더 라인 플러그인 코드) ...
         id: 'pieLeaderLinePlugin',
         afterDraw(chart, args, pluginOptions) {
             if (!pluginOptions || !pluginOptions.enabled) return;
@@ -454,19 +443,17 @@
 
     function openDataSheet() {
         const type = document.getElementById('chartType').value;
-        if (type === 'table' || type === 'list' || type === 'chart-table') {
+        if (type === 'table' || type === 'list' || type === 'chart-table' || type === 'timeline') {
             alert("텍스트 표 또는 리스트 뷰가 포함된 모드에서는 좌측 입력창을 이용해 주세요.");
             return;
         }
-        // ... (이전 버전과 동일한 시트 오픈 로직)
         document.getElementById('sheetName1').innerText = document.getElementById('dataName1').value || '데이터 1';
         document.getElementById('sheetName2').innerText = document.getElementById('dataName2').value || '데이터 2';
         document.getElementById('sheetName3').innerText = document.getElementById('dataName3').value || '데이터 3';
         document.getElementById('sheetName4').innerText = document.getElementById('dataName4').value || '데이터 4';
 
         const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'h-multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo' || type === 'stacked-bar' || type === 'h-stacked-bar');
-        const useD3 = useD2;
-        const useD4 = useD2;
+        const useD3 = useD2; const useD4 = useD2;
 
         document.getElementById('sheetTh2').style.display = useD2 ? 'table-cell' : 'none';
         document.getElementById('sheetTh3').style.display = useD3 ? 'table-cell' : 'none';
@@ -551,12 +538,16 @@
             document.getElementById('subInput').value = '';
             document.getElementById('tableDataInput').value = `## 강남구 순매수\n종목명\t순매수액\t현재가\t대비율\n삼성전자\t323억\t8만2000\t-16.7\nSK하이닉스\t312억\t12만3000\t-6.2\n## 강북구 순매수\n종목명\t순매수액\t현재가\t대비율\n카카오\t285억\t5만8950\t-25.6\n네이버\t236억\t18만3600\t-19.7`;
             document.getElementById('footnoteInput').value = '*자료: 한국부동산원';
-            
             if (type === 'chart-table') {
                 document.getElementById('labelsInput').value = 'A, B, C';
                 document.getElementById('dataName1').value = '항목1'; document.getElementById('dataInput1').value = '10, 20, 30';
                 document.getElementById('dataName2').value = '항목2'; document.getElementById('dataInput2').value = '15, 25, 35';
             }
+        } else if (type === 'timeline') {
+            document.getElementById('titleInput').value = '코스피 지수 추이';
+            document.getElementById('subInput').value = '';
+            document.getElementById('tableDataInput').value = `2025년 6월 20일\t3000포인트 돌파\n10월 27일\t4000포인트 돌파\n2026년 1월 27일\t5000포인트 돌파\n2월 25일\t6000포인트 돌파\n2월 27일\t장중 6347포인트로 사상 최고치 기록\n3월 31일\t미·이란 전쟁으로 5042포인트까지 급락\n4월 14일\t6000포인트 재돌파`;
+            document.getElementById('footnoteInput').value = '';
         } else if (type === 'list') {
             document.getElementById('titleInput').value = '2026년도 서울시 제1회 추가경정예산안';
             document.getElementById('subInput').value = '(주요 사업비 편성내역)';
@@ -625,8 +616,7 @@
             document.getElementById('titleInput').value = '현재 한국의 경제 상황, 10점 만점에 몇 점';
             document.getElementById('subInput').value = '(단위: 명)';
             document.getElementById('labelsInput').value = '1점, 2점, 3점, 5점, 7점';
-            document.getElementById('dataName1').value = '응답자 수';
-            document.getElementById('dataInput1').value = '1, 2, 7, 1, 1';
+            document.getElementById('dataName1').value = '응답자 수'; document.getElementById('dataInput1').value = '1, 2, 7, 1, 1';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'h-stacked-bar') {
             document.getElementById('titleInput').value = '우리나라 성인 금융이해력 점수';
@@ -642,7 +632,6 @@
             document.getElementById('dataName1').value = '항목1'; document.getElementById('dataInput1').value = '10, 20, 30';
             document.getElementById('dataName2').value = '항목2'; document.getElementById('dataInput2').value = '15, 25, 35';
         }
-
         toggleInputs();
     }
 
@@ -663,6 +652,7 @@
         let mappedType = 'line';
 
         if (rawType.includes('chart-table') || rawType.includes('그래프+표')) mappedType = 'chart-table';
+        else if (rawType.includes('timeline') || rawType.includes('타임라인')) mappedType = 'timeline';
         else if (rawType.includes('stacked-combo') || rawType.includes('누적막대+선')) mappedType = 'stacked-combo';
         else if (rawType.includes('multi-combo') || rawType.includes('다중막대+선')) mappedType = 'multi-combo';
         else if (rawType.includes('h-stacked-bar') || rawType.includes('가로형 누적')) mappedType = 'h-stacked-bar';
@@ -717,8 +707,7 @@
         const labelSettingGroup = document.getElementById('labelSettingGroup');
         const openSheetBtn = document.getElementById('openSheetBtn');
 
-        // 🚨 차트+표 동시 출력을 위한 로직 분기 🚨
-        if (type === 'table' || type === 'list') {
+        if (type === 'table' || type === 'list' || type === 'timeline') {
             if(document.getElementById('chartInputs')) document.getElementById('chartInputs').style.display = 'none';
             if(document.getElementById('tableInputs')) document.getElementById('tableInputs').style.display = 'block';
             if(labelSettingGroup) labelSettingGroup.style.display = 'none';
@@ -729,11 +718,7 @@
             if(labelSettingGroup) labelSettingGroup.style.display = 'block';
             if(openSheetBtn) openSheetBtn.style.display = 'flex';
             
-            ds2Group.style.display = 'block';
-            ds3Group.style.display = 'block';
-            ds4Group.style.display = 'block';
-            y1Group.style.display = 'flex';
-            axisSettingGroup.style.display = 'block';
+            ds2Group.style.display = 'block'; ds3Group.style.display = 'block'; ds4Group.style.display = 'block'; y1Group.style.display = 'flex'; axisSettingGroup.style.display = 'block';
         } else {
             if(document.getElementById('chartInputs')) document.getElementById('chartInputs').style.display = 'block';
             if(document.getElementById('tableInputs')) document.getElementById('tableInputs').style.display = 'none';
@@ -743,16 +728,11 @@
             else labelSettingGroup.style.display = 'block';
 
             if (type.includes('multi-') || type.includes('combo') || type.includes('stacked')) {
-                ds2Group.style.display = 'block';
-                ds3Group.style.display = 'block';
-                ds4Group.style.display = 'block';
+                ds2Group.style.display = 'block'; ds3Group.style.display = 'block'; ds4Group.style.display = 'block';
                 if(type.includes('combo') && !type.includes('stacked-bar')) y1Group.style.display = 'flex';
                 else y1Group.style.display = 'none';
             } else {
-                ds2Group.style.display = 'none';
-                ds3Group.style.display = 'none';
-                ds4Group.style.display = 'none';
-                y1Group.style.display = 'none';
+                ds2Group.style.display = 'none'; ds3Group.style.display = 'none'; ds4Group.style.display = 'none'; y1Group.style.display = 'none';
             }
 
             if (type === 'pie') axisSettingGroup.style.display = 'none';
@@ -780,17 +760,21 @@
             if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'block';
             if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'none';
             detectedFootnote = renderTable(detectedFootnote);
+        } else if (type === 'timeline') {
+            if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'none';
+            if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'block';
+            if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'block';
+            detectedFootnote = renderTimeline(detectedFootnote);
         } else if (type === 'list') {
             if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'none';
             if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'block';
             if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'block';
             detectedFootnote = renderList(detectedFootnote);
         } else if (type === 'chart-table') {
-            // 🚨 차트+표 동시 렌더링 🚨
             if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'block';
             if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'block';
             if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'block';
-            renderChart('multi-bar'); // 기본적으로 다중 막대로 처리
+            renderChart('multi-bar'); 
             detectedFootnote = renderTable(detectedFootnote);
         } else {
             if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'block';
@@ -804,6 +788,48 @@
             if (detectedFootnote.trim() === '') displayFootnote.style.display = 'none';
             else { displayFootnote.innerText = detectedFootnote; displayFootnote.style.display = 'block'; }
         }
+    }
+
+    function renderTimeline(manualFootnote) {
+        const tsvData = document.getElementById('tableDataInput').value.trim();
+        const rows = tsvData.split('\n');
+        const fontSizeElem = document.getElementById('globalFontSize');
+        const fontSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
+
+        let html = `<div class="timeline-container" style="font-size: ${fontSize}px;">`;
+        let autoFootnote = manualFootnote;
+        let tableRows = [...rows];
+
+        if (tableRows.length > 2) {
+            const lastLine = tableRows[tableRows.length - 1];
+            const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
+            if (lastCols.length === 1 && !lastCols[0].startsWith('##')) {
+                if (autoFootnote === '') autoFootnote = lastCols[0].trim();
+                tableRows.pop();
+            }
+        }
+
+        for (let i = 0; i < tableRows.length; i++) {
+            let cols = tableRows[i].indexOf('\t') !== -1 ? tableRows[i].split('\t') : tableRows[i].split(',');
+            cols = cols.map(c => c.trim());
+            
+            if (i === 0 && (cols[0] === '일자' || cols[0] === '구분' || cols[0] === '날짜' || cols[0] === '연도') && cols.length > 1) continue;
+            if (cols[0].startsWith('##')) continue; 
+
+            let leftText = cols[0] || '';
+            let rightText = cols[1] || '';
+            
+            if(leftText || rightText) {
+                html += `
+                <div class="timeline-row" style="z-index: ${100 - i}; position: relative;">
+                    <div class="timeline-left" style="font-size: ${Math.round(fontSize * 1.1)}px;">${leftText}</div>
+                    <div class="timeline-right" style="font-size: ${fontSize}px;">${rightText}</div>
+                </div>`;
+            }
+        }
+        html += `</div>`;
+        if(document.getElementById('table-container')) document.getElementById('table-container').innerHTML = html;
+        return autoFootnote;
     }
 
     function renderList(manualFootnote) {
@@ -839,7 +865,6 @@
         return autoFootnote;
     }
 
-    // 🚨 이중 표 (블록 나누기) 지원 렌더링 🚨
     function renderTable(manualFootnote) {
         const tsvData = document.getElementById('tableDataInput').value.trim();
         const rows = tsvData.split('\n');
@@ -848,18 +873,15 @@
         const isKoreanNumber = document.getElementById('koreanNumberType') ? document.getElementById('koreanNumberType').value === 'apply' : false;
         const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
 
-        let html = '';
-        let inTable = false;
-        let tableRows = [...rows]; 
-        let autoFootnote = manualFootnote;
+        let html = ''; let inTable = false;
+        let tableRows = [...rows]; let autoFootnote = manualFootnote;
 
         if (tableRows.length > 2) {
             const lastLine = tableRows[tableRows.length - 1];
             const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
             const headerCols = tableRows[0].indexOf('\t') !== -1 ? tableRows[0].split('\t') : tableRows[0].split(',');
             if (lastCols.length === 1 && headerCols.length > 1 && !lastCols[0].startsWith('##')) { 
-                if (autoFootnote === '') autoFootnote = lastCols[0].trim(); 
-                tableRows.pop(); 
+                if (autoFootnote === '') autoFootnote = lastCols[0].trim(); tableRows.pop(); 
             }
         }
 
@@ -873,19 +895,15 @@
                 for (let r = 1; r < cells.length; r++) {
                     if (cells[r][c] && cells[r][c].text === '^') { 
                         if (cells[mergeStartRow] && !cells[mergeStartRow][0].text.startsWith('##')) {
-                            cells[mergeStartRow][c].rowspan++; 
-                            cells[r][c].hide = true; 
+                            cells[mergeStartRow][c].rowspan++; cells[r][c].hide = true; 
                         }
-                    } else { 
-                        mergeStartRow = r; 
-                    }
+                    } else { mergeStartRow = r; }
                 }
             }
         }
 
         cells.forEach((row, rIdx) => {
             const isBlockHeader = row[0].text.startsWith('##');
-
             if (isBlockHeader) {
                 if (inTable) { html += '</tbody></table>'; inTable = false; }
                 let blockTitle = row[0].text.replace('##', '').trim();
@@ -893,9 +911,7 @@
             } else {
                 if (!inTable) {
                     html += `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 5px;"><thead><tr>`;
-                    row.forEach((cell, cIdx) => {
-                        if (!cell.hide) html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="col-${cIdx}">${cell.text}</th>`;
-                    });
+                    row.forEach((cell, cIdx) => { if (!cell.hide) html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="col-${cIdx}">${cell.text}</th>`; });
                     html += '</tr></thead><tbody>';
                     inTable = true;
                 } else {
@@ -911,9 +927,7 @@
                 }
             }
         });
-
         if (inTable) html += '</tbody></table>';
-        
         if(document.getElementById('table-container')) document.getElementById('table-container').innerHTML = html;
         return autoFootnote;
     }
@@ -1052,12 +1066,7 @@
                         },
                         align: function(context) {
                             if (normType === 'pie') return getPieAlign(context);
-                            
-                            if (isHorizontal) {
-                                if (isStacked && context.dataset.type === 'bar') return 'center';
-                                return 'right';
-                            }
-                            
+                            if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 'center'; return 'right'; }
                             if (isStacked && context.dataset.type === 'bar') return 'center';
                             if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'start';
                             if (normType === 'multi-line' || ((normType.includes('combo')) && context.dataset.type === 'line')) {
@@ -1073,12 +1082,7 @@
                         },
                         anchor: function(context) {
                             if (normType === 'pie') return getPieAnchor(context);
-                            
-                            if (isHorizontal) {
-                                if (isStacked && context.dataset.type === 'bar') return 'center';
-                                return 'end';
-                            }
-
+                            if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 'center'; return 'end'; }
                             if (isStacked && context.dataset.type === 'bar') return 'center';
                             if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'end';
                             if (normType === 'bar' || normType === 'multi-bar') return 'end';
@@ -1086,12 +1090,7 @@
                         },
                         offset: function(context) {
                             if (normType === 'pie') return getPieOffset(context);
-                            
-                            if (isHorizontal) {
-                                if (isStacked && context.dataset.type === 'bar') return 0;
-                                return 6;
-                            }
-
+                            if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 0; return 6; }
                             if (isStacked && context.dataset.type === 'bar') return 0;
                             if (normType === 'multi-bar') return 4;
                             if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 6;
