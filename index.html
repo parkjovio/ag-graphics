@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.7</title>
+    <title>그래픽 보조 데스크 V 1.9</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -95,7 +95,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.7</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.9</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -110,15 +110,21 @@
         </div>
         <select id="chartType" onchange="toggleInputs()">
             <option value="line">📈 단일 꺾은선 그래프</option>
-            <option value="bar">📊 단일 막대 그래프</option>
-            <option value="multi-bar">📊 다중 막대 그래프 (비교형)</option>
+            <option value="bar">📊 (세로) 단일 막대 그래프</option>
+            <option value="multi-bar">📊 (세로) 다중 막대 그래프</option>
+            <option value="stacked-bar">📊 (세로) 누적 막대 그래프</option>
+            <option value="h-bar">▤ (가로) 단일 막대 그래프</option>
+            <option value="h-multi-bar">▤ (가로) 다중 막대 그래프</option>
+            <option value="h-stacked-bar">▤ (가로) 누적 막대 그래프</option>
             <option value="multi-line">📉 다중 선 그래프</option>
-            <option value="combo">📈 선+막대 혼합 (막대 1 + 선 최대 3)</option>
-            <option value="multi-combo">📈 다중 막대+선 혼합 (막대 2 + 선 최대 2)</option>
-            <option value="stacked-combo">📉 누적막대+선 혼합 (막대 다중 + 선 1)</option>
+            <option value="combo">📈 선+막대 혼합 (막대 1 + 선 다중)</option>
+            <option value="multi-combo">📈 다중막대+선 혼합 (막대 2 + 선 다중)</option>
+            <option value="stacked-combo">📉 누적막대+선 혼합</option>
             <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
-            <option value="table">📋 텍스트 표 (엑셀 연동)</option>
+            <option value="table">📋 텍스트 표 (엑셀 연동/이중표 지원)</option>
             <option value="list">📝 리스트형 인포그래픽 (카드형)</option>
+            <option disabled>──────────</option>
+            <option value="chart-table">📊+📋 혼합그래프 + 텍스트 표 동시 출력</option>
         </select>
 
         <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (엑셀 방식)</button>
@@ -158,7 +164,7 @@
         </div>
         
         <div id="chartInputs">
-            <label>X축 항목 / 데이터 라벨 (콤마 구분)</label>
+            <label>X축(항목) 데이터 라벨 (콤마 구분)</label>
             <textarea id="labelsInput" rows="2"></textarea>
             
             <div class="data-group">
@@ -190,14 +196,14 @@
             </div>
             
             <div class="data-group" id="axisSettingGroup" style="display: none;">
-                <label>Y축 범위 수동 설정</label>
+                <label>수치 축(가로/세로) 범위 수동 설정</label>
                 <div class="axis-inputs">
-                    <input type="text" id="yMin" placeholder="좌측축 최소">
-                    <input type="text" id="yMax" placeholder="좌측축 최대">
+                    <input type="text" id="yMin" placeholder="최소값">
+                    <input type="text" id="yMax" placeholder="최대값">
                 </div>
                 <div class="axis-inputs" id="y1Group" style="display: none;">
-                    <input type="text" id="y1Min" placeholder="우측축 최소">
-                    <input type="text" id="y1Max" placeholder="우측축 최대">
+                    <input type="text" id="y1Min" placeholder="우측축 최소값">
+                    <input type="text" id="y1Max" placeholder="우측축 최대값">
                 </div>
             </div>
         </div>
@@ -205,7 +211,7 @@
         <div id="tableInputs" style="display: none;">
             <label id="tableDataLabel">엑셀/리스트 데이터 붙여넣기</label>
             <textarea id="tableDataInput" rows="10"></textarea>
-            <span class="help-text" id="tableHelpText" style="margin-top: 5px; color: var(--ak-red);">💡 위 칸과 병합(셀 합치기)하거나 리스트 하위 항목으로 넣으려면 해당 칸(왼쪽)에 <b>^</b> 기호를 입력하세요.</span>
+            <span class="help-text" id="tableHelpText" style="margin-top: 5px; color: var(--ak-red);">💡 팁1: 위 칸과 병합(셀 합치기)할 땐 <b>^</b> 기호 입력.<br>💡 팁2: 표를 나누고 싶을 땐 맨 앞칸에 <b>## 소제목</b> 입력.</span>
         </div>
 
         <div class="data-group" style="background-color: #fff; border: 1px solid #ccc;">
@@ -214,7 +220,7 @@
         </div>
         
         <label>기자 이름</label>
-        <input type="text" id="nameInput" value="박충훈 기자">
+        <input type="text" id="nameInput" value="박조비 기자">
         
         <button class="main-btn" onclick="updateOutput()">🔄 수동 적용하기</button>
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
@@ -233,7 +239,7 @@
             <table class="modal-table" id="modalTable">
                 <thead>
                     <tr id="modalTh">
-                        <th>X축 항목(라벨)</th>
+                        <th>항목(라벨)</th>
                         <th><span id="sheetName1">데이터 1</span></th>
                         <th id="sheetTh2" style="display:none;"><span id="sheetName2">데이터 2</span></th>
                         <th id="sheetTh3" style="display:none;"><span id="sheetName3">데이터 3</span></th>
@@ -268,7 +274,7 @@
             <div id="displayFootnote"></div>
             
             <div class="footer-watermark">
-                그래픽&nbsp;&nbsp;<span id="displayName">박충훈 기자</span>
+                그래픽&nbsp;&nbsp;<span id="displayName">박조비 기자</span>
                 <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
             </div>
         </div>
@@ -283,10 +289,8 @@
 
     function formatKoreanNumber(num, subText = '') {
         if (isNaN(num) || num === 0) return num;
-
         let absNum = Math.abs(num);
         let sign = num < 0 ? '-' : '';
-
         if (absNum < 10000) return num;
 
         let isUck = /단위.*억/.test(subText) && !/십억|백억|천억/.test(subText);
@@ -319,11 +323,9 @@
             } else if (isMan && result.endsWith('만')) {
                 result = result.slice(0, -1);
             }
-
             return sign + result + decStr;
         } else {
             let intPart = Math.floor(absNum);
-            
             let numStr = String(absNum);
             let decStr = numStr.includes('.') ? '.' + numStr.split('.')[1] : '';
             
@@ -340,7 +342,6 @@
             for (let i = chunks.length - 1; i >= 0; i--) {
                 if (chunks[i] > 0) result += chunks[i] + units[i];
             }
-
             return sign + result + decStr;
         }
     }
@@ -350,7 +351,6 @@
         const numericValues = values.map(v => Number(v) || 0);
         const maxValue = Math.max(...numericValues);
         const maxIndex = numericValues.indexOf(maxValue);
-
         let grayCursor = 0;
 
         return numericValues.map((_, index) => {
@@ -378,167 +378,60 @@
     };
 
     const pieLeaderLinePlugin = {
+        // ... (이전 버전과 동일한 파이 차트 리더 라인 플러그인 코드) ...
         id: 'pieLeaderLinePlugin',
         afterDraw(chart, args, pluginOptions) {
             if (!pluginOptions || !pluginOptions.enabled) return;
-
             try {
                 const dataset = chart.data.datasets && chart.data.datasets[0];
                 if (!dataset) return;
-
                 const meta = chart.getDatasetMeta(0);
                 if (!meta || !meta.data || !meta.data.length) return;
-
-                const ctx = chart.ctx;
-                const chartArea = chart.chartArea;
-                const centerX = meta.data[0].x;
-                const outerRadius = meta.data[0].outerRadius;
-
-                const scale = pluginOptions.scale || 1;
-                const fontSize = Math.round(15 * scale);
-                
-                const labelFont = `900 ${fontSize}px ${globalFont}`;
-                const valueFont = `900 ${fontSize}px ${globalFont}`;
-                const lineColor = '#777777';
-                const fillColor = '#111111';
-                const strokeColor = '#ffffff';
-
-                const labelLineHeight = Math.round(18 * scale);
-                const blockHeight = Math.round(36 * scale);
-                const minGap = Math.round(48 * scale);
-                
-                const shortDiagonalLen = 18;
-                const minRise = 14;
-                const textGap = 6;
-                const edgePadding = 10;
-                const topPadding = 12;
-                const bottomPadding = 12;
-
+                const ctx = chart.ctx; const chartArea = chart.chartArea;
+                const centerX = meta.data[0].x; const outerRadius = meta.data[0].outerRadius;
+                const scale = pluginOptions.scale || 1; const fontSize = Math.round(15 * scale);
+                const labelFont = `900 ${fontSize}px ${globalFont}`; const valueFont = `900 ${fontSize}px ${globalFont}`;
+                const lineColor = '#777777'; const fillColor = '#111111'; const strokeColor = '#ffffff';
+                const labelLineHeight = Math.round(18 * scale); const blockHeight = Math.round(36 * scale); const minGap = Math.round(48 * scale);
+                const shortDiagonalLen = 18; const minRise = 14; const textGap = 6; const edgePadding = 10; const topPadding = 12; const bottomPadding = 12;
                 const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
                 const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
-
-                const formatValue = (value) => {
-                    return isKoreanNumber ? String(formatKoreanNumber(value, subText)) : String(value);
-                };
-
-                const measureBlockWidth = (label, value) => {
-                    ctx.save();
-                    ctx.font = labelFont;
-                    const labelWidth = ctx.measureText(String(label)).width;
-                    ctx.font = valueFont;
-                    const valueWidth = ctx.measureText(String(value)).width;
-                    ctx.restore();
-                    return Math.max(labelWidth, valueWidth);
-                };
-
+                const formatValue = (value) => { return isKoreanNumber ? String(formatKoreanNumber(value, subText)) : String(value); };
+                const measureBlockWidth = (label, value) => { ctx.save(); ctx.font = labelFont; const labelWidth = ctx.measureText(String(label)).width; ctx.font = valueFont; const valueWidth = ctx.measureText(String(value)).width; ctx.restore(); return Math.max(labelWidth, valueWidth); };
                 const items = meta.data.map((arc, index) => {
-                    const context = {
-                        chart: chart,
-                        dataset: dataset,
-                        datasetIndex: 0,
-                        dataIndex: index
-                    };
-
+                    const context = { chart: chart, dataset: dataset, datasetIndex: 0, dataIndex: index };
                     if (!getPieIsOutside(context)) return null;
-
-                    const angle = getPieMidAngle(context);
-                    const side = Math.cos(angle) >= 0 ? 'right' : 'left';
-                    const label = String(chart.data.labels[index] || '');
-                    const value = formatValue(dataset.data[index]);
-
-                    const startX = arc.x + Math.cos(angle) * (arc.outerRadius + 2);
-                    const startY = arc.y + Math.sin(angle) * (arc.outerRadius + 2);
-
-                    return {
-                        side: side,
-                        label: label,
-                        value: value,
-                        startX: startX,
-                        startY: startY,
-                        maxLineY: startY - minRise,
-                        lineY: 0,
-                        elbowX: 0,
-                        textX: 0,
-                        lineEndX: 0,
-                        boxWidth: measureBlockWidth(label, value)
-                    };
+                    const angle = getPieMidAngle(context); const side = Math.cos(angle) >= 0 ? 'right' : 'left';
+                    const label = String(chart.data.labels[index] || ''); const value = formatValue(dataset.data[index]);
+                    const startX = arc.x + Math.cos(angle) * (arc.outerRadius + 2); const startY = arc.y + Math.sin(angle) * (arc.outerRadius + 2);
+                    return { side: side, label: label, value: value, startX: startX, startY: startY, maxLineY: startY - minRise, lineY: 0, elbowX: 0, textX: 0, lineEndX: 0, boxWidth: measureBlockWidth(label, value) };
                 }).filter(Boolean);
-
                 const layoutSide = (sideItems, side) => {
                     if (!sideItems.length) return;
-
                     sideItems.sort((a, b) => b.maxLineY - a.maxLineY);
-
                     let nextAllowedY = chartArea.bottom - bottomPadding;
-
-                    for (const item of sideItems) {
-                        item.lineY = Math.min(item.maxLineY, nextAllowedY);
-                        nextAllowedY = item.lineY - minGap;
-                    }
-
+                    for (const item of sideItems) { item.lineY = Math.min(item.maxLineY, nextAllowedY); nextAllowedY = item.lineY - minGap; }
                     const minLineY = chartArea.top + topPadding + blockHeight + 4;
                     if (sideItems.length && sideItems[sideItems.length - 1].lineY < minLineY) {
                         const underflow = minLineY - sideItems[sideItems.length - 1].lineY;
                         for (let i = sideItems.length - 1; i >= 0; i--) {
                             sideItems[i].lineY += underflow;
-                            if (i < sideItems.length - 1) {
-                                sideItems[i].lineY = Math.min(sideItems[i].lineY, sideItems[i + 1].lineY - minGap);
-                            }
+                            if (i < sideItems.length - 1) { sideItems[i].lineY = Math.min(sideItems[i].lineY, sideItems[i + 1].lineY - minGap); }
                             sideItems[i].lineY = Math.min(sideItems[i].lineY, sideItems[i].maxLineY);
                         }
                     }
-
                     const maxWidth = Math.max(...sideItems.map(item => item.boxWidth));
-                    const commonTextX = side === 'right'
-                        ? Math.min(chartArea.right - maxWidth - edgePadding, centerX + outerRadius + 56)
-                        : Math.max(chartArea.left + maxWidth + edgePadding, centerX - outerRadius - 56);
-
-                    sideItems.forEach(item => {
-                        item.textX = commonTextX;
-                        item.lineEndX = side === 'right' ? commonTextX - textGap : commonTextX + textGap;
-                        item.elbowX = item.startX + (side === 'right' ? shortDiagonalLen : -shortDiagonalLen);
-                    });
+                    const commonTextX = side === 'right' ? Math.min(chartArea.right - maxWidth - edgePadding, centerX + outerRadius + 56) : Math.max(chartArea.left + maxWidth + edgePadding, centerX - outerRadius - 56);
+                    sideItems.forEach(item => { item.textX = commonTextX; item.lineEndX = side === 'right' ? commonTextX - textGap : commonTextX + textGap; item.elbowX = item.startX + (side === 'right' ? shortDiagonalLen : -shortDiagonalLen); });
                 };
-
-                layoutSide(items.filter(item => item.side === 'left'), 'left');
-                layoutSide(items.filter(item => item.side === 'right'), 'right');
-
-                const drawText = (text, x, y, font, align) => {
-                    ctx.save();
-                    ctx.font = font;
-                    ctx.textAlign = align;
-                    ctx.textBaseline = 'top';
-                    ctx.lineJoin = 'round';
-                    ctx.lineWidth = 4;
-                    ctx.strokeStyle = strokeColor;
-                    ctx.strokeText(String(text), x, y);
-                    ctx.fillStyle = fillColor;
-                    ctx.fillText(String(text), x, y);
-                    ctx.restore();
-                };
-
+                layoutSide(items.filter(item => item.side === 'left'), 'left'); layoutSide(items.filter(item => item.side === 'right'), 'right');
+                const drawText = (text, x, y, font, align) => { ctx.save(); ctx.font = font; ctx.textAlign = align; ctx.textBaseline = 'top'; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = strokeColor; ctx.strokeText(String(text), x, y); ctx.fillStyle = fillColor; ctx.fillText(String(text), x, y); ctx.restore(); };
                 items.forEach(item => {
                     const textTopY = item.lineY - blockHeight - 2;
-
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.moveTo(item.startX, item.startY);
-                    ctx.lineTo(item.elbowX, item.lineY);
-                    ctx.lineTo(item.lineEndX, item.lineY);
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = lineColor;
-                    ctx.lineCap = 'butt';
-                    ctx.lineJoin = 'miter';
-                    ctx.stroke();
-                    ctx.restore();
-
-                    const align = item.side === 'right' ? 'left' : 'right';
-                    drawText(item.label, item.textX, textTopY, labelFont, align);
-                    drawText(item.value, item.textX, textTopY + labelLineHeight, valueFont, align);
+                    ctx.save(); ctx.beginPath(); ctx.moveTo(item.startX, item.startY); ctx.lineTo(item.elbowX, item.lineY); ctx.lineTo(item.lineEndX, item.lineY); ctx.lineWidth = 2; ctx.strokeStyle = lineColor; ctx.lineCap = 'butt'; ctx.lineJoin = 'miter'; ctx.stroke(); ctx.restore();
+                    const align = item.side === 'right' ? 'left' : 'right'; drawText(item.label, item.textX, textTopY, labelFont, align); drawText(item.value, item.textX, textTopY + labelLineHeight, valueFont, align);
                 });
-            } catch (err) {
-                console.error('pieLeaderLinePlugin error:', err);
-            }
+            } catch (err) { console.error('pieLeaderLinePlugin error:', err); }
         }
     };
 
@@ -547,81 +440,33 @@
         const numericValues = (dataVals || []).map(v => Number(v) || 0);
         const total = numericValues.reduce((a, b) => a + b, 0);
         const outsideCount = total > 0 ? numericValues.filter(v => (v / total) < 0.05).length : 0;
-
         return Math.min(260, 96 + Math.max(0, longest - 6) * 2 + Math.max(0, outsideCount - 1) * 54);
     }
-
-    function getPieRatio(context) {
-        const value = Number(context.dataset.data[context.dataIndex]) || 0;
-        const total = context.dataset.data.reduce((a, b) => a + (Number(b) || 0), 0);
-        return total > 0 ? value / total : 0;
-    }
-
-    function getPieMidAngle(context) {
-        const meta = context.chart.getDatasetMeta(context.datasetIndex);
-        const arc = meta && meta.data ? meta.data[context.dataIndex] : null;
-        if (!arc) return -Math.PI / 2;
-        return (arc.startAngle + arc.endAngle) / 2;
-    }
-
-    function getPieDirectionByAngle(angle) {
-        const deg = ((angle * 180 / Math.PI) + 360) % 360;
-        if (deg >= 330 || deg < 30) return 'right';
-        if (deg >= 30 && deg < 150) return 'bottom';
-        if (deg >= 150 && deg < 210) return 'left';
-        return 'top';
-    }
-
-    function getPieIsOutside(context) {
-        return getPieRatio(context) < 0.05;
-    }
-
-    function getPieOffset(context) {
-        return getPieIsOutside(context) ? 16 : 0;
-    }
-
-    function getPieAlign(context) {
-        if (!getPieIsOutside(context)) return 'center';
-        return getPieDirectionByAngle(getPieMidAngle(context));
-    }
-
-    function getPieAnchor(context) {
-        return getPieIsOutside(context) ? 'end' : 'center';
-    }
-
-    function getPieTextAlign(context) {
-        if (!getPieIsOutside(context)) return 'center';
-
-        const direction = getPieDirectionByAngle(getPieMidAngle(context));
-        if (direction === 'left') return 'right';
-        if (direction === 'right') return 'left';
-        return 'center';
-    }
-
-    function getPieFont(context, scale = 1) {
-        const ratio = getPieRatio(context);
-
-        if (ratio >= 0.25) return { size: Math.round(19 * scale), weight: '900' };
-        if (ratio >= 0.12) return { size: Math.round(17 * scale), weight: '900' };
-        if (ratio >= 0.05) return { size: Math.round(15 * scale), weight: '900' };
-        return { size: Math.round(15 * scale), weight: '900' };
-    }
+    function getPieRatio(context) { const value = Number(context.dataset.data[context.dataIndex]) || 0; const total = context.dataset.data.reduce((a, b) => a + (Number(b) || 0), 0); return total > 0 ? value / total : 0; }
+    function getPieMidAngle(context) { const meta = context.chart.getDatasetMeta(context.datasetIndex); const arc = meta && meta.data ? meta.data[context.dataIndex] : null; if (!arc) return -Math.PI / 2; return (arc.startAngle + arc.endAngle) / 2; }
+    function getPieDirectionByAngle(angle) { const deg = ((angle * 180 / Math.PI) + 360) % 360; if (deg >= 330 || deg < 30) return 'right'; if (deg >= 30 && deg < 150) return 'bottom'; if (deg >= 150 && deg < 210) return 'left'; return 'top'; }
+    function getPieIsOutside(context) { return getPieRatio(context) < 0.05; }
+    function getPieOffset(context) { return getPieIsOutside(context) ? 16 : 0; }
+    function getPieAlign(context) { return !getPieIsOutside(context) ? 'center' : getPieDirectionByAngle(getPieMidAngle(context)); }
+    function getPieAnchor(context) { return getPieIsOutside(context) ? 'end' : 'center'; }
+    function getPieTextAlign(context) { if (!getPieIsOutside(context)) return 'center'; const direction = getPieDirectionByAngle(getPieMidAngle(context)); if (direction === 'left') return 'right'; if (direction === 'right') return 'left'; return 'center'; }
+    function getPieFont(context, scale = 1) { const ratio = getPieRatio(context); if (ratio >= 0.25) return { size: Math.round(19 * scale), weight: '900' }; if (ratio >= 0.12) return { size: Math.round(17 * scale), weight: '900' }; if (ratio >= 0.05) return { size: Math.round(15 * scale), weight: '900' }; return { size: Math.round(15 * scale), weight: '900' }; }
 
     function openDataSheet() {
         const type = document.getElementById('chartType').value;
-        if (type === 'table' || type === 'list') {
-            alert("텍스트 표 또는 리스트 모드에서는 좌측 입력창을 이용해 주세요.");
+        if (type === 'table' || type === 'list' || type === 'chart-table') {
+            alert("텍스트 표 또는 리스트 뷰가 포함된 모드에서는 좌측 입력창을 이용해 주세요.");
             return;
         }
-
+        // ... (이전 버전과 동일한 시트 오픈 로직)
         document.getElementById('sheetName1').innerText = document.getElementById('dataName1').value || '데이터 1';
         document.getElementById('sheetName2').innerText = document.getElementById('dataName2').value || '데이터 2';
         document.getElementById('sheetName3').innerText = document.getElementById('dataName3').value || '데이터 3';
         document.getElementById('sheetName4').innerText = document.getElementById('dataName4').value || '데이터 4';
 
-        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
-        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
-        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
+        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'h-multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo' || type === 'stacked-bar' || type === 'h-stacked-bar');
+        const useD3 = useD2;
+        const useD4 = useD2;
 
         document.getElementById('sheetTh2').style.display = useD2 ? 'table-cell' : 'none';
         document.getElementById('sheetTh3').style.display = useD3 ? 'table-cell' : 'none';
@@ -633,9 +478,7 @@
         const d3 = document.getElementById('dataInput3').value.split(',').map(s => s.trim());
         const d4 = document.getElementById('dataInput4').value.split(',').map(s => s.trim());
 
-        const tbody = document.getElementById('modalTbody');
-        tbody.innerHTML = '';
-
+        const tbody = document.getElementById('modalTbody'); tbody.innerHTML = '';
         let maxLen = Math.max(labels.length, d1.length, (useD2 ? d2.length : 0), (useD3 ? d3.length : 0), (useD4 ? d4.length : 0));
         if (maxLen === 0 || (maxLen === 1 && labels[0] === "")) maxLen = 5;
 
@@ -646,179 +489,158 @@
             rowHtml += `<td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2" value="${d2[i] !== undefined ? d2[i] : ''}"></td>`;
             rowHtml += `<td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3" value="${d3[i] !== undefined ? d3[i] : ''}"></td>`;
             rowHtml += `<td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4" value="${d4[i] !== undefined ? d4[i] : ''}"></td>`;
-            tr.innerHTML = rowHtml;
-            tbody.appendChild(tr);
+            tr.innerHTML = rowHtml; tbody.appendChild(tr);
         }
-
         document.getElementById('sheetModal').style.display = 'flex';
     }
 
     function addRow() {
         const type = document.getElementById('chartType').value;
-        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
-        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
-        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
+        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'h-multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo' || type === 'stacked-bar' || type === 'h-stacked-bar');
         const tbody = document.getElementById('modalTbody');
         const tr = document.createElement('tr');
-
         tr.innerHTML = `
             <td><input type="text" class="grid-label"></td>
             <td><input type="text" class="grid-d1"></td>
             <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2"></td>
-            <td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3"></td>
-            <td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4"></td>
+            <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3"></td>
+            <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4"></td>
         `;
         tbody.appendChild(tr);
     }
 
-    function closeDataSheet() {
-        document.getElementById('sheetModal').style.display = 'none';
-    }
+    function closeDataSheet() { document.getElementById('sheetModal').style.display = 'none'; }
 
     function saveDataSheet() {
         const type = document.getElementById('chartType').value;
-        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
-        const useD3 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
-        const useD4 = (type === 'multi-line' || type === 'multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo');
+        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'h-multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo' || type === 'stacked-bar' || type === 'h-stacked-bar');
+        const labels = [], d1 = [], d2 = [], d3 = [], d4 = [];
 
-        const labels = [];
-        const d1 = [];
-        const d2 = [];
-        const d3 = [];
-        const d4 = [];
-
-        const rows = document.querySelectorAll('#modalTbody tr');
-        rows.forEach(row => {
+        document.querySelectorAll('#modalTbody tr').forEach(row => {
             const l = row.querySelector('.grid-label').value.trim();
             const v1 = row.querySelector('.grid-d1').value.trim();
             const v2 = useD2 ? row.querySelector('.grid-d2').value.trim() : '';
-            const v3 = useD3 ? row.querySelector('.grid-d3').value.trim() : '';
-            const v4 = useD4 ? row.querySelector('.grid-d4').value.trim() : '';
-
+            const v3 = useD2 ? row.querySelector('.grid-d3').value.trim() : '';
+            const v4 = useD2 ? row.querySelector('.grid-d4').value.trim() : '';
             if (l !== '' || v1 !== '' || v2 !== '' || v3 !== '' || v4 !== '') {
-                labels.push(l);
-                d1.push(v1);
-                if (useD2) d2.push(v2);
-                if (useD3) d3.push(v3);
-                if (useD4) d4.push(v4);
+                labels.push(l); d1.push(v1); if (useD2) { d2.push(v2); d3.push(v3); d4.push(v4); }
             }
         });
 
         document.getElementById('labelsInput').value = labels.join(', ');
         document.getElementById('dataInput1').value = d1.join(', ');
-        if (useD2) document.getElementById('dataInput2').value = d2.join(', ');
-        if (useD3) document.getElementById('dataInput3').value = d3.join(', ');
-        if (useD4) document.getElementById('dataInput4').value = d4.join(', ');
-
-        closeDataSheet();
-        updateOutput();
+        if (useD2) {
+            document.getElementById('dataInput2').value = d2.join(', ');
+            document.getElementById('dataInput3').value = d3.join(', ');
+            document.getElementById('dataInput4').value = d4.join(', ');
+        }
+        closeDataSheet(); updateOutput();
     }
 
     function loadExampleData() {
         const type = document.getElementById('chartType').value;
+        document.getElementById('dataName2').value = ''; document.getElementById('dataInput2').value = '';
+        document.getElementById('dataName3').value = ''; document.getElementById('dataInput3').value = '';
+        document.getElementById('dataName4').value = ''; document.getElementById('dataInput4').value = '';
+        document.getElementById('yMin').value = ''; document.getElementById('yMax').value = '';
+        document.getElementById('y1Min').value = ''; document.getElementById('y1Max').value = '';
+        document.getElementById('footnoteInput').value = ''; document.getElementById('nameInput').value = '박조비 기자';
 
-        document.getElementById('dataName2').value = '';
-        document.getElementById('dataInput2').value = '';
-        document.getElementById('dataName3').value = '';
-        document.getElementById('dataInput3').value = '';
-        document.getElementById('dataName4').value = '';
-        document.getElementById('dataInput4').value = '';
-        document.getElementById('yMin').value = '';
-        document.getElementById('yMax').value = '';
-        document.getElementById('y1Min').value = '';
-        document.getElementById('y1Max').value = '';
-        document.getElementById('footnoteInput').value = '';
-        document.getElementById('nameInput').value = '박조비 기자';
-
-        if (type === 'table') {
+        if (type === 'table' || type === 'chart-table') {
             document.getElementById('titleInput').value = '주요 지역별 부동산 시장 동향';
             document.getElementById('subInput').value = '';
-            document.getElementById('tableDataInput').value = `구분\t지역\t주요 이슈\n서울 한강 이남\t강남구\t서울 25개 자치구 중 가장 높은 상승률 기록\n^\t서초구\t분양시장 중심으로 주택가격 크게 상승\n^\t송파구\t재건축 사업이 탄력 받으며 기대감 상승\n서울 한강 이북\t마포구\t강북 최고 분양가를 기록하는 등 상승세 지속\n^\t용산구\t한남 뉴타운 등 개발 사업 진행에 따른 기대감`;
+            document.getElementById('tableDataInput').value = `## 강남구 순매수\n종목명\t순매수액\t현재가\t대비율\n삼성전자\t323억\t8만2000\t-16.7\nSK하이닉스\t312억\t12만3000\t-6.2\n## 강북구 순매수\n종목명\t순매수액\t현재가\t대비율\n카카오\t285억\t5만8950\t-25.6\n네이버\t236억\t18만3600\t-19.7`;
             document.getElementById('footnoteInput').value = '*자료: 한국부동산원';
+            
+            if (type === 'chart-table') {
+                document.getElementById('labelsInput').value = 'A, B, C';
+                document.getElementById('dataName1').value = '항목1'; document.getElementById('dataInput1').value = '10, 20, 30';
+                document.getElementById('dataName2').value = '항목2'; document.getElementById('dataInput2').value = '15, 25, 35';
+            }
         } else if (type === 'list') {
             document.getElementById('titleInput').value = '2026년도 서울시 제1회 추가경정예산안';
             document.getElementById('subInput').value = '(주요 사업비 편성내역)';
             document.getElementById('tableDataInput').value = `피해계층 밀착지원: 1202억원\t소상공인 지원: 811억원\n^\t수출 중소기업 등 지원: 88억원\n^\t취약계층 지원: 303억원\n고유가 대응 체질개선: 4976억원\t대중교통 이용 활성화: 4695억원\n^\t내연차량 친환경 전환: 281억원\n고유가 피해지원금 매칭지원: 1529억원\t고유가피해지원금: 1529억원\n자치구 지원: 3530억원\t자치구 조정교부금: 3530억원`;
-            document.getElementById('footnoteInput').value = '';
         } else if (type === 'line') {
             document.getElementById('titleInput').value = '한국 시중 총통화량(M2) 추이';
             document.getElementById('subInput').value = '(단위: 조원, 자료: 트레이딩 이코노믹스)';
             document.getElementById('labelsInput').value = '7월,8월,9월,10월,11월,12월,1월';
-            document.getElementById('dataName1').value = '총통화량';
-            document.getElementById('dataInput1').value = '4370,4400,4430,4470,4480,4530,4565';
+            document.getElementById('dataName1').value = '총통화량'; document.getElementById('dataInput1').value = '4370,4400,4430,4470,4480,4530,4565';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'bar') {
             document.getElementById('titleInput').value = '주요 정당 지지율 추이';
             document.getElementById('subInput').value = '(단위: %, 자료: 리얼미터)';
             document.getElementById('labelsInput').value = 'A당,B당,C당,D당,무당층';
-            document.getElementById('dataName1').value = '지지율';
-            document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
+            document.getElementById('dataName1').value = '지지율'; document.getElementById('dataInput1').value = '42.5, 35.2, 5.8, 3.1, 13.4';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'pie') {
             document.getElementById('titleInput').value = '세계 D램 시장 점유율(22년 3분기)';
             document.getElementById('subInput').value = '(단위: %, 자료: 옴디아)';
             document.getElementById('labelsInput').value = '삼성전자,SK하이닉스,마이크론,기타';
-            document.getElementById('dataName1').value = '점유율';
-            document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
+            document.getElementById('dataName1').value = '점유율'; document.getElementById('dataInput1').value = '40.6,29.9,24.8,4.7';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'multi-line') {
             document.getElementById('titleInput').value = '5대 은행 가계대출 증감 추이';
             document.getElementById('subInput').value = '(단위: 억원, 기준: 전월말대비, 자료: 각사)';
             document.getElementById('labelsInput').value = '25년12월, 26년1월, 2월, 3월(16일기준)';
-            document.getElementById('dataName1').value = '주담대';
-            document.getElementById('dataInput1').value = '3000, -15000, 6000, -5776';
-            document.getElementById('dataName2').value = '총가계대출';
-            document.getElementById('dataInput2').value = '-5000, -20000, 0, 8068';
-            document.getElementById('dataName3').value = '신용대출';
-            document.getElementById('dataInput3').value = '-6000, -2000, -4000, 14008';
+            document.getElementById('dataName1').value = '주담대'; document.getElementById('dataInput1').value = '3000, -15000, 6000, -5776';
+            document.getElementById('dataName2').value = '총가계대출'; document.getElementById('dataInput2').value = '-5000, -20000, 0, 8068';
+            document.getElementById('dataName3').value = '신용대출'; document.getElementById('dataInput3').value = '-6000, -2000, -4000, 14008';
             document.getElementById('labelDisplayType').value = 'last';
         } else if (type === 'combo') {
             document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
             document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
             document.getElementById('labelsInput').value = "'25.1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '26.1, 2";
-            document.getElementById('dataName1').value = '계절조정 실업자';
-            document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
-            document.getElementById('dataName2').value = '계절조정 실업률';
-            document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
+            document.getElementById('dataName1').value = '계절조정 실업자'; document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
+            document.getElementById('dataName2').value = '계절조정 실업률'; document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'multi-combo') {
             document.getElementById('titleInput').value = '한국 에너지 자급도 추이';
             document.getElementById('subInput').value = '(단위: Mtoe, %)';
             document.getElementById('labelsInput').value = '2020년, 2021년, 2022년, 2023년, 2024년';
-            document.getElementById('dataName1').value = '국내 에너지 공급량';
-            document.getElementById('dataInput1').value = '269.336, 285.438, 279.651, 275.986, 281.463';
-            document.getElementById('dataName2').value = '국내 에너지 생산량';
-            document.getElementById('dataInput2').value = '52.660, 52.394, 57.804, 59.190, 62.224';
-            document.getElementById('dataName3').value = '에너지 자급도';
-            document.getElementById('dataInput3').value = '19.6, 18.4, 20.7, 21.4, 22.1';
-            document.getElementById('yMin').value = '0';
-            document.getElementById('yMax').value = '300';
-            document.getElementById('y1Min').value = '0';
-            document.getElementById('y1Max').value = '30';
+            document.getElementById('dataName1').value = '국내 에너지 공급량'; document.getElementById('dataInput1').value = '269.336, 285.438, 279.651, 275.986, 281.463';
+            document.getElementById('dataName2').value = '국내 에너지 생산량'; document.getElementById('dataInput2').value = '52.660, 52.394, 57.804, 59.190, 62.224';
+            document.getElementById('dataName3').value = '에너지 자급도'; document.getElementById('dataInput3').value = '19.6, 18.4, 20.7, 21.4, 22.1';
+            document.getElementById('yMin').value = '0'; document.getElementById('yMax').value = '300';
+            document.getElementById('y1Min').value = '0'; document.getElementById('y1Max').value = '30';
             document.getElementById('footnoteInput').value = '출처:국제에너지기구(IEA), 에너지경제연구원';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'multi-bar') {
             document.getElementById('titleInput').value = '삼성·SK하이닉스 연간 영업이익 전망';
             document.getElementById('subInput').value = '(단위: 억원, 출처: 시장 컨센서스)';
             document.getElementById('labelsInput').value = '2026년, 2027년, 2028년';
-            document.getElementById('dataName1').value = '삼성전자';
-            document.getElementById('dataInput1').value = '2975478, 3606812, 3505234';
-            document.getElementById('dataName2').value = 'SK하이닉스';
-            document.getElementById('dataInput2').value = '1944330, 2355562, 2567822';
+            document.getElementById('dataName1').value = '삼성전자'; document.getElementById('dataInput1').value = '2975478, 3606812, 3505234';
+            document.getElementById('dataName2').value = 'SK하이닉스'; document.getElementById('dataInput2').value = '1944330, 2355562, 2567822';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'stacked-combo') {
             document.getElementById('titleInput').value = '지역별 입주물량 추이';
             document.getElementById('subInput').value = '(단위: 천호, %, 자료: 부동산114)';
             document.getElementById('labelsInput').value = "'14, '15, '16, '17, '18, '19, '20, '21, '22, '23, '24, '25";
-            document.getElementById('dataName1').value = '수도권';
-            document.getElementById('dataInput1').value = '100, 110, 130, 180, 230, 210, 190, 160, 220, 190, 200, 160';
-            document.getElementById('dataName2').value = '5개 광역시';
-            document.getElementById('dataInput2').value = '60, 50, 70, 140, 50, 70, 60, 50, 50, 50, 60, 60';
-            document.getElementById('dataName3').value = '기타지방';
-            document.getElementById('dataInput3').value = '110, 110, 100, 70, 180, 130, 110, 150, 20, 120, 90, 110';
-            document.getElementById('dataName4').value = '전국 증감률(우)';
-            document.getElementById('dataInput4').value = '38, 5, 12, 28, 15, -10, -14, -20, 16, 8, -2, -25';
+            document.getElementById('dataName1').value = '수도권'; document.getElementById('dataInput1').value = '100, 110, 130, 180, 230, 210, 190, 160, 220, 190, 200, 160';
+            document.getElementById('dataName2').value = '5개 광역시'; document.getElementById('dataInput2').value = '60, 50, 70, 140, 50, 70, 60, 50, 50, 50, 60, 60';
+            document.getElementById('dataName3').value = '기타지방'; document.getElementById('dataInput3').value = '110, 110, 100, 70, 180, 130, 110, 150, 20, 120, 90, 110';
+            document.getElementById('dataName4').value = '전국 증감률(우)'; document.getElementById('dataInput4').value = '38, 5, 12, 28, 15, -10, -14, -20, 16, 8, -2, -25';
             document.getElementById('labelDisplayType').value = 'none';
+        } else if (type === 'h-bar') {
+            document.getElementById('titleInput').value = '현재 한국의 경제 상황, 10점 만점에 몇 점';
+            document.getElementById('subInput').value = '(단위: 명)';
+            document.getElementById('labelsInput').value = '1점, 2점, 3점, 5점, 7점';
+            document.getElementById('dataName1').value = '응답자 수';
+            document.getElementById('dataInput1').value = '1, 2, 7, 1, 1';
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'h-stacked-bar') {
+            document.getElementById('titleInput').value = '우리나라 성인 금융이해력 점수';
+            document.getElementById('subInput').value = '';
+            document.getElementById('labelsInput').value = '한국 2022년, 한국 2024년, OECD 2023년';
+            document.getElementById('dataName1').value = '금융지식'; document.getElementById('dataInput1').value = '75.5, 73.6, 66.9';
+            document.getElementById('dataName2').value = '금융행위'; document.getElementById('dataInput2').value = '65.8, 64.7, 61.6';
+            document.getElementById('dataName3').value = '금융태도'; document.getElementById('dataInput3').value = '52.4, 53.7, 58.0';
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'stacked-bar' || type === 'h-multi-bar') {
+            document.getElementById('titleInput').value = '가로/세로 막대 그래프 예시';
+            document.getElementById('labelsInput').value = 'A, B, C';
+            document.getElementById('dataName1').value = '항목1'; document.getElementById('dataInput1').value = '10, 20, 30';
+            document.getElementById('dataName2').value = '항목2'; document.getElementById('dataInput2').value = '15, 25, 35';
         }
 
         toggleInputs();
@@ -826,38 +648,29 @@
 
     function parseGeminiData() {
         const text = document.getElementById('geminiInput').value;
-        if (!text.trim()) {
-            alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요.");
-            return;
-        }
+        if (!text.trim()) { alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요."); return; }
 
-        let parsedData = {};
-        let currentTag = '';
-
+        let parsedData = {}; let currentTag = '';
         const lines = text.split(/\r?\n/);
         for (let line of lines) {
             const trimmedLine = line.trim();
-            if (/^\[.+\]$/.test(trimmedLine)) {
-                currentTag = trimmedLine;
-                parsedData[currentTag] = '';
-            } else if (currentTag) {
-                if (parsedData[currentTag] !== '' || trimmedLine !== '') {
-                    parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine;
-                }
-            }
+            if (/^\[.+\]$/.test(trimmedLine)) { currentTag = trimmedLine; parsedData[currentTag] = ''; }
+            else if (currentTag) { if (parsedData[currentTag] !== '' || trimmedLine !== '') parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine; }
         }
-
-        const extract = (tag) => {
-            return parsedData[tag] ? parsedData[tag].trim() : '';
-        };
+        const extract = (tag) => parsedData[tag] ? parsedData[tag].trim() : '';
 
         let rawType = extract('[종류]').toLowerCase();
         let mappedType = 'line';
 
-        if (rawType.includes('stacked-combo') || rawType.includes('누적막대+선')) mappedType = 'stacked-combo';
+        if (rawType.includes('chart-table') || rawType.includes('그래프+표')) mappedType = 'chart-table';
+        else if (rawType.includes('stacked-combo') || rawType.includes('누적막대+선')) mappedType = 'stacked-combo';
         else if (rawType.includes('multi-combo') || rawType.includes('다중막대+선')) mappedType = 'multi-combo';
+        else if (rawType.includes('h-stacked-bar') || rawType.includes('가로형 누적')) mappedType = 'h-stacked-bar';
+        else if (rawType.includes('h-multi-bar') || rawType.includes('가로형 다중막대')) mappedType = 'h-multi-bar';
+        else if (rawType.includes('h-bar') || rawType.includes('가로형 단일막대') || rawType.includes('가로막대')) mappedType = 'h-bar';
+        else if (rawType.includes('stacked-bar') || rawType.includes('누적막대')) mappedType = 'stacked-bar';
         else if (rawType.includes('multi-bar') || rawType.includes('다중막대')) mappedType = 'multi-bar';
-        else if (rawType.includes('multi') || rawType.includes('다중')) mappedType = 'multi-line';
+        else if (rawType.includes('multi-line') || rawType.includes('다중선')) mappedType = 'multi-line';
         else if (rawType.includes('combo') || rawType.includes('혼합')) mappedType = 'combo';
         else if (rawType.includes('pie') || rawType.includes('원')) mappedType = 'pie';
         else if (rawType.includes('list') || rawType.includes('리스트')) mappedType = 'list';
@@ -865,46 +678,33 @@
         else if (rawType.includes('bar') || rawType.includes('막대')) mappedType = 'bar';
         else if (rawType.includes('line') || rawType.includes('선')) mappedType = 'line';
 
-        // 🚨 지능형 자동 보정 로직 복구 및 업그레이드 🚨
         let data2 = extract('[데이터2수치]');
         if (data2 !== '') {
             if (mappedType === 'line') mappedType = 'multi-line';
             else if (mappedType === 'bar') mappedType = 'multi-bar';
             else if (mappedType === 'pie') mappedType = 'multi-line';
+            else if (mappedType === 'h-bar') mappedType = 'h-multi-bar';
         }
 
         document.getElementById('chartType').value = mappedType;
         document.getElementById('titleInput').value = extract('[제목]');
         document.getElementById('subInput').value = extract('[부제목]');
         document.getElementById('labelsInput').value = extract('[X축]');
-        document.getElementById('dataName1').value = extract('[데이터1이름]');
-        document.getElementById('dataInput1').value = extract('[데이터1수치]');
-        document.getElementById('dataName2').value = extract('[데이터2이름]');
-        document.getElementById('dataInput2').value = extract('[데이터2수치]');
-        document.getElementById('dataName3').value = extract('[데이터3이름]');
-        document.getElementById('dataInput3').value = extract('[데이터3수치]');
-        document.getElementById('dataName4').value = extract('[데이터4이름]');
-        document.getElementById('dataInput4').value = extract('[데이터4수치]');
-        document.getElementById('yMin').value = extract('[Y좌측최소]');
-        document.getElementById('yMax').value = extract('[Y좌측최대]');
-        document.getElementById('y1Min').value = extract('[Y우측최소]');
-        document.getElementById('y1Max').value = extract('[Y우측최대]');
+        document.getElementById('dataName1').value = extract('[데이터1이름]'); document.getElementById('dataInput1').value = extract('[데이터1수치]');
+        document.getElementById('dataName2').value = extract('[데이터2이름]'); document.getElementById('dataInput2').value = extract('[데이터2수치]');
+        document.getElementById('dataName3').value = extract('[데이터3이름]'); document.getElementById('dataInput3').value = extract('[데이터3수치]');
+        document.getElementById('dataName4').value = extract('[데이터4이름]'); document.getElementById('dataInput4').value = extract('[데이터4수치]');
+        document.getElementById('yMin').value = extract('[Y좌측최소]'); document.getElementById('yMax').value = extract('[Y좌측최대]');
+        document.getElementById('y1Min').value = extract('[Y우측최소]'); document.getElementById('y1Max').value = extract('[Y우측최대]');
         document.getElementById('footnoteInput').value = extract('[하단주석]');
-
-        const tableData = extract('[표데이터]');
-        if (tableData) document.getElementById('tableDataInput').value = tableData;
+        const tableData = extract('[표데이터]'); if (tableData) document.getElementById('tableDataInput').value = tableData;
 
         toggleInputs();
 
         const btn = document.getElementById('autoFillBtn');
         const originalText = btn.innerText;
-        btn.innerText = '✅ 데이터 맵핑 성공!';
-        btn.style.backgroundColor = '#111';
-
-        setTimeout(() => {
-            btn.innerText = originalText;
-            btn.style.backgroundColor = '#0056b3';
-        }, 2000);
+        btn.innerText = '✅ 데이터 맵핑 성공!'; btn.style.backgroundColor = '#111';
+        setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = '#0056b3'; }, 2000);
     }
 
     function toggleInputs() {
@@ -917,65 +717,60 @@
         const labelSettingGroup = document.getElementById('labelSettingGroup');
         const openSheetBtn = document.getElementById('openSheetBtn');
 
+        // 🚨 차트+표 동시 출력을 위한 로직 분기 🚨
         if (type === 'table' || type === 'list') {
             if(document.getElementById('chartInputs')) document.getElementById('chartInputs').style.display = 'none';
             if(document.getElementById('tableInputs')) document.getElementById('tableInputs').style.display = 'block';
             if(labelSettingGroup) labelSettingGroup.style.display = 'none';
             if(openSheetBtn) openSheetBtn.style.display = 'none';
+        } else if (type === 'chart-table') {
+            if(document.getElementById('chartInputs')) document.getElementById('chartInputs').style.display = 'block';
+            if(document.getElementById('tableInputs')) document.getElementById('tableInputs').style.display = 'block';
+            if(labelSettingGroup) labelSettingGroup.style.display = 'block';
+            if(openSheetBtn) openSheetBtn.style.display = 'flex';
+            
+            ds2Group.style.display = 'block';
+            ds3Group.style.display = 'block';
+            ds4Group.style.display = 'block';
+            y1Group.style.display = 'flex';
+            axisSettingGroup.style.display = 'block';
         } else {
             if(document.getElementById('chartInputs')) document.getElementById('chartInputs').style.display = 'block';
             if(document.getElementById('tableInputs')) document.getElementById('tableInputs').style.display = 'none';
             if(openSheetBtn) openSheetBtn.style.display = 'flex';
 
-            if (type === 'pie') {
-                if(labelSettingGroup) labelSettingGroup.style.display = 'none';
+            if (type === 'pie') labelSettingGroup.style.display = 'none';
+            else labelSettingGroup.style.display = 'block';
+
+            if (type.includes('multi-') || type.includes('combo') || type.includes('stacked')) {
+                ds2Group.style.display = 'block';
+                ds3Group.style.display = 'block';
+                ds4Group.style.display = 'block';
+                if(type.includes('combo') && !type.includes('stacked-bar')) y1Group.style.display = 'flex';
+                else y1Group.style.display = 'none';
             } else {
-                if(labelSettingGroup) labelSettingGroup.style.display = 'block';
+                ds2Group.style.display = 'none';
+                ds3Group.style.display = 'none';
+                ds4Group.style.display = 'none';
+                y1Group.style.display = 'none';
             }
 
-            if (type === 'multi-line' || type === 'multi-bar') {
-                if(ds2Group) ds2Group.style.display = 'block';
-                if(ds3Group) ds3Group.style.display = 'block';
-                if(ds4Group) ds4Group.style.display = 'block';
-                if(y1Group) y1Group.style.display = 'none';
-            } else if (type === 'combo' || type === 'multi-combo' || type === 'stacked-combo') {
-                if(ds2Group) ds2Group.style.display = 'block';
-                if(ds3Group) ds3Group.style.display = 'block';
-                if(ds4Group) ds4Group.style.display = 'block';
-                if(y1Group) y1Group.style.display = 'flex';
-            } else {
-                if(ds2Group) ds2Group.style.display = 'none';
-                if(ds3Group) ds3Group.style.display = 'none';
-                if(ds4Group) ds4Group.style.display = 'none';
-                if(y1Group) y1Group.style.display = 'none';
-            }
-
-            if (type === 'pie') {
-                if(axisSettingGroup) axisSettingGroup.style.display = 'none';
-            } else {
-                if(axisSettingGroup) axisSettingGroup.style.display = 'block';
-            }
+            if (type === 'pie') axisSettingGroup.style.display = 'none';
+            else axisSettingGroup.style.display = 'block';
         }
-
         updateOutput();
     }
 
     function updateOutput() {
         const type = document.getElementById('chartType').value;
-
         if(document.getElementById('displayTitle')) document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
         if(document.getElementById('displayName')) document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
 
         const subText = document.getElementById('subInput').value;
         const displaySub = document.getElementById('displaySub');
-
         if(displaySub) {
-            if (subText.trim() === '') {
-                displaySub.style.display = 'none';
-            } else {
-                displaySub.innerText = subText;
-                displaySub.style.display = 'inline-block';
-            }
+            if (subText.trim() === '') displaySub.style.display = 'none';
+            else { displaySub.innerText = subText; displaySub.style.display = 'inline-block'; }
         }
 
         let detectedFootnote = document.getElementById('footnoteInput').value;
@@ -990,6 +785,13 @@
             if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'block';
             if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'block';
             detectedFootnote = renderList(detectedFootnote);
+        } else if (type === 'chart-table') {
+            // 🚨 차트+표 동시 렌더링 🚨
+            if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'block';
+            if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'block';
+            if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'block';
+            renderChart('multi-bar'); // 기본적으로 다중 막대로 처리
+            detectedFootnote = renderTable(detectedFootnote);
         } else {
             if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'block';
             if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'none';
@@ -999,19 +801,14 @@
 
         const displayFootnote = document.getElementById('displayFootnote');
         if(displayFootnote) {
-            if (detectedFootnote.trim() === '') {
-                displayFootnote.style.display = 'none';
-            } else {
-                displayFootnote.innerText = detectedFootnote;
-                displayFootnote.style.display = 'block';
-            }
+            if (detectedFootnote.trim() === '') displayFootnote.style.display = 'none';
+            else { displayFootnote.innerText = detectedFootnote; displayFootnote.style.display = 'block'; }
         }
     }
 
     function renderList(manualFootnote) {
         const tsvData = document.getElementById('tableDataInput').value.trim();
         const rows = tsvData.split('\n');
-        
         const fontSizeElem = document.getElementById('globalFontSize');
         const fontSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
 
@@ -1022,120 +819,101 @@
         for (let i = 0; i < rows.length; i++) {
             let cols = rows[i].indexOf('\t') !== -1 ? rows[i].split('\t') : rows[i].split(',');
             cols = cols.map(c => c.trim());
+            if (cols.length === 1 && i === rows.length - 1 && autoFootnote === '') { autoFootnote = cols[0]; break; }
 
-            if (cols.length === 1 && i === rows.length - 1 && autoFootnote === '') {
-                autoFootnote = cols[0];
-                break;
-            }
-
-            let cat = cols[0];
-            let val = cols[1] || '';
-
+            let cat = cols[0]; let val = cols[1] || '';
             if (i === 0 && (cat === '구분' || cat === '카테고리') && (val === '내용' || val === '주요 이슈')) continue;
 
             if (cat && cat !== '^') {
-                if (currentListHTML !== '') {
-                    html += `<div class="list-item-group">${currentListHTML}</div>`;
-                    currentListHTML = '';
-                }
+                if (currentListHTML !== '') { html += `<div class="list-item-group">${currentListHTML}</div>`; currentListHTML = ''; }
                 let headerFontSize = Math.round(fontSize * 1.1);
                 html += `<div class="list-header-box" style="font-size: ${headerFontSize}px;">${cat}</div>`;
-                if (val) {
-                    currentListHTML += `<div class="list-item" style="font-size: ${fontSize}px;">${val}</div>`;
-                }
+                if (val) currentListHTML += `<div class="list-item" style="font-size: ${fontSize}px;">${val}</div>`;
             } else if (cat === '^' || cat === '') {
-                if (val) {
-                    currentListHTML += `<div class="list-item" style="font-size: ${fontSize}px;">${val}</div>`;
-                }
+                if (val) currentListHTML += `<div class="list-item" style="font-size: ${fontSize}px;">${val}</div>`;
             }
         }
-        
-        if (currentListHTML !== '') {
-            html += `<div class="list-item-group">${currentListHTML}</div>`;
-        }
-
+        if (currentListHTML !== '') html += `<div class="list-item-group">${currentListHTML}</div>`;
         html += `</div>`;
         if(document.getElementById('table-container')) document.getElementById('table-container').innerHTML = html;
         return autoFootnote;
     }
 
+    // 🚨 이중 표 (블록 나누기) 지원 렌더링 🚨
     function renderTable(manualFootnote) {
         const tsvData = document.getElementById('tableDataInput').value.trim();
         const rows = tsvData.split('\n');
-        
         const fontSizeElem = document.getElementById('globalFontSize');
         const fontSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
-        
-        const isKoreanNumberElem = document.getElementById('koreanNumberType');
-        const isKoreanNumber = isKoreanNumberElem ? isKoreanNumberElem.value === 'apply' : false;
+        const isKoreanNumber = document.getElementById('koreanNumberType') ? document.getElementById('koreanNumberType').value === 'apply' : false;
         const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
 
-        let html = `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 15px;">`;
-        let tableRows = [...rows];
+        let html = '';
+        let inTable = false;
+        let tableRows = [...rows]; 
         let autoFootnote = manualFootnote;
 
         if (tableRows.length > 2) {
             const lastLine = tableRows[tableRows.length - 1];
             const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
             const headerCols = tableRows[0].indexOf('\t') !== -1 ? tableRows[0].split('\t') : tableRows[0].split(',');
-
-            if (lastCols.length === 1 && headerCols.length > 1) {
-                if (autoFootnote === '') autoFootnote = lastCols[0].trim();
-                tableRows.pop();
+            if (lastCols.length === 1 && headerCols.length > 1 && !lastCols[0].startsWith('##')) { 
+                if (autoFootnote === '') autoFootnote = lastCols[0].trim(); 
+                tableRows.pop(); 
             }
         }
 
-        const matrix = tableRows.map(row => {
-            return (row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',')).map(c => c.trim());
-        });
-
+        const matrix = tableRows.map(row => (row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',')).map(c => c.trim()));
         const cells = matrix.map(row => row.map(col => ({ text: col, rowspan: 1, hide: false })));
 
         if (cells.length > 0) {
-            const numCols = cells[0].length;
+            const numCols = cells.reduce((max, r) => Math.max(max, r.length), 0);
             for (let c = 0; c < numCols; c++) {
                 let mergeStartRow = 0;
                 for (let r = 1; r < cells.length; r++) {
-                    if (cells[r][c] && cells[r][c].text === '^') {
-                        cells[mergeStartRow][c].rowspan++;
-                        cells[r][c].hide = true;
-                    } else {
-                        mergeStartRow = r;
+                    if (cells[r][c] && cells[r][c].text === '^') { 
+                        if (cells[mergeStartRow] && !cells[mergeStartRow][0].text.startsWith('##')) {
+                            cells[mergeStartRow][c].rowspan++; 
+                            cells[r][c].hide = true; 
+                        }
+                    } else { 
+                        mergeStartRow = r; 
                     }
                 }
             }
         }
 
         cells.forEach((row, rIdx) => {
-            if (rIdx === 0) {
-                html += '<thead><tr>';
-                row.forEach((cell, cIdx) => {
-                    if (!cell.hide) {
-                        const rs = cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : '';
-                        html += `<th${rs} class="col-${cIdx}">${cell.text}</th>`;
-                    }
-                });
-                html += '</tr></thead><tbody>';
+            const isBlockHeader = row[0].text.startsWith('##');
+
+            if (isBlockHeader) {
+                if (inTable) { html += '</tbody></table>'; inTable = false; }
+                let blockTitle = row[0].text.replace('##', '').trim();
+                html += `<div style="background-color:#444; color:white; padding:8px 15px; font-size:${fontSize*0.9}px; font-weight:bold; border-radius:5px; margin-top:20px; margin-bottom:5px; width:100%; box-sizing:border-box;">■ ${blockTitle}</div>`;
             } else {
-                html += '<tr>';
-                row.forEach((cell, cIdx) => {
-                    if (!cell.hide) {
-                        let cellText = cell.text;
-                        let cleanText = cellText.replace(/,/g, '');
-
-                        if (isKoreanNumber && cellText !== '' && !isNaN(cleanText)) {
-                            cellText = formatKoreanNumber(Number(cleanText), subText);
+                if (!inTable) {
+                    html += `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 5px;"><thead><tr>`;
+                    row.forEach((cell, cIdx) => {
+                        if (!cell.hide) html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="col-${cIdx}">${cell.text}</th>`;
+                    });
+                    html += '</tr></thead><tbody>';
+                    inTable = true;
+                } else {
+                    html += '<tr>';
+                    row.forEach((cell, cIdx) => {
+                        if (!cell.hide) {
+                            let cellText = cell.text; let cleanText = cellText.replace(/,/g, '');
+                            if (isKoreanNumber && cellText !== '' && !isNaN(cleanText)) cellText = formatKoreanNumber(Number(cleanText), subText);
+                            html += `<td${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="col-${cIdx}">${cellText}</td>`;
                         }
-
-                        const rs = cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : '';
-                        html += `<td${rs} class="col-${cIdx}">${cellText}</td>`;
-                    }
-                });
-                html += '</tr>';
+                    });
+                    html += '</tr>';
+                }
             }
         });
 
-        html += '</tbody></table>';
+        if (inTable) html += '</tbody></table>';
+        
         if(document.getElementById('table-container')) document.getElementById('table-container').innerHTML = html;
         return autoFootnote;
     }
@@ -1159,74 +937,68 @@
         const dataVals4 = document.getElementById('dataInput4') && document.getElementById('dataInput4').value ? document.getElementById('dataInput4').value.split(',').map(item => parseFloat(item.trim())) : null;
         const name4 = document.getElementById('dataName4') ? document.getElementById('dataName4').value : '';
 
-        const akRed = '#E61E2B';
-        const akOrange = '#F48F1F';
-        const akGray1 = '#888888';
-        const akGray2 = '#444444';
+        const akRed = '#E61E2B'; const akOrange = '#F48F1F'; const akGray1 = '#888888'; const akGray2 = '#444444';
 
-        if (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-combo' || chartType === 'multi-bar' || chartType === 'stacked-combo') {
-            if (chartType === 'multi-line') {
+        let isHorizontal = chartType.startsWith('h-');
+        let normType = chartType.replace('h-', '');
+
+        if (normType === 'multi-line' || normType === 'combo' || normType === 'multi-combo' || normType === 'multi-bar' || normType === 'stacked-combo' || normType === 'stacked-bar') {
+            if (normType === 'multi-line') {
                 datasets.push({ type: 'line', label: name1, data: dataVals1, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akGray1, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akGray1, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#bbbbbb', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#bbbbbb', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
-            } else if (chartType === 'combo') {
-                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, barPercentage: 0.55, yAxisID: 'y', order: 2 });
-                if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
-                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
-                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
-            } else if (chartType === 'multi-combo') {
-                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, yAxisID: 'y', order: 2 });
-                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#888888', borderRadius: 4, yAxisID: 'y', order: 2 });
-                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
-                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
-            } else if (chartType === 'multi-bar') {
+            } else if (normType === 'combo') {
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, barPercentage: 0.55, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+            } else if (normType === 'multi-combo') {
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#888888', borderRadius: 4, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+            } else if (normType === 'multi-bar') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, borderRadius: 4 });
                 if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akOrange, borderRadius: 4 });
                 if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, borderRadius: 4 });
                 if(dataVals4) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: akGray2, borderRadius: 4 });
-            } else if (chartType === 'stacked-combo') {
-                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, yAxisID: 'y', order: 2 });
-                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#bbbbbb', yAxisID: 'y', order: 2 });
-                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: '#888888', yAxisID: 'y', order: 2 });
-                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: 'y1', order: 1 });
+            } else if (normType === 'stacked-combo') {
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#bbbbbb', yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+            } else if (normType === 'stacked-bar') {
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed });
+                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akOrange });
+                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: '#bbbbbb' });
+                if(dataVals4) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: akGray1 });
             }
         } else {
-            let bgColors;
-            let borderColors;
-            let datasetType;
+            let bgColors; let borderColors; let datasetType;
 
-            if (chartType === 'pie') {
-                datasetType = 'doughnut';
-                bgColors = getPieColors(dataVals1);
-                borderColors = '#ffffff';
-            } else if (chartType === 'bar') {
+            if (normType === 'pie') {
+                datasetType = 'doughnut'; bgColors = getPieColors(dataVals1); borderColors = '#ffffff';
+            } else if (normType === 'bar') {
                 datasetType = 'bar';
-                if (dataVals1.length === 2) {
-                    bgColors = [akOrange, akRed];
-                    borderColors = [akOrange, akRed];
-                } else {
-                    bgColors = akRed;
-                    borderColors = akRed;
-                }
+                if (dataVals1.length === 2) { bgColors = [akOrange, akRed]; borderColors = [akOrange, akRed]; } 
+                else { bgColors = akRed; borderColors = akRed; }
             } else {
-                datasetType = 'line';
-                bgColors = 'rgba(235, 235, 235, 0.8)';
-                borderColors = akRed;
+                datasetType = 'line'; bgColors = 'rgba(235, 235, 235, 0.8)'; borderColors = akRed;
             }
 
             datasets.push({
                 type: datasetType,
                 data: dataVals1,
                 borderColor: borderColors,
-                borderWidth: chartType === 'pie' ? 2 : (chartType === 'line' ? 4 : 0),
+                borderWidth: normType === 'pie' ? 2 : (normType === 'line' ? 4 : 0),
                 backgroundColor: bgColors,
-                fill: chartType === 'line',
+                fill: normType === 'line',
                 pointBackgroundColor: '#fff',
                 pointBorderColor: akRed,
                 pointBorderWidth: 2,
-                pointRadius: chartType === 'line' ? 5 : 0,
-                borderRadius: chartType === 'bar' ? 4 : 0,
+                pointRadius: normType === 'line' ? 5 : 0,
+                borderRadius: normType === 'bar' ? 4 : 0,
                 barPercentage: 0.55
             });
         }
@@ -1237,7 +1009,6 @@
         let y1Max = document.getElementById('y1Max').value;
         const labelDisplayTypeElem = document.getElementById('labelDisplayType');
         const labelDisplayType = labelDisplayTypeElem ? labelDisplayTypeElem.value : 'all';
-        
         const isKoreanNumberElem = document.getElementById('koreanNumberType');
         const isKoreanNumber = isKoreanNumberElem ? isKoreanNumberElem.value === 'apply' : false;
         const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
@@ -1247,190 +1018,183 @@
         const scale = baseSize / 20; 
 
         const ctx = document.getElementById('myChart').getContext('2d');
-
-        let baseChartType = chartType;
-        if(chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-combo' || chartType === 'multi-bar' || chartType === 'stacked-combo') baseChartType = 'bar';
+        let baseChartType = (normType === 'line' || normType === 'pie') ? normType : 'bar';
+        let isStacked = normType.includes('stacked');
 
         myChart = new Chart(ctx, {
             type: baseChartType,
-            data: {
-                labels: labels,
-                datasets: datasets
-            },
+            data: { labels: labels, datasets: datasets },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: chartType === 'pie' ? '28%' : '0%',
+                indexAxis: isHorizontal ? 'y' : 'x',
+                responsive: true, maintainAspectRatio: false,
+                cutout: normType === 'pie' ? '28%' : '0%',
                 layout: {
-                    padding: chartType === 'pie'
+                    padding: normType === 'pie'
                         ? { top: getPieTopPadding(labels, dataVals1), right: 64, bottom: 30, left: 64 }
-                        : (labelDisplayType === 'last'
-                            ? { right: 100, top: 40, bottom: 20, left: 10 }
-                            : { right: 30, top: 40, bottom: 20, left: 10 })
+                        : (labelDisplayType === 'last' ? { right: 100, top: 40, bottom: 20, left: 10 } : { right: 50, top: 40, bottom: 20, left: 10 })
                 },
                 plugins: {
-                    pieLeaderLinePlugin: {
-                        enabled: chartType === 'pie',
-                        scale: scale 
-                    },
+                    pieLeaderLinePlugin: { enabled: normType === 'pie', scale: scale },
                     title: { display: false },
                     legend: {
-                        display: (chartType === 'multi-line' || chartType === 'combo' || chartType === 'multi-combo' || chartType === 'multi-bar' || chartType === 'stacked-combo'),
-                        position: 'top',
-                        align: 'end',
-                        labels: {
-                            font: { size: Math.round(16 * scale), weight: 'bold' },
-                            color: '#111'
-                        },
+                        display: (normType === 'multi-line' || normType === 'combo' || normType === 'multi-combo' || normType === 'multi-bar' || normType === 'stacked-combo' || normType === 'stacked-bar'),
+                        position: 'top', align: 'end',
+                        labels: { font: { size: Math.round(16 * scale), weight: 'bold' }, color: '#111' },
                         padding: { bottom: 25 }
                     },
                     tooltip: { enabled: false },
                     datalabels: {
                         display: function(context) {
                             if (labelDisplayType === 'none') return false;
-                            if (chartType === 'pie') return !getPieIsOutside(context);
+                            if (normType === 'pie') return !getPieIsOutside(context);
                             if (labelDisplayType === 'last') return context.dataIndex === context.dataset.data.length - 1;
                             return true;
                         },
                         align: function(context) {
-                            if (chartType === 'pie') return getPieAlign(context);
-                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 'center';
-                            if ((chartType === 'combo' || chartType === 'multi-combo') && context.dataset.type === 'bar') return 'start';
-
-                            if (chartType === 'multi-line' || ((chartType === 'combo' || chartType === 'multi-combo' || chartType === 'stacked-combo') && context.dataset.type === 'line')) {
+                            if (normType === 'pie') return getPieAlign(context);
+                            
+                            if (isHorizontal) {
+                                if (isStacked && context.dataset.type === 'bar') return 'center';
+                                return 'right';
+                            }
+                            
+                            if (isStacked && context.dataset.type === 'bar') return 'center';
+                            if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'start';
+                            if (normType === 'multi-line' || ((normType.includes('combo')) && context.dataset.type === 'line')) {
                                 const { rank, totalLines } = getLineRank(context);
-
                                 if (labelDisplayType === 'last' && context.dataIndex === context.dataset.data.length - 1) {
                                     if (totalLines === 2) return rank === 0 ? 'top' : 'bottom';
-                                    if (totalLines >= 3) {
-                                        if (rank === 0) return 'top';
-                                        if (rank === 1) return 'right';
-                                        return 'bottom';
-                                    }
+                                    if (totalLines >= 3) { if (rank === 0) return 'top'; if (rank === 1) return 'right'; return 'bottom'; }
                                 }
-
-                                if (rank === 0) return 'top';
-                                if (rank === 1) return 'bottom';
-                                return 'bottom';
+                                if (rank === 0) return 'top'; if (rank === 1) return 'bottom'; return 'bottom';
                             }
-
-                            if (chartType === 'bar' || chartType === 'multi-bar') return 'end';
+                            if (normType === 'bar' || normType === 'multi-bar') return 'end';
                             return 'top';
                         },
                         anchor: function(context) {
-                            if (chartType === 'pie') return getPieAnchor(context);
-                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 'center';
-                            if ((chartType === 'combo' || chartType === 'multi-combo') && context.dataset.type === 'bar') return 'end';
-                            if (chartType === 'bar' || chartType === 'multi-bar') return 'end';
+                            if (normType === 'pie') return getPieAnchor(context);
+                            
+                            if (isHorizontal) {
+                                if (isStacked && context.dataset.type === 'bar') return 'center';
+                                return 'end';
+                            }
+
+                            if (isStacked && context.dataset.type === 'bar') return 'center';
+                            if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'end';
+                            if (normType === 'bar' || normType === 'multi-bar') return 'end';
                             return 'center';
                         },
                         offset: function(context) {
-                            if (chartType === 'pie') return getPieOffset(context);
-                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 0;
-                            if (chartType === 'multi-bar') return 4;
-                            if ((chartType === 'combo' || chartType === 'multi-combo') && context.dataset.type === 'bar') return 6;
-
-                            if (chartType === 'multi-line' || ((chartType === 'combo' || chartType === 'multi-combo' || chartType === 'stacked-combo') && context.dataset.type === 'line')) {
-                                const { rank, totalLines } = getLineRank(context);
-
-                                if (labelDisplayType === 'last' && context.dataIndex === context.dataset.data.length - 1) {
-                                    if (totalLines >= 3 && rank === 1) return 12;
-                                    return 10;
-                                }
-
-                                if (rank === 2) return 25;
-                                return 8;
+                            if (normType === 'pie') return getPieOffset(context);
+                            
+                            if (isHorizontal) {
+                                if (isStacked && context.dataset.type === 'bar') return 0;
+                                return 6;
                             }
 
-                            if (chartType === 'bar') return 6;
-                            return 10;
+                            if (isStacked && context.dataset.type === 'bar') return 0;
+                            if (normType === 'multi-bar') return 4;
+                            if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 6;
+                            if (normType === 'multi-line' || ((normType.includes('combo')) && context.dataset.type === 'line')) {
+                                const { rank, totalLines } = getLineRank(context);
+                                if (labelDisplayType === 'last' && context.dataIndex === context.dataset.data.length - 1) {
+                                    if (totalLines >= 3 && rank === 1) return 12; return 10;
+                                }
+                                if (rank === 2) return 25; return 8;
+                            }
+                            if (normType === 'bar') return 6; return 10;
                         },
                         color: function(context) {
-                            if (chartType === 'pie') return '#ffffff';
-                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return '#ffffff';
-                            if ((chartType === 'combo' || chartType === 'multi-combo') && context.dataset.type === 'bar') return '#333';
-                            if (chartType === 'bar' || chartType === 'multi-bar') return '#111';
+                            if (normType === 'pie') return '#ffffff';
+                            if (isStacked && context.dataset.type === 'bar') return '#ffffff';
+                            if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return '#333';
+                            if (normType === 'bar' || normType === 'multi-bar') return '#111';
+                            if (isHorizontal) return '#111';
                             return context.dataset.borderColor;
                         },
                         font: function(context) {
-                            if (chartType === 'pie') return getPieFont(context, scale); 
+                            if (normType === 'pie') return getPieFont(context, scale); 
                             if (labelDisplayType === 'last') return { size: Math.round(22 * scale), weight: '900' };
                             return { size: Math.round(18 * scale), weight: 'bold' };
                         },
                         textStrokeColor: function(context) {
-                            if (chartType === 'pie') return 'rgba(0,0,0,0)'; 
-                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 'rgba(0,0,0,0)';
+                            if (normType === 'pie') return 'rgba(0,0,0,0)'; 
+                            if (isStacked && context.dataset.type === 'bar') return 'rgba(0,0,0,0)';
+                            if (isHorizontal) return 'rgba(0,0,0,0)';
                             return '#ffffff';
                         },
                         textStrokeWidth: function(context) {
-                            if (chartType === 'pie') return 0;
-                            if (chartType === 'stacked-combo' && context.dataset.type === 'bar') return 0;
+                            if (normType === 'pie') return 0;
+                            if (isStacked && context.dataset.type === 'bar') return 0;
+                            if (isHorizontal) return 0;
                             return 6;
                         },
                         formatter: (value, ctx) => {
                             let displayVal = isKoreanNumber ? formatKoreanNumber(value, subText) : value;
-                            if (chartType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + displayVal;
+                            if (normType === 'pie') return ctx.chart.data.labels[ctx.dataIndex] + '\n' + displayVal;
                             return displayVal;
                         },
                         textAlign: function(context) {
-                            if (chartType === 'pie') return getPieTextAlign(context);
+                            if (normType === 'pie') return getPieTextAlign(context);
                             return 'center';
                         },
-                        clamp: true,
-                        clip: false
+                        clamp: true, clip: false
                     }
                 },
                 scales: {
                     x: {
-                        display: chartType !== 'pie',
-                        stacked: chartType === 'stacked-combo',
-                        grid: { display: false },
-                        ticks: {
-                            font: { size: Math.round(16 * scale), weight: 'bold' },
-                            color: '#333'
-                        }
-                    },
-                    y: {
-                        display: chartType !== 'pie',
-                        type: 'linear',
-                        position: 'left',
-                        stacked: chartType === 'stacked-combo',
-                        grid: {
-                            color: function(context) {
-                                return context.tick.value === 0 ? '#000000' : '#e0e0e0';
-                            },
-                            lineWidth: function(context) {
-                                return context.tick.value === 0 ? 2 : 1;
-                            },
+                        display: normType !== 'pie',
+                        stacked: isStacked,
+                        type: isHorizontal ? 'linear' : 'category',
+                        grid: { 
+                            display: isHorizontal ? true : false,
+                            color: function(context) { return isHorizontal && context.tick.value === 0 ? '#000000' : '#e0e0e0'; },
+                            lineWidth: function(context) { return isHorizontal && context.tick.value === 0 ? 2 : 1; },
                             drawBorder: false
                         },
                         ticks: {
-                            font: { size: Math.round(16 * scale) },
-                            color: '#666',
+                            font: { size: Math.round(16 * scale), weight: isHorizontal ? 'normal' : 'bold' },
+                            color: isHorizontal ? '#666' : '#333',
                             callback: function(value) {
-                                return isKoreanNumber ? formatKoreanNumber(value, subText) : value;
+                                if (isHorizontal) return isKoreanNumber ? formatKoreanNumber(value, subText) : value;
+                                return this.getLabelForValue(value);
                             }
                         },
-                        beginAtZero: (chartType === 'bar' || chartType === 'multi-bar') ? true : false,
-                        min: yMin !== '' ? parseFloat(yMin) : undefined,
-                        max: yMax !== '' ? parseFloat(yMax) : undefined,
+                        beginAtZero: isHorizontal ? true : false,
+                        min: isHorizontal && yMin !== '' ? parseFloat(yMin) : undefined,
+                        max: isHorizontal && yMax !== '' ? parseFloat(yMax) : undefined,
+                    },
+                    y: {
+                        display: normType !== 'pie',
+                        type: isHorizontal ? 'category' : 'linear',
+                        position: 'left',
+                        stacked: isStacked,
+                        grid: {
+                            display: isHorizontal ? false : true,
+                            color: function(context) { return !isHorizontal && context.tick.value === 0 ? '#000000' : '#e0e0e0'; },
+                            lineWidth: function(context) { return !isHorizontal && context.tick.value === 0 ? 2 : 1; },
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: { size: Math.round(16 * scale), weight: isHorizontal ? 'bold' : 'normal' },
+                            color: isHorizontal ? '#333' : '#666',
+                            callback: function(value) {
+                                if (!isHorizontal) return isKoreanNumber ? formatKoreanNumber(value, subText) : value;
+                                return this.getLabelForValue(value);
+                            }
+                        },
+                        beginAtZero: !isHorizontal && (baseChartType === 'bar') ? true : false,
+                        min: !isHorizontal && yMin !== '' ? parseFloat(yMin) : undefined,
+                        max: !isHorizontal && yMax !== '' ? parseFloat(yMax) : undefined,
                         grace: '15%'
                     },
                     y1: {
-                        display: chartType === 'combo' || chartType === 'multi-combo' || chartType === 'stacked-combo',
-                        type: 'linear',
-                        position: 'right',
-                        grid: { display: false },
-                        ticks: {
-                            font: { size: Math.round(16 * scale), weight: 'bold' },
-                            color: '#E61E2B',
-                            callback: function(value) {
-                                return isKoreanNumber ? formatKoreanNumber(value, subText) : value;
-                            }
-                        },
+                        display: !isHorizontal && (normType === 'combo' || normType === 'multi-combo' || normType === 'stacked-combo'),
+                        type: 'linear', position: 'right', grid: { display: false },
+                        ticks: { font: { size: Math.round(16 * scale), weight: 'bold' }, color: '#E61E2B', callback: function(value) { return isKoreanNumber ? formatKoreanNumber(value, subText) : value; } },
                         beginAtZero: true,
-                        min: y1Min !== '' ? parseFloat(y1Min) : undefined,
-                        max: y1Max !== '' ? parseFloat(y1Max) : undefined,
+                        min: !isHorizontal && y1Min !== '' ? parseFloat(y1Min) : undefined,
+                        max: !isHorizontal && y1Max !== '' ? parseFloat(y1Max) : undefined,
                         grace: '15%'
                     }
                 }
@@ -1443,33 +1207,17 @@
         const btn = document.getElementById('downloadBtn');
         const originalText = btn.innerText;
 
-        btn.innerText = '⏳ 이미지 생성 중...';
-        btn.style.backgroundColor = '#666';
-
-        html2canvas(captureDiv, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff'
-        }).then(canvas => {
+        btn.innerText = '⏳ 이미지 생성 중...'; btn.style.backgroundColor = '#666';
+        html2canvas(captureDiv, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
             const link = document.createElement('a');
             const type = document.getElementById('chartType').value;
             let filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
-            link.download = filePrefix + new Date().getTime() + '.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-
-            btn.innerText = originalText;
-            btn.style.backgroundColor = '#333';
-        }).catch(err => {
-            alert("저장 오류가 발생했습니다.");
-            btn.innerText = originalText;
-            btn.style.backgroundColor = '#333';
-        });
+            link.download = filePrefix + new Date().getTime() + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
+            btn.innerText = originalText; btn.style.backgroundColor = '#333';
+        }).catch(err => { alert("저장 오류가 발생했습니다."); btn.innerText = originalText; btn.style.backgroundColor = '#333'; });
     }
 
-    window.onload = function() {
-        loadExampleData();
-    };
+    window.onload = function() { loadExampleData(); };
 </script>
 </body>
 </html>
