@@ -49,7 +49,12 @@
         button.main-btn:hover { background: #c51824; }
         .btn-download { background: #333; margin-top: 10px; border: none; color: white; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;}
         .btn-download:hover { background: #111; }
-        
+
+        .export-option-group { background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #e0e0e0; margin-top: 10px; }
+        .export-option-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+        .export-option-row select { flex: 1; margin-bottom: 0; }
+        .export-size-hint { font-size: 12px; color: #666; line-height: 1.4; margin-top: 6px; display: block; }
+
         .preview-area { flex: 1; display: flex; justify-content: flex-start; align-items: flex-start; width: 100%; position: sticky; top: 20px;}
         #capture-area { background: white; width: 750px; padding: 40px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         
@@ -238,6 +243,18 @@
         <input type="text" id="nameInput" value="박조비 기자">
         
         <button class="main-btn" onclick="handleApplyClick()">🔄 수동 적용하기</button>
+
+        <div class="export-option-group">
+            <label style="margin-top:0; color:var(--ak-red); font-size:14px;">📸 저장 배율 선택</label>
+            <div class="export-option-row">
+                <select id="exportScale">
+                    <option value="2">2배 고정 출력 (1500px 기준)</option>
+                    <option value="3" selected>3배 고정 출력 (2250px 기준)</option>
+                </select>
+            </div>
+            <span class="export-size-hint">현재 750px 작업 화면을 기준으로 2배/3배 크기로 고정 저장합니다.</span>
+        </div>
+
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
         
         <div style="margin-top: 20px; font-size: 13px; color: #888; text-align: center; font-weight: bold;">
@@ -304,6 +321,48 @@
     let myChart = null;
 
     let initializedChartTypes = new Set();
+    const NORMAL_CHART_DPR = Math.max(window.devicePixelRatio || 1, 1);
+    const EXPORT_CHART_DPR = Math.max(4, NORMAL_CHART_DPR);
+
+    function waitForNextPaint() {
+        return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }
+
+    async function setChartPixelRatio(pixelRatio) {
+        if (!myChart) return;
+        myChart.options.devicePixelRatio = pixelRatio;
+        myChart.resize();
+        myChart.update('none');
+        await waitForNextPaint();
+    }
+
+    function getSelectedExportScale() {
+        const exportScaleEl = document.getElementById('exportScale');
+        const exportScale = exportScaleEl ? parseInt(exportScaleEl.value, 10) : 3;
+        return exportScale === 2 ? 2 : 3;
+    }
+
+    function getFixedExportSize() {
+        const captureDiv = document.getElementById('capture-area');
+        const baseWidth = 750;
+        const rect = captureDiv.getBoundingClientRect();
+        const baseHeight = Math.max(Math.round(rect.height), captureDiv.scrollHeight, captureDiv.offsetHeight);
+        const exportScale = getSelectedExportScale();
+        return {
+            exportScale,
+            baseWidth,
+            baseHeight,
+            exportWidth: baseWidth * exportScale,
+            exportHeight: baseHeight * exportScale
+        };
+    }
+
+    function updateExportSizeHint() {
+        const hintEl = document.querySelector('.export-size-hint');
+        if (!hintEl) return;
+        const sizes = getFixedExportSize();
+        hintEl.innerText = `현재 750px 작업 화면을 기준으로 ${sizes.exportScale}배 크기(${sizes.exportWidth}px × ${sizes.exportHeight}px)로 고정 저장합니다.`;
+    }
 
     function hasGeminiInputData() {
         const geminiInput = document.getElementById('geminiInput');
@@ -874,6 +933,8 @@ function openDataSheet() {
             if (detectedFootnote.trim() === '') displayFootnote.style.display = 'none';
             else { displayFootnote.innerText = detectedFootnote; displayFootnote.style.display = 'block'; }
         }
+
+        updateExportSizeHint();
     }
 
     function renderTimeline(manualFootnote) {
@@ -1133,6 +1194,8 @@ function openDataSheet() {
             options: {
                 indexAxis: isHorizontal ? 'y' : 'x',
                 responsive: true, maintainAspectRatio: false,
+                devicePixelRatio: NORMAL_CHART_DPR,
+                animation: false,
                 cutout: normType === 'pie' ? '30%' : '0%',
                 layout: {
                     padding: normType === 'pie'
@@ -1304,27 +1367,79 @@ function openDataSheet() {
         }
     }
 
-    function downloadImage() {
+    async function downloadImage() {
         if (!validateReporterName()) return;
 
         const captureDiv = document.getElementById('capture-area');
         const btn = document.getElementById('downloadBtn');
         const originalText = btn.innerText;
+        const { exportScale, baseWidth, baseHeight, exportWidth, exportHeight } = getFixedExportSize();
+        const chartExportDpr = Math.max(EXPORT_CHART_DPR, exportScale * 2);
 
-        btn.innerText = '⏳ 이미지 생성 중...'; btn.style.backgroundColor = '#666';
-        html2canvas(captureDiv, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
-            const link = document.createElement('a');
-            const type = document.getElementById('chartType').value;
-            let filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
-            link.download = filePrefix + new Date().getTime() + '.png'; link.href = canvas.toDataURL('image/png'); link.click();
-            btn.innerText = originalText; btn.style.backgroundColor = '#333';
-        }).catch(err => { alert("저장 오류가 발생했습니다."); btn.innerText = originalText; btn.style.backgroundColor = '#333'; });
+        btn.innerText = `⏳ ${exportScale}배 이미지 생성 중...`;
+        btn.style.backgroundColor = '#666';
+
+        try {
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+
+            await setChartPixelRatio(chartExportDpr);
+            await waitForNextPaint();
+
+            const canvas = await html2canvas(captureDiv, {
+                scale: exportScale,
+                width: baseWidth,
+                height: baseHeight,
+                windowWidth: baseWidth,
+                windowHeight: baseHeight,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false
+            });
+
+            if (canvas.width !== exportWidth || canvas.height !== exportHeight) {
+                const fixedCanvas = document.createElement('canvas');
+                fixedCanvas.width = exportWidth;
+                fixedCanvas.height = exportHeight;
+                const fixedCtx = fixedCanvas.getContext('2d');
+                fixedCtx.drawImage(canvas, 0, 0, exportWidth, exportHeight);
+
+                const link = document.createElement('a');
+                const type = document.getElementById('chartType').value;
+                let filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
+                link.download = `${filePrefix}${exportScale}x_` + new Date().getTime() + '.png';
+                link.href = fixedCanvas.toDataURL('image/png');
+                link.click();
+            } else {
+                const link = document.createElement('a');
+                const type = document.getElementById('chartType').value;
+                let filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
+                link.download = `${filePrefix}${exportScale}x_` + new Date().getTime() + '.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+        } catch (err) {
+            console.error(err);
+            alert('저장 오류가 발생했습니다.');
+        } finally {
+            await setChartPixelRatio(NORMAL_CHART_DPR);
+            updateExportSizeHint();
+            btn.innerText = originalText;
+            btn.style.backgroundColor = '#333';
+        }
     }
 
     window.onload = function() { 
         const initialType = document.getElementById('chartType').value;
         initializedChartTypes.add(initialType);
-        loadExampleData(); 
+        loadExampleData();
+        updateExportSizeHint();
+
+        const exportScaleEl = document.getElementById('exportScale');
+        if (exportScaleEl) {
+            exportScaleEl.addEventListener('change', updateExportSizeHint);
+        } 
         
         document.getElementById('tableDataInput').addEventListener('keydown', function(e) {
             if (e.key === 'Tab') {
