@@ -248,8 +248,8 @@
             <label style="margin-top:0; color:var(--ak-red); font-size:14px;">📸 저장 배율 선택</label>
             <div class="export-option-row">
                 <select id="exportScale">
-                    <option value="2">2배 고정 출력 (1500px 기준)</option>
-                    <option value="3" selected>3배 고정 출력 (2250px 기준)</option>
+                    <option value="2" selected>2배 고정 출력 (1500px 기준)</option>
+                    <option value="3">3배 고정 출력 (2250px 기준)</option>
                 </select>
             </div>
             <span class="export-size-hint">현재 750px 작업 화면을 기준으로 2배/3배 크기로 고정 저장합니다.</span>
@@ -361,7 +361,7 @@
         const hintEl = document.querySelector('.export-size-hint');
         if (!hintEl) return;
         const sizes = getFixedExportSize();
-        hintEl.innerText = `현재 750px 작업 화면을 기준으로 ${sizes.exportScale}배 크기(${sizes.exportWidth}px × ${sizes.exportHeight}px)로 고정 저장합니다.`;
+        hintEl.innerText = `현재 750px 작업 화면을 기준으로 ${sizes.exportScale}배 크기(${sizes.exportWidth}px × ${sizes.exportHeight}px)로 고정 저장합니다. 2배 저장이 가장 무난합니다.`;
     }
 
     function hasGeminiInputData() {
