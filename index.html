@@ -59,6 +59,12 @@
         .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline; line-height: 1.4; word-break: keep-all;}
         
         #chart-container { height: 420px; margin-top: 0px; flex-shrink: 0; transition: height 0.3s ease; position: relative;}
+        #pie-side-list { display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 210px; z-index: 5; }
+        .pie-side-list-inner { display: flex; flex-direction: column; gap: 10px; }
+        .pie-side-item { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+        .pie-side-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+        .pie-side-text { min-width: 0; color: #111; font-weight: 700; line-height: 1.3; letter-spacing: -0.4px; word-break: keep-all; overflow-wrap: anywhere; }
+        .pie-side-text strong { font-weight: 900; }
         #table-container { display: none; margin-top: 5px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
         
         /* 일반 엑셀 표 */
@@ -116,7 +122,7 @@
             <label style="margin-bottom: 0;">종류 선택</label>
             <span style="font-size: 12px; cursor: pointer; color: var(--ak-red); font-weight: bold; text-decoration: underline;" onclick="loadExampleData()">📝 예시 불러오기</span>
         </div>
-        <select id="chartType" onchange="toggleInputs()">
+        <select id="chartType" onchange="handleChartTypeChange()">
             <option value="line">📈 단일 꺾은선 그래프</option>
             <option value="bar">📊 (세로) 단일 막대 그래프</option>
             <option value="multi-bar">📊 (세로) 다중 막대 그래프</option>
@@ -276,6 +282,7 @@
             
             <div id="chart-container">
                 <canvas id="myChart"></canvas>
+                <div id="pie-side-list" style="display: none;"></div>
             </div>
 
             <div id="table-container" style="display: none;"></div>
@@ -295,6 +302,28 @@
     Chart.defaults.font.family = globalFont;
 
     let myChart = null;
+
+    let initializedChartTypes = new Set();
+
+    function hasGeminiInputData() {
+        const geminiInput = document.getElementById('geminiInput');
+        return !!(geminiInput && geminiInput.value.trim());
+    }
+
+    function handleChartTypeChange() {
+        const type = document.getElementById('chartType').value;
+        if (!initializedChartTypes.has(type)) {
+            initializedChartTypes.add(type);
+
+            if (hasGeminiInputData()) {
+                parseGeminiData({ preserveSelectedType: true, silent: true });
+            } else {
+                loadExampleData();
+            }
+            return;
+        }
+        toggleInputs();
+    }
 
     function formatKoreanNumber(num, subText = '') {
         if (isNaN(num) || num === 0) return num;
@@ -370,8 +399,10 @@
         return total > 0 ? value / total : 0; 
     }
 
-    // 🚨 5% 미만 조각을 리스트업 대상으로 판별 🚨
-    function getPieIsOutside(context) { return getPieRatio(context) < 0.02; }
+    const PIE_SIDE_LIST_THRESHOLD = 0.05;
+
+    // 🚨 5% 미만 조각을 우측 리스트업 대상으로 판별 🚨
+    function getPieIsOutside(context) { return getPieRatio(context) < PIE_SIDE_LIST_THRESHOLD; }
     
     function getPieFont(context, scale = 1) { 
         const ratio = getPieRatio(context); 
@@ -381,68 +412,93 @@
         return { size: Math.round(13 * scale), weight: '900' }; 
     }
 
-    // 🚨 우측 리스트업 커스텀 플러그인 🚨
-    const pieRightSideListPlugin = {
-        id: 'pieRightSideListPlugin',
-        afterDraw(chart, args, pluginOptions) {
-            if (!pluginOptions || !pluginOptions.enabled) return;
-            const dataset = chart.data.datasets[0];
-            if (!dataset) return;
-            
-            const ctx = chart.ctx;
-            const scale = pluginOptions.scale || 1;
-            const fontSize = Math.round(14 * scale);
-            const font = `900 ${fontSize}px ${globalFont}`;
-            const lineHeight = Math.round(22 * scale);
-            
-            const isKoreanNumber = document.getElementById('koreanNumberType').value === 'apply';
-            const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
+    function wrapPieInsideLabel(label, maxLength = 11, maxLines = 3) {
+        if (!label) return '';
+        const compact = label.replace(/\s+/g, ' ').trim();
+        if (compact.length <= maxLength) return compact;
 
-            let smallItems = [];
-            let totalVal = dataset.data.reduce((a,b) => a + (Number(b)||0), 0);
-            
-            dataset.data.forEach((val, i) => {
-                let num = Number(val) || 0;
-                if (totalVal > 0 && (num / totalVal) < 0.02) {
-                    let label = chart.data.labels[i] ? chart.data.labels[i].trim() : '';
-                    let formattedVal = isKoreanNumber ? formatKoreanNumber(num, subText) : num;
-                    smallItems.push({ label, value: formattedVal, color: dataset.backgroundColor[i] });
+        const words = compact.split(' ');
+        const lines = [];
+        let currentLine = '';
+
+        const pushLine = () => {
+            if (currentLine) {
+                lines.push(currentLine);
+                currentLine = '';
+            }
+        };
+
+        words.forEach(word => {
+            if (!word) return;
+            if (word.length > maxLength) {
+                pushLine();
+                for (let i = 0; i < word.length; i += maxLength) {
+                    lines.push(word.slice(i, i + maxLength));
                 }
-            });
+                return;
+            }
 
-            if (smallItems.length === 0) return;
+            if (!currentLine) {
+                currentLine = word;
+            } else if ((currentLine + ' ' + word).length <= maxLength) {
+                currentLine += ' ' + word;
+            } else {
+                pushLine();
+                currentLine = word;
+            }
+        });
 
-            ctx.save();
-            ctx.font = font;
-            ctx.textBaseline = 'middle';
-            ctx.textAlign = 'left';
-            
-            const totalHeight = smallItems.length * lineHeight;
-            let startY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2 - totalHeight / 2 + (lineHeight / 2);
-            
-            // 리스트 X좌표: 차트 영역(pie가 그려진 구역)의 우측 끝부분
-            const startX = chart.chartArea.right + 20 * scale; 
-            
-            smallItems.forEach((item, index) => {
-                let y = startY + index * lineHeight;
-                let text = item.label ? `${item.label}  ${item.value}` : `${item.value}`;
-                
-                // 컬러 점(Dot) 그리기
-                ctx.fillStyle = item.color;
-                ctx.beginPath();
-                ctx.arc(startX - 12 * scale, y, 6 * scale, 0, 2 * Math.PI);
-                ctx.fill();
-                
-                // 텍스트 그리기
-                ctx.fillStyle = '#111111';
-                ctx.fillText(text, startX, y);
-            });
-            
-            ctx.restore();
+        pushLine();
+
+        if (lines.length <= maxLines) return lines.join('\n');
+        const visible = lines.slice(0, maxLines - 1);
+        visible.push(lines.slice(maxLines - 1).join(' '));
+        return visible.join('\n');
+    }
+
+    function renderPieSideList(labels, values, colors) {
+        const pieSideList = document.getElementById('pie-side-list');
+        if (!pieSideList) return;
+
+        const total = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
+        const items = labels.map((label, index) => ({
+            label: (label || '').trim(),
+            rawValue: Number(values[index]) || 0,
+            ratio: total > 0 ? (Number(values[index]) || 0) / total : 0,
+            color: Array.isArray(colors) ? colors[index] : colors
+        })).filter(item => item.ratio < PIE_SIDE_LIST_THRESHOLD && item.rawValue > 0);
+
+        if (!items.length) {
+            pieSideList.innerHTML = '';
+            pieSideList.style.display = 'none';
+            return;
         }
-    };
 
-    function openDataSheet() {
+        const fontSizeElem = document.getElementById('globalFontSize');
+        const baseSize = fontSizeElem ? parseInt(fontSizeElem.value, 10) : 20;
+        const itemFontSize = Math.max(12, Math.round(baseSize * 0.72));
+        const isKoreanNumber = document.getElementById('koreanNumberType') && document.getElementById('koreanNumberType').value === 'apply';
+        const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
+
+        pieSideList.innerHTML = `
+            <div class="pie-side-list-inner">
+                ${items.map(item => {
+                    const displayValue = isKoreanNumber ? formatKoreanNumber(item.rawValue, subText) : item.rawValue;
+                    return `
+                        <div class="pie-side-item">
+                            <span class="pie-side-dot" style="background:${item.color};"></span>
+                            <div class="pie-side-text" style="font-size:${itemFontSize}px;">
+                                ${item.label ? `${item.label} <strong>${displayValue}</strong>` : `<strong>${displayValue}</strong>`}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+        pieSideList.style.display = 'block';
+    }
+
+function openDataSheet() {
         const type = document.getElementById('chartType').value;
         if (type === 'table' || type === 'list' || type === 'chart-table' || type === 'timeline') {
             alert("텍스트 표 또는 리스트 뷰가 포함된 모드에서는 좌측 입력창을 이용해 주세요.");
@@ -636,9 +692,15 @@
         toggleInputs();
     }
 
-    function parseGeminiData() {
+    function parseGeminiData(options = {}) {
+        const { preserveSelectedType = false, silent = false } = options;
         const text = document.getElementById('geminiInput').value;
-        if (!text.trim()) { alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요."); return; }
+        if (!text.trim()) {
+            if (!silent) alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요.");
+            return false;
+        }
+
+        const currentSelectedType = document.getElementById('chartType').value;
 
         let parsedData = {}; let currentTag = '';
         const lines = text.split(/\r?\n/);
@@ -676,7 +738,7 @@
             else if (mappedType === 'h-bar') mappedType = 'h-multi-bar';
         }
 
-        document.getElementById('chartType').value = mappedType;
+        document.getElementById('chartType').value = preserveSelectedType ? currentSelectedType : mappedType;
         document.getElementById('titleInput').value = extract('[제목]');
         document.getElementById('subInput').value = extract('[부제목]');
         document.getElementById('labelsInput').value = extract('[X축]');
@@ -692,9 +754,13 @@
         toggleInputs();
 
         const btn = document.getElementById('autoFillBtn');
-        const originalText = btn.innerText;
-        btn.innerText = '✅ 데이터 맵핑 성공!'; btn.style.backgroundColor = '#111';
-        setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = '#0056b3'; }, 2000);
+        if (!silent && btn) {
+            const originalText = btn.innerText;
+            btn.innerText = '✅ 데이터 맵핑 성공!'; btn.style.backgroundColor = '#111';
+            setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = '#0056b3'; }, 2000);
+        }
+
+        return true;
     }
 
     function toggleInputs() {
@@ -954,12 +1020,18 @@
 
     function renderChart(chartType) {
         const chartContainer = document.getElementById('chart-container');
-        if(chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
+        const pieSideList = document.getElementById('pie-side-list');
 
         if (myChart != null) myChart.destroy();
         
         const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
         const dataVals1 = document.getElementById('dataInput1').value.split(',').map(item => parseFloat(item.trim()));
+                if(chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
+        if (pieSideList) {
+            pieSideList.style.display = 'none';
+            pieSideList.innerHTML = '';
+        }
+
         const name1 = document.getElementById('dataName1').value;
         let datasets = [];
 
@@ -1054,23 +1126,20 @@
         let baseChartType = (normType === 'line' || normType === 'pie') ? normType : 'bar';
         let isStacked = normType.includes('stacked');
 
-        // 🚨 플러그인 리스트에서 pieRightSideListPlugin도 등록 🚨
         myChart = new Chart(ctx, {
             type: baseChartType,
             data: { labels: labels, datasets: datasets },
-            plugins: [pieRightSideListPlugin, ChartDataLabels], 
+            plugins: [ChartDataLabels], 
             options: {
                 indexAxis: isHorizontal ? 'y' : 'x',
                 responsive: true, maintainAspectRatio: false,
-                cutout: normType === 'pie' ? '28%' : '0%',
+                cutout: normType === 'pie' ? '30%' : '0%',
                 layout: {
                     padding: normType === 'pie'
-                        // 🚨 리스트형 플러그인을 위해 우측 여백을 넉넉히 확보 (160px) 🚨
-                        ? { top: 30, right: 160, bottom: 30, left: 30 }
+                        ? { top: 24, right: 230, bottom: 24, left: 24 }
                         : (labelDisplayType === 'last' ? { right: 100, top: 40, bottom: 20, left: 10 } : { right: 50, top: 40, bottom: 20, left: 10 })
                 },
                 plugins: {
-                    pieRightSideListPlugin: { enabled: normType === 'pie', scale: scale },
                     title: { display: false },
                     legend: {
                         display: (normType === 'multi-line' || normType === 'combo' || normType === 'multi-combo' || normType === 'multi-bar' || normType === 'stacked-combo' || normType === 'stacked-bar'),
@@ -1083,8 +1152,7 @@
                         display: function(context) {
                             if (labelDisplayType === 'none') return false;
                             if (normType === 'pie') {
-                                // 🚨 5% 미만인 데이터는 우측 리스트업 플러그인이 그리므로 기본 라벨에선 숨김 처리 🚨
-                                return getPieRatio(context) >= 0.02; 
+                                return !getPieIsOutside(context) && getPieRatio(context) > 0;
                             }
                             if (labelDisplayType === 'last' && normType !== 'pie') return context.dataIndex === context.dataset.data.length - 1;
                             return true; 
@@ -1137,7 +1205,9 @@
                             return context.dataset.borderColor;
                         },
                         font: function(context) {
-                            if (normType === 'pie') return getPieFont(context, scale); 
+                            if (normType === 'pie') {
+                                return getPieFont(context, scale);
+                            }
                             if (labelDisplayType === 'last') return { size: Math.round(22 * scale), weight: '900' };
                             return { size: Math.round(18 * scale), weight: 'bold' };
                         },
@@ -1159,7 +1229,7 @@
                                 let label = ctx.chart.data.labels[ctx.dataIndex];
                                 label = label ? label.trim() : '';
                                 if (label === '') return displayVal;
-                                return label + '\n' + displayVal;
+                                return wrapPieInsideLabel(label, 11, 4) + '\n' + displayVal;
                             }
                             return displayVal;
                         },
@@ -1228,6 +1298,10 @@
                 }
             }
         });
+
+        if (normType === 'pie' && pieSideList) {
+            renderPieSideList(labels, dataVals1, datasets[0].backgroundColor);
+        }
     }
 
     function downloadImage() {
@@ -1248,6 +1322,8 @@
     }
 
     window.onload = function() { 
+        const initialType = document.getElementById('chartType').value;
+        initializedChartTypes.add(initialType);
         loadExampleData(); 
         
         document.getElementById('tableDataInput').addEventListener('keydown', function(e) {
