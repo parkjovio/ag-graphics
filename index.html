@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.23</title>
+    <title>그래픽 보조 데스크 V 1.25</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -114,7 +114,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.23</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.25</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -164,6 +164,28 @@
                 <option value="apply" selected>자동 변환 적용 (예: 1조2345억)</option>
                 <option value="none">원래 숫자 유지 (예: 12345678)</option>
             </select>
+        </div>
+
+
+        <div class="data-group" id="highlightSettingGroup">
+            <label style="color:var(--ak-red); font-size:14px;">📌 강조 데이터 표시</label>
+            <select id="highlightMode" onchange="updateOutput()">
+                <option value="none" selected>기본 스타일 유지</option>
+                <option value="custom">선택한 데이터 강조</option>
+            </select>
+            <div id="highlightTargetWrapRed" style="display:none; margin-top:8px;">
+                <label style="margin-top:0; color:#E61E2B;">빨간색으로 강조할 데이터</label>
+                <select id="highlightTargetsRed" multiple size="6" onchange="updateOutput()" style="height:auto;"></select>
+            </div>
+            <div id="highlightTargetWrapOrange" style="display:none; margin-top:8px;">
+                <label style="margin-top:0; color:#F48F1F;">주황색으로 강조할 데이터</label>
+                <select id="highlightTargetsOrange" multiple size="6" onchange="updateOutput()" style="height:auto;"></select>
+            </div>
+            <div id="highlightTargetWrapBlue" style="display:none; margin-top:8px;">
+                <label style="margin-top:0; color:#2F6BFF;">파란색으로 강조할 데이터</label>
+                <select id="highlightTargetsBlue" multiple size="6" onchange="updateOutput()" style="height:auto;"></select>
+            </div>
+            <span class="help-text" style="margin-top:8px; margin-bottom:0;">필요할 때만 특정 막대·점·조각을 강조합니다. 빨간색·주황색·파란색을 각각 따로 고를 수 있고, 여러 항목을 동시에 선택할 수 있습니다. 같은 데이터를 여러 색에서 동시에 고르면 아래쪽 색상 선택이 우선 적용됩니다. (복수 선택/취소 : Windows는 Ctrl, Mac은 Command)</span>
         </div>
 
         <div class="data-group" id="fontSizeSettingGroup">
@@ -557,6 +579,187 @@
         pieSideList.style.display = 'block';
     }
 
+
+    function getCurrentLabels() {
+        const labelsInput = document.getElementById('labelsInput');
+        if (!labelsInput) return [];
+        return labelsInput.value.split(',').map(item => item.trim()).filter(Boolean);
+    }
+
+    function getCurrentDatasetNames(typeOverride) {
+        const type = typeOverride || document.getElementById('chartType').value;
+        const names = [];
+        const name1 = document.getElementById('dataName1') ? document.getElementById('dataName1').value.trim() : '';
+        const name2 = document.getElementById('dataName2') ? document.getElementById('dataName2').value.trim() : '';
+        const name3 = document.getElementById('dataName3') ? document.getElementById('dataName3').value.trim() : '';
+        const name4 = document.getElementById('dataName4') ? document.getElementById('dataName4').value.trim() : '';
+
+        names.push(name1 || '데이터 1');
+
+        if (type.includes('multi-') || type.includes('stacked') || type.includes('combo') || type === 'chart-table') {
+            if ((document.getElementById('dataInput2')?.value || '').trim() !== '') names.push(name2 || '데이터 2');
+            if ((document.getElementById('dataInput3')?.value || '').trim() !== '') names.push(name3 || '데이터 3');
+            if ((document.getElementById('dataInput4')?.value || '').trim() !== '') names.push(name4 || '데이터 4');
+        }
+
+        return names;
+    }
+
+    function chartUsesMultipleDatasets(typeOverride) {
+        const type = typeOverride || document.getElementById('chartType').value;
+        return type.includes('multi-') || type.includes('stacked') || type.includes('combo') || type === 'chart-table';
+    }
+
+    function getHighlightPalette() {
+        return {
+            red: '#E61E2B',
+            orange: '#F48F1F',
+            blue: '#2F6BFF'
+        };
+    }
+
+    function refreshHighlightControls() {
+        const type = document.getElementById('chartType').value;
+        const group = document.getElementById('highlightSettingGroup');
+        const modeEl = document.getElementById('highlightMode');
+        const targetWraps = [
+            document.getElementById('highlightTargetWrapRed'),
+            document.getElementById('highlightTargetWrapOrange'),
+            document.getElementById('highlightTargetWrapBlue')
+        ];
+        const targetSelectors = [
+            document.getElementById('highlightTargetsRed'),
+            document.getElementById('highlightTargetsOrange'),
+            document.getElementById('highlightTargetsBlue')
+        ];
+
+        if (!group || !modeEl || targetSelectors.some(select => !select) || targetWraps.some(wrap => !wrap)) return;
+
+        if (type === 'table' || type === 'list' || type === 'timeline') {
+            group.style.display = 'none';
+            return;
+        }
+        group.style.display = 'block';
+
+        const previousSelections = targetSelectors.map(select => Array.from(select.selectedOptions || []).map(option => option.value));
+        const labels = getCurrentLabels();
+        const datasetNames = getCurrentDatasetNames(type);
+        const usesMultiDataset = chartUsesMultipleDatasets(type) && datasetNames.length > 1;
+        const isActive = modeEl.value === 'custom';
+
+        const options = [];
+        if (usesMultiDataset) {
+            datasetNames.forEach((name, datasetIndex) => {
+                labels.forEach((label, labelIndex) => {
+                    options.push({ value: `${datasetIndex}|${labelIndex}`, text: `${name} - ${label}` });
+                });
+            });
+        } else {
+            labels.forEach((label, labelIndex) => {
+                options.push({ value: `0|${labelIndex}`, text: label });
+            });
+        }
+
+        const optionHtml = options.map(option => `<option value="${option.value}">${option.text}</option>`).join('');
+        targetSelectors.forEach((select, index) => {
+            select.innerHTML = optionHtml;
+            Array.from(select.options).forEach(option => {
+                option.selected = previousSelections[index].includes(option.value);
+            });
+        });
+
+        targetWraps.forEach(wrap => {
+            wrap.style.display = isActive ? 'block' : 'none';
+        });
+    }
+
+    function getHighlightColorForTarget(highlightConfig, datasetIndex, labelIndex) {
+        if (!highlightConfig || !highlightConfig.enabled || !highlightConfig.targetColorMap) return null;
+        return highlightConfig.targetColorMap.get(`${datasetIndex}|${labelIndex}`) || null;
+    }
+
+    function isHighlightedTarget(highlightConfig, datasetIndex, labelIndex) {
+        return !!getHighlightColorForTarget(highlightConfig, datasetIndex, labelIndex);
+    }
+
+    function getHighlightConfig(chartType, labels) {
+        const modeEl = document.getElementById('highlightMode');
+        const palette = getHighlightPalette();
+        const selectors = [
+            { element: document.getElementById('highlightTargetsRed'), color: palette.red },
+            { element: document.getElementById('highlightTargetsOrange'), color: palette.orange },
+            { element: document.getElementById('highlightTargetsBlue'), color: palette.blue }
+        ];
+        const emptyConfig = { enabled: false, targetColorMap: new Map(), labelIndices: new Set() };
+
+        if (!modeEl || modeEl.value !== 'custom') return emptyConfig;
+        if (chartType === 'table' || chartType === 'list' || chartType === 'timeline') return emptyConfig;
+        if (selectors.some(item => !item.element)) return emptyConfig;
+
+        const targetColorMap = new Map();
+        const labelIndices = new Set();
+
+        selectors.forEach(({ element, color }) => {
+            const selectedValues = Array.from(element.selectedOptions || []).map(option => option.value).filter(Boolean);
+            selectedValues.forEach(value => {
+                const [datasetIndexRaw, labelIndexRaw] = value.split('|');
+                const datasetIndex = parseInt(datasetIndexRaw, 10);
+                const labelIndex = parseInt(labelIndexRaw, 10);
+                if (!Number.isNaN(datasetIndex) && !Number.isNaN(labelIndex) && labels[labelIndex] !== undefined) {
+                    targetColorMap.set(`${datasetIndex}|${labelIndex}`, color);
+                    labelIndices.add(labelIndex);
+                }
+            });
+        });
+
+        if (!targetColorMap.size) return emptyConfig;
+        return { enabled: true, targetColorMap, labelIndices };
+    }
+
+    function getMutedColor(index, type = 'bar') {
+        const barPalette = ['#BDBDBD', '#8F8F8F', '#D6D6D6', '#6F6F6F'];
+        const linePalette = ['#4F4F4F', '#7B7B7B', '#A0A0A0', '#C0C0C0'];
+        const palette = type === 'line' ? linePalette : barPalette;
+        return palette[index % palette.length];
+    }
+
+    function getPieMutedColors(length) {
+        const palette = ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
+        return Array.from({ length }, (_, index) => palette[index % palette.length]);
+    }
+
+    function applyHighlightToDatasets(datasets, labels, normType, highlightConfig) {
+        if (!highlightConfig.enabled) return datasets;
+
+        if (normType === 'pie' && datasets[0]) {
+            const mutedColors = getPieMutedColors(labels.length);
+            datasets[0].backgroundColor = labels.map((_, index) => getHighlightColorForTarget(highlightConfig, 0, index) || mutedColors[index]);
+            return datasets;
+        }
+
+        datasets.forEach((dataset, datasetIndex) => {
+            const datasetType = dataset.type || (normType === 'line' ? 'line' : 'bar');
+            const mutedColor = getMutedColor(datasetIndex, datasetType === 'line' ? 'line' : 'bar');
+
+            if (datasetType === 'bar') {
+                const barColors = labels.map((_, labelIndex) => getHighlightColorForTarget(highlightConfig, datasetIndex, labelIndex) || mutedColor);
+                dataset.backgroundColor = barColors;
+                dataset.borderColor = barColors;
+                dataset.borderWidth = 0;
+                if (dataset.borderRadius === undefined) dataset.borderRadius = 4;
+            } else if (datasetType === 'line') {
+                dataset.borderColor = mutedColor;
+                dataset.pointBackgroundColor = labels.map((_, labelIndex) => getHighlightColorForTarget(highlightConfig, datasetIndex, labelIndex) || '#ffffff');
+                dataset.pointBorderColor = labels.map((_, labelIndex) => getHighlightColorForTarget(highlightConfig, datasetIndex, labelIndex) || mutedColor);
+                dataset.pointBorderWidth = labels.map((_, labelIndex) => isHighlightedTarget(highlightConfig, datasetIndex, labelIndex) ? 4 : 3);
+                dataset.pointRadius = labels.map((_, labelIndex) => isHighlightedTarget(highlightConfig, datasetIndex, labelIndex) ? 8 : 5);
+                dataset.backgroundColor = dataset.fill ? 'rgba(160,160,160,0.18)' : 'transparent';
+            }
+        });
+
+        return datasets;
+    }
+
 function openDataSheet() {
         const type = document.getElementById('chartType').value;
         if (type === 'table' || type === 'list' || type === 'chart-table' || type === 'timeline') {
@@ -863,6 +1066,7 @@ function openDataSheet() {
             if (type === 'pie') axisSettingGroup.style.display = 'none';
             else axisSettingGroup.style.display = 'block';
         }
+        refreshHighlightControls();
         updateOutput();
     }
 
@@ -888,6 +1092,7 @@ function openDataSheet() {
 
     function updateOutput() {
         const type = document.getElementById('chartType').value;
+        refreshHighlightControls();
         if(document.getElementById('displayTitle')) document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
         if(document.getElementById('displayName')) document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
 
@@ -1086,6 +1291,7 @@ function openDataSheet() {
         if (myChart != null) myChart.destroy();
         
         const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
+        const highlightConfig = getHighlightConfig(chartType, labels);
         const dataVals1 = document.getElementById('dataInput1').value.split(',').map(item => parseFloat(item.trim()));
                 if(chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
         if (pieSideList) {
@@ -1169,6 +1375,8 @@ function openDataSheet() {
             });
         }
 
+        applyHighlightToDatasets(datasets, labels, normType, highlightConfig);
+
         let yMin = document.getElementById('yMin').value;
         let yMax = document.getElementById('yMax').value;
         let y1Min = document.getElementById('y1Min').value;
@@ -1217,7 +1425,7 @@ function openDataSheet() {
                             if (normType === 'pie') {
                                 return !getPieIsOutside(context) && getPieRatio(context) > 0;
                             }
-                            if (labelDisplayType === 'last' && normType !== 'pie') return context.dataIndex === context.dataset.data.length - 1;
+                            if (labelDisplayType === 'last' && normType !== 'pie' && !highlightConfig.enabled) return context.dataIndex === context.dataset.data.length - 1;
                             return true; 
                         },
                         align: function(context) {
@@ -1260,7 +1468,18 @@ function openDataSheet() {
                             if (normType === 'bar') return 6; return 10;
                         },
                         color: function(context) {
+                            const highlightColor = getHighlightColorForTarget(highlightConfig, context.datasetIndex, context.dataIndex);
+                            const isHighlightedPoint = !!highlightColor;
                             if (normType === 'pie') return '#ffffff'; // 큰 조각은 무조건 흰 글씨
+                            if (highlightConfig.enabled) {
+                                if (isHighlightedPoint) {
+                                    if (isStacked && context.dataset.type === 'bar') return '#ffffff';
+                                    return highlightColor;
+                                }
+                                if (isStacked && context.dataset.type === 'bar') return '#ffffff';
+                                if (context.dataset.type === 'line') return '#666666';
+                                return '#666666';
+                            }
                             if (isStacked && context.dataset.type === 'bar') return '#ffffff';
                             if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return '#333';
                             if (normType === 'bar' || normType === 'multi-bar') return '#111';
@@ -1268,10 +1487,12 @@ function openDataSheet() {
                             return context.dataset.borderColor;
                         },
                         font: function(context) {
+                            const isHighlightedPoint = !!getHighlightColorForTarget(highlightConfig, context.datasetIndex, context.dataIndex);
                             if (normType === 'pie') {
                                 return getPieFont(context, scale);
                             }
-                            if (labelDisplayType === 'last') return { size: Math.round(22 * scale), weight: '900' };
+                            if (isHighlightedPoint) return { size: Math.round(22 * scale), weight: '900' };
+                            if (labelDisplayType === 'last' && !highlightConfig.enabled) return { size: Math.round(22 * scale), weight: '900' };
                             return { size: Math.round(18 * scale), weight: 'bold' };
                         },
                         textStrokeColor: function(context) {
@@ -1441,6 +1662,11 @@ function openDataSheet() {
             exportScaleEl.addEventListener('change', updateExportSizeHint);
         } 
         
+        ['labelsInput', 'dataName1', 'dataName2', 'dataName3', 'dataName4'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', refreshHighlightControls);
+        });
+
         document.getElementById('tableDataInput').addEventListener('keydown', function(e) {
             if (e.key === 'Tab') {
                 e.preventDefault();
