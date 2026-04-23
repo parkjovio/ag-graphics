@@ -152,10 +152,51 @@
         <div class="data-group" id="labelSettingGroup">
             <label style="color:var(--ak-red); font-size:14px;">📌 수치 표시 방식</label>
             <select id="labelDisplayType" onchange="updateOutput()">
-                <option value="all" selected>모든 데이터에 표시</option>
-                <option value="last">맨 끝 데이터만 표시 (강조)</option>
-                <option value="none">표시 안 함 (숫자 숨김)</option>
+                <option value="all" selected>전체 기본값: 모든 데이터에 표시</option>
+                <option value="last">전체 기본값: 맨 끝 데이터만 표시 (강조)</option>
+                <option value="none">전체 기본값: 표시 안 함 (숫자 숨김)</option>
             </select>
+            <span class="help-text" style="margin-top:8px;">아래에서 데이터 묶음별로 따로 바꿀 수 있습니다. ‘전체 설정 따름’을 두면 위 기본값을 그대로 사용합니다.</span>
+
+            <div id="datasetLabelDisplayWrap1" style="margin-top:8px;">
+                <label id="datasetLabelDisplayLabel1" style="margin-top:0;">데이터 1 수치 표시 방식</label>
+                <select id="datasetLabelDisplayType1" onchange="updateOutput()">
+                    <option value="follow" selected>전체 설정 따름</option>
+                    <option value="all">모든 데이터에 표시</option>
+                    <option value="last">맨 끝 데이터만 표시 (강조)</option>
+                    <option value="none">표시 안 함 (숫자 숨김)</option>
+                </select>
+            </div>
+
+            <div id="datasetLabelDisplayWrap2" style="display:none; margin-top:8px;">
+                <label id="datasetLabelDisplayLabel2" style="margin-top:0;">데이터 2 수치 표시 방식</label>
+                <select id="datasetLabelDisplayType2" onchange="updateOutput()">
+                    <option value="follow" selected>전체 설정 따름</option>
+                    <option value="all">모든 데이터에 표시</option>
+                    <option value="last">맨 끝 데이터만 표시 (강조)</option>
+                    <option value="none">표시 안 함 (숫자 숨김)</option>
+                </select>
+            </div>
+
+            <div id="datasetLabelDisplayWrap3" style="display:none; margin-top:8px;">
+                <label id="datasetLabelDisplayLabel3" style="margin-top:0;">데이터 3 수치 표시 방식</label>
+                <select id="datasetLabelDisplayType3" onchange="updateOutput()">
+                    <option value="follow" selected>전체 설정 따름</option>
+                    <option value="all">모든 데이터에 표시</option>
+                    <option value="last">맨 끝 데이터만 표시 (강조)</option>
+                    <option value="none">표시 안 함 (숫자 숨김)</option>
+                </select>
+            </div>
+
+            <div id="datasetLabelDisplayWrap4" style="display:none; margin-top:8px;">
+                <label id="datasetLabelDisplayLabel4" style="margin-top:0;">데이터 4 수치 표시 방식</label>
+                <select id="datasetLabelDisplayType4" onchange="updateOutput()">
+                    <option value="follow" selected>전체 설정 따름</option>
+                    <option value="all">모든 데이터에 표시</option>
+                    <option value="last">맨 끝 데이터만 표시 (강조)</option>
+                    <option value="none">표시 안 함 (숫자 숨김)</option>
+                </select>
+            </div>
         </div>
 
         <div class="data-group" id="koreanNumberGroup">
@@ -710,6 +751,46 @@
             const display = document.getElementById(`datasetFontDisplay${index}`);
             if (slider && display) display.innerText = `${slider.value}px`;
         });
+    }
+
+
+    function refreshDatasetLabelDisplayControls() {
+        const type = document.getElementById('chartType').value;
+        const group = document.getElementById('labelSettingGroup');
+        if (!group) return;
+
+        if (type === 'table' || type === 'list' || type === 'timeline' || type === 'pie') {
+            return;
+        }
+
+        const datasetNames = getCurrentDatasetNames(type);
+
+        [1, 2, 3, 4].forEach(index => {
+            const wrap = document.getElementById(`datasetLabelDisplayWrap${index}`);
+            const label = document.getElementById(`datasetLabelDisplayLabel${index}`);
+            if (!wrap || !label) return;
+
+            const datasetName = datasetNames[index - 1];
+            if (datasetName) {
+                wrap.style.display = 'block';
+                label.innerText = `${datasetName} 수치 표시 방식`;
+            } else {
+                wrap.style.display = 'none';
+            }
+        });
+    }
+
+    function getDatasetLabelDisplayType(datasetIndex) {
+        const globalSelect = document.getElementById('labelDisplayType');
+        const globalValue = globalSelect && globalSelect.value ? globalSelect.value : 'all';
+        const select = document.getElementById(`datasetLabelDisplayType${datasetIndex + 1}`);
+        if (!select || !select.value || select.value === 'follow') return globalValue;
+        return select.value;
+    }
+
+    function anyDatasetUsesLastDisplay(datasets) {
+        if (!Array.isArray(datasets) || !datasets.length) return false;
+        return datasets.some((_, index) => getDatasetLabelDisplayType(index) === 'last');
     }
 
     function refreshDatasetFontControls() {
@@ -1274,6 +1355,7 @@ function openDataSheet() {
             else axisSettingGroup.style.display = 'block';
         }
         refreshHighlightControls();
+        refreshDatasetLabelDisplayControls();
         refreshDatasetFontControls();
         refreshDatasetColorControls();
         updateOutput();
@@ -1302,6 +1384,7 @@ function openDataSheet() {
     function updateOutput() {
         const type = document.getElementById('chartType').value;
         refreshHighlightControls();
+        refreshDatasetLabelDisplayControls();
         refreshDatasetFontControls();
         refreshDatasetColorControls();
         if(document.getElementById('displayTitle')) document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
@@ -1594,6 +1677,8 @@ function openDataSheet() {
         let y1Max = document.getElementById('y1Max').value;
         const labelDisplayTypeElem = document.getElementById('labelDisplayType');
         const labelDisplayType = labelDisplayTypeElem ? labelDisplayTypeElem.value : 'all';
+        const datasetLabelDisplayTypes = datasets.map((_, index) => getDatasetLabelDisplayType(index));
+        const hasLastDisplay = anyDatasetUsesLastDisplay(datasets);
         const isKoreanNumberElem = document.getElementById('koreanNumberType');
         const isKoreanNumber = isKoreanNumberElem ? isKoreanNumberElem.value === 'apply' : false;
         const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
@@ -1629,7 +1714,7 @@ function openDataSheet() {
                 layout: {
                     padding: normType === 'pie'
                         ? { top: 24, right: 230, bottom: 24, left: 24 }
-                        : (labelDisplayType === 'last' ? { right: 100, top: 40, bottom: 20, left: 10 } : { right: 50, top: 40, bottom: 20, left: 10 })
+                        : (hasLastDisplay ? { right: 100, top: 40, bottom: 20, left: 10 } : { right: 50, top: 40, bottom: 20, left: 10 })
                 },
                 plugins: {
                     title: { display: false },
@@ -1642,11 +1727,12 @@ function openDataSheet() {
                     tooltip: { enabled: false },
                     datalabels: {
                         display: function(context) {
-                            if (labelDisplayType === 'none') return false;
+                            const datasetDisplayType = datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType;
+                            if (datasetDisplayType === 'none') return false;
                             if (normType === 'pie') {
                                 return !getPieIsOutside(context) && getPieRatio(context) > 0;
                             }
-                            if (labelDisplayType === 'last' && normType !== 'pie') {
+                            if (datasetDisplayType === 'last' && normType !== 'pie') {
                                 return context.dataIndex === context.dataset.data.length - 1;
                             }
                             return true; 
@@ -1658,7 +1744,7 @@ function openDataSheet() {
                             if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'start';
                             if (normType === 'multi-line' || ((normType.includes('combo')) && context.dataset.type === 'line')) {
                                 const { rank, totalLines } = getLineRank(context);
-                                if (labelDisplayType === 'last' && context.dataIndex === context.dataset.data.length - 1) {
+                                if ((datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType) === 'last' && context.dataIndex === context.dataset.data.length - 1) {
                                     if (totalLines === 2) return rank === 0 ? 'top' : 'bottom';
                                     if (totalLines >= 3) { if (rank === 0) return 'top'; if (rank === 1) return 'right'; return 'bottom'; }
                                 }
@@ -1683,7 +1769,7 @@ function openDataSheet() {
                             if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 6;
                             if (normType === 'multi-line' || ((normType.includes('combo')) && context.dataset.type === 'line')) {
                                 const { rank, totalLines } = getLineRank(context);
-                                if (labelDisplayType === 'last' && context.dataIndex === context.dataset.data.length - 1) {
+                                if ((datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType) === 'last' && context.dataIndex === context.dataset.data.length - 1) {
                                     if (totalLines >= 3 && rank === 1) return 12; return 10;
                                 }
                                 if (rank === 2) return 25; return 8;
@@ -1718,7 +1804,7 @@ function openDataSheet() {
                                 return getPieFont(context, datasetFontSize / 18);
                             }
                             if (isHighlightedPoint) return { size: emphasizedFontSize, weight: '900' };
-                            if (labelDisplayType === 'last' && context.dataIndex === context.dataset.data.length - 1) return { size: emphasizedFontSize, weight: '900' };
+                            if ((datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType) === 'last' && context.dataIndex === context.dataset.data.length - 1) return { size: emphasizedFontSize, weight: '900' };
                             return { size: datasetFontSize, weight: 'bold' };
                         },
                         textStrokeColor: function(context) {
@@ -1892,12 +1978,14 @@ function openDataSheet() {
             const el = document.getElementById(id);
             if (el) el.addEventListener('input', () => {
                 refreshHighlightControls();
+                refreshDatasetLabelDisplayControls();
                 refreshDatasetFontControls();
                 refreshDatasetColorControls();
             });
         });
 
         updateDatasetFontDisplays();
+        refreshDatasetLabelDisplayControls();
         refreshDatasetFontControls();
         refreshDatasetColorControls();
 
