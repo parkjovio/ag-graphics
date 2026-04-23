@@ -197,6 +197,100 @@
             <span class="help-text">글자가 겹치거나 잘릴 경우 슬라이더를 조절해 보세요.</span>
         </div>
 
+        <div class="data-group" id="datasetLabelSizeGroup">
+            <label style="color:var(--ak-red); font-size:14px;">📌 데이터별 수치 글자 크기</label>
+            <span class="help-text">그래프 위 숫자(값 라벨)만 데이터 묶음별로 따로 조절합니다.</span>
+
+            <div id="datasetFontWrap1" style="margin-top:8px;">
+                <label id="datasetFontLabel1" style="margin-top:0;">데이터 1</label>
+                <div class="slider-group">
+                    <input type="range" id="datasetFontSize1" min="10" max="32" value="18" oninput="updateDatasetFontDisplays(); updateOutput();">
+                    <span id="datasetFontDisplay1" class="font-size-display">18px</span>
+                </div>
+            </div>
+
+            <div id="datasetFontWrap2" style="display:none; margin-top:8px;">
+                <label id="datasetFontLabel2" style="margin-top:0;">데이터 2</label>
+                <div class="slider-group">
+                    <input type="range" id="datasetFontSize2" min="10" max="32" value="18" oninput="updateDatasetFontDisplays(); updateOutput();">
+                    <span id="datasetFontDisplay2" class="font-size-display">18px</span>
+                </div>
+            </div>
+
+            <div id="datasetFontWrap3" style="display:none; margin-top:8px;">
+                <label id="datasetFontLabel3" style="margin-top:0;">데이터 3</label>
+                <div class="slider-group">
+                    <input type="range" id="datasetFontSize3" min="10" max="32" value="18" oninput="updateDatasetFontDisplays(); updateOutput();">
+                    <span id="datasetFontDisplay3" class="font-size-display">18px</span>
+                </div>
+            </div>
+
+            <div id="datasetFontWrap4" style="display:none; margin-top:8px;">
+                <label id="datasetFontLabel4" style="margin-top:0;">데이터 4</label>
+                <div class="slider-group">
+                    <input type="range" id="datasetFontSize4" min="10" max="32" value="18" oninput="updateDatasetFontDisplays(); updateOutput();">
+                    <span id="datasetFontDisplay4" class="font-size-display">18px</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-group" id="datasetLabelColorGroup">
+            <label style="color:var(--ak-red); font-size:14px;">📌 데이터별 수치 글자 색상</label>
+            <span class="help-text">그래프 위 숫자(값 라벨) 색상을 데이터 묶음별로 따로 지정합니다.</span>
+
+            <div id="datasetColorWrap1" style="margin-top:8px;">
+                <label id="datasetColorLabel1" style="margin-top:0;">데이터 1</label>
+                <select id="datasetFontColor1" onchange="updateOutput()">
+                    <option value="auto" selected>자동</option>
+                    <option value="#111111">검정</option>
+                    <option value="#555555">회색</option>
+                    <option value="#E61E2B">빨강</option>
+                    <option value="#F48F1F">주황</option>
+                    <option value="#2F6BFF">파랑</option>
+                    <option value="#2E8B57">초록</option>
+                </select>
+            </div>
+
+            <div id="datasetColorWrap2" style="display:none; margin-top:8px;">
+                <label id="datasetColorLabel2" style="margin-top:0;">데이터 2</label>
+                <select id="datasetFontColor2" onchange="updateOutput()">
+                    <option value="auto" selected>자동</option>
+                    <option value="#111111">검정</option>
+                    <option value="#555555">회색</option>
+                    <option value="#E61E2B">빨강</option>
+                    <option value="#F48F1F">주황</option>
+                    <option value="#2F6BFF">파랑</option>
+                    <option value="#2E8B57">초록</option>
+                </select>
+            </div>
+
+            <div id="datasetColorWrap3" style="display:none; margin-top:8px;">
+                <label id="datasetColorLabel3" style="margin-top:0;">데이터 3</label>
+                <select id="datasetFontColor3" onchange="updateOutput()">
+                    <option value="auto" selected>자동</option>
+                    <option value="#111111">검정</option>
+                    <option value="#555555">회색</option>
+                    <option value="#E61E2B">빨강</option>
+                    <option value="#F48F1F">주황</option>
+                    <option value="#2F6BFF">파랑</option>
+                    <option value="#2E8B57">초록</option>
+                </select>
+            </div>
+
+            <div id="datasetColorWrap4" style="display:none; margin-top:8px;">
+                <label id="datasetColorLabel4" style="margin-top:0;">데이터 4</label>
+                <select id="datasetFontColor4" onchange="updateOutput()">
+                    <option value="auto" selected>자동</option>
+                    <option value="#111111">검정</option>
+                    <option value="#555555">회색</option>
+                    <option value="#E61E2B">빨강</option>
+                    <option value="#F48F1F">주황</option>
+                    <option value="#2F6BFF">파랑</option>
+                    <option value="#2E8B57">초록</option>
+                </select>
+            </div>
+        </div>
+
         <label>제목</label>
         <input type="text" id="titleInput" value="">
         
@@ -608,6 +702,84 @@
     function chartUsesMultipleDatasets(typeOverride) {
         const type = typeOverride || document.getElementById('chartType').value;
         return type.includes('multi-') || type.includes('stacked') || type.includes('combo') || type === 'chart-table';
+    }
+
+    function updateDatasetFontDisplays() {
+        [1, 2, 3, 4].forEach(index => {
+            const slider = document.getElementById(`datasetFontSize${index}`);
+            const display = document.getElementById(`datasetFontDisplay${index}`);
+            if (slider && display) display.innerText = `${slider.value}px`;
+        });
+    }
+
+    function refreshDatasetFontControls() {
+        const type = document.getElementById('chartType').value;
+        const group = document.getElementById('datasetLabelSizeGroup');
+        if (!group) return;
+
+        if (type === 'table' || type === 'list' || type === 'timeline') {
+            group.style.display = 'none';
+            return;
+        }
+
+        group.style.display = 'block';
+        const datasetNames = getCurrentDatasetNames(type);
+
+        [1, 2, 3, 4].forEach(index => {
+            const wrap = document.getElementById(`datasetFontWrap${index}`);
+            const label = document.getElementById(`datasetFontLabel${index}`);
+            if (!wrap || !label) return;
+
+            const datasetName = datasetNames[index - 1];
+            if (datasetName) {
+                wrap.style.display = 'block';
+                label.innerText = `${datasetName} 수치 글자 크기`;
+            } else {
+                wrap.style.display = 'none';
+            }
+        });
+
+        updateDatasetFontDisplays();
+    }
+
+    function getDatasetLabelFontSize(datasetIndex) {
+        const slider = document.getElementById(`datasetFontSize${datasetIndex + 1}`);
+        const value = slider ? parseInt(slider.value, 10) : 18;
+        return Number.isNaN(value) ? 18 : value;
+    }
+
+    function refreshDatasetColorControls() {
+        const type = document.getElementById('chartType').value;
+        const group = document.getElementById('datasetLabelColorGroup');
+        if (!group) return;
+
+        if (type === 'table' || type === 'list' || type === 'timeline') {
+            group.style.display = 'none';
+            return;
+        }
+
+        group.style.display = 'block';
+        const datasetNames = getCurrentDatasetNames(type);
+
+        [1, 2, 3, 4].forEach(index => {
+            const wrap = document.getElementById(`datasetColorWrap${index}`);
+            const label = document.getElementById(`datasetColorLabel${index}`);
+            if (!wrap || !label) return;
+
+            const datasetName = datasetNames[index - 1];
+            if (datasetName) {
+                wrap.style.display = 'block';
+                label.innerText = `${datasetName} 수치 글자 색상`;
+            } else {
+                wrap.style.display = 'none';
+            }
+        });
+    }
+
+    function getDatasetLabelColor(datasetIndex) {
+        const select = document.getElementById(`datasetFontColor${datasetIndex + 1}`);
+        if (!select || !select.value || select.value === 'auto') return null;
+        return select.value;
     }
 
     function getHighlightPalette() {
@@ -1067,6 +1239,8 @@ function openDataSheet() {
             else axisSettingGroup.style.display = 'block';
         }
         refreshHighlightControls();
+        refreshDatasetFontControls();
+        refreshDatasetColorControls();
         updateOutput();
     }
 
@@ -1093,6 +1267,8 @@ function openDataSheet() {
     function updateOutput() {
         const type = document.getElementById('chartType').value;
         refreshHighlightControls();
+        refreshDatasetFontControls();
+        refreshDatasetColorControls();
         if(document.getElementById('displayTitle')) document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
         if(document.getElementById('displayName')) document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
 
@@ -1425,7 +1601,9 @@ function openDataSheet() {
                             if (normType === 'pie') {
                                 return !getPieIsOutside(context) && getPieRatio(context) > 0;
                             }
-                            if (labelDisplayType === 'last' && normType !== 'pie' && !highlightConfig.enabled) return context.dataIndex === context.dataset.data.length - 1;
+                            if (labelDisplayType === 'last' && normType !== 'pie') {
+                                return context.dataIndex === context.dataset.data.length - 1;
+                            }
                             return true; 
                         },
                         align: function(context) {
@@ -1470,16 +1648,17 @@ function openDataSheet() {
                         color: function(context) {
                             const highlightColor = getHighlightColorForTarget(highlightConfig, context.datasetIndex, context.dataIndex);
                             const isHighlightedPoint = !!highlightColor;
-                            if (normType === 'pie') return '#ffffff'; // 큰 조각은 무조건 흰 글씨
+                            const datasetLabelColor = getDatasetLabelColor(context.datasetIndex);
+                            if (normType === 'pie') return datasetLabelColor || '#ffffff';
                             if (highlightConfig.enabled) {
                                 if (isHighlightedPoint) {
                                     if (isStacked && context.dataset.type === 'bar') return '#ffffff';
                                     return highlightColor;
                                 }
                                 if (isStacked && context.dataset.type === 'bar') return '#ffffff';
-                                if (context.dataset.type === 'line') return '#666666';
                                 return '#666666';
                             }
+                            if (datasetLabelColor) return datasetLabelColor;
                             if (isStacked && context.dataset.type === 'bar') return '#ffffff';
                             if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return '#333';
                             if (normType === 'bar' || normType === 'multi-bar') return '#111';
@@ -1488,12 +1667,14 @@ function openDataSheet() {
                         },
                         font: function(context) {
                             const isHighlightedPoint = !!getHighlightColorForTarget(highlightConfig, context.datasetIndex, context.dataIndex);
+                            const datasetFontSize = getDatasetLabelFontSize(context.datasetIndex);
+                            const emphasizedFontSize = Math.min(datasetFontSize + 4, 36);
                             if (normType === 'pie') {
-                                return getPieFont(context, scale);
+                                return getPieFont(context, datasetFontSize / 18);
                             }
-                            if (isHighlightedPoint) return { size: Math.round(22 * scale), weight: '900' };
-                            if (labelDisplayType === 'last' && !highlightConfig.enabled) return { size: Math.round(22 * scale), weight: '900' };
-                            return { size: Math.round(18 * scale), weight: 'bold' };
+                            if (isHighlightedPoint) return { size: emphasizedFontSize, weight: '900' };
+                            if (labelDisplayType === 'last' && context.dataIndex === context.dataset.data.length - 1) return { size: emphasizedFontSize, weight: '900' };
+                            return { size: datasetFontSize, weight: 'bold' };
                         },
                         textStrokeColor: function(context) {
                             if (normType === 'pie') return 'rgba(0,0,0,0)'; 
@@ -1662,10 +1843,18 @@ function openDataSheet() {
             exportScaleEl.addEventListener('change', updateExportSizeHint);
         } 
         
-        ['labelsInput', 'dataName1', 'dataName2', 'dataName3', 'dataName4'].forEach(id => {
+        ['labelsInput', 'dataName1', 'dataName2', 'dataName3', 'dataName4', 'dataInput1', 'dataInput2', 'dataInput3', 'dataInput4'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.addEventListener('input', refreshHighlightControls);
+            if (el) el.addEventListener('input', () => {
+                refreshHighlightControls();
+                refreshDatasetFontControls();
+                refreshDatasetColorControls();
+            });
         });
+
+        updateDatasetFontDisplays();
+        refreshDatasetFontControls();
+        refreshDatasetColorControls();
 
         document.getElementById('tableDataInput').addEventListener('keydown', function(e) {
             if (e.key === 'Tab') {
