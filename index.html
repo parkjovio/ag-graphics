@@ -782,6 +782,41 @@
         return select.value;
     }
 
+    function getAxisRepresentativeDatasetIndex(datasets, axisId) {
+        if (!Array.isArray(datasets) || !datasets.length) return -1;
+        const targetAxisId = axisId || 'y';
+        for (let i = 0; i < datasets.length; i++) {
+            const dataset = datasets[i] || {};
+            const datasetAxisId = dataset.yAxisID || 'y';
+            if (datasetAxisId === targetAxisId) return i;
+        }
+        return -1;
+    }
+
+    function getDatasetAxisColor(dataset, fallbackColor = '#666666') {
+        if (!dataset) return fallbackColor;
+        const pickColor = (value) => {
+            if (Array.isArray(value)) {
+                const found = value.find(item => typeof item === 'string' && item && item !== '#ffffff' && item !== '#fff');
+                return found || null;
+            }
+            if (typeof value === 'string' && value && value !== '#ffffff' && value !== '#fff') return value;
+            return null;
+        };
+
+        return pickColor(dataset.borderColor)
+            || pickColor(dataset.backgroundColor)
+            || pickColor(dataset.pointBorderColor)
+            || pickColor(dataset.pointBackgroundColor)
+            || fallbackColor;
+    }
+
+    function getAxisTickColorForDataset(datasetIndex, datasets, fallbackColor = '#666666') {
+        if (datasetIndex < 0 || !Array.isArray(datasets) || !datasets[datasetIndex]) return fallbackColor;
+        const customLabelColor = getDatasetLabelColor(datasetIndex);
+        return customLabelColor || getDatasetAxisColor(datasets[datasetIndex], fallbackColor);
+    }
+
     function getHighlightPalette() {
         return {
             red: '#E61E2B',
@@ -1566,6 +1601,16 @@ function openDataSheet() {
         const fontSizeElem = document.getElementById('globalFontSize');
         const baseSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
         const scale = baseSize / 20; 
+        const primaryAxisId = isHorizontal ? 'x' : 'y';
+        const secondaryAxisId = isHorizontal ? 'x1' : 'y1';
+        const primaryAxisDatasetIndex = getAxisRepresentativeDatasetIndex(datasets, primaryAxisId);
+        const secondaryAxisDatasetIndex = getAxisRepresentativeDatasetIndex(datasets, secondaryAxisId);
+        const yTickColor = !isHorizontal
+            ? getAxisTickColorForDataset(primaryAxisDatasetIndex, datasets, '#666666')
+            : '#333333';
+        const y1TickColor = !isHorizontal
+            ? getAxisTickColorForDataset(secondaryAxisDatasetIndex, datasets, '#E61E2B')
+            : '#333333';
 
         const ctx = document.getElementById('myChart').getContext('2d');
         let baseChartType = (normType === 'line' || normType === 'pie') ? normType : 'bar';
@@ -1740,7 +1785,7 @@ function openDataSheet() {
                         },
                         ticks: {
                             font: { size: Math.round(16 * scale), weight: isHorizontal ? 'bold' : 'normal' },
-                            color: isHorizontal ? '#333' : '#666',
+                            color: isHorizontal ? '#333' : yTickColor,
                             callback: function(value) {
                                 if (!isHorizontal) return isKoreanNumber ? formatKoreanNumber(value, subText) : value;
                                 return this.getLabelForValue(value);
@@ -1754,7 +1799,7 @@ function openDataSheet() {
                     y1: {
                         display: !isHorizontal && (normType === 'combo' || normType === 'multi-combo' || normType === 'stacked-combo'),
                         type: 'linear', position: 'right', grid: { display: false },
-                        ticks: { font: { size: Math.round(16 * scale), weight: 'bold' }, color: '#E61E2B', callback: function(value) { return isKoreanNumber ? formatKoreanNumber(value, subText) : value; } },
+                        ticks: { font: { size: Math.round(16 * scale), weight: 'bold' }, color: y1TickColor, callback: function(value) { return isKoreanNumber ? formatKoreanNumber(value, subText) : value; } },
                         beginAtZero: true,
                         min: !isHorizontal && y1Min !== '' ? parseFloat(y1Min) : undefined,
                         max: !isHorizontal && y1Max !== '' ? parseFloat(y1Max) : undefined,
