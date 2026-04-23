@@ -814,7 +814,7 @@
     function getAxisTickColorForDataset(datasetIndex, datasets, fallbackColor = '#666666') {
         if (datasetIndex < 0 || !Array.isArray(datasets) || !datasets[datasetIndex]) return fallbackColor;
         const customLabelColor = getDatasetLabelColor(datasetIndex);
-        return customLabelColor || getDatasetAxisColor(datasets[datasetIndex], fallbackColor);
+        return customLabelColor || fallbackColor;
     }
 
     function getHighlightPalette() {
