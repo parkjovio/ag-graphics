@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.25</title>
+    <title>그래픽 보조 데스크 V 1.3</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -114,7 +114,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.25</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.3</h2>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
@@ -389,6 +389,23 @@
             <label id="tableDataLabel">엑셀/리스트 데이터 붙여넣기</label>
             <textarea id="tableDataInput" rows="10"></textarea>
             <span class="help-text" id="tableHelpText" style="margin-top: 5px; color: var(--ak-red);">💡 팁1: 위 칸과 병합할 땐 <b>^</b> 기호 입력.<br>💡 팁2: 표를 나눌 땐 맨 앞칸에 <b>## 소제목</b> 입력.<br>⌨️ (이제 입력창 안에서 탭(Tab) 키를 누르면 바로 탭이 삽입됩니다!)</span>
+        </div>
+
+        <div class="data-group" id="columnWidthSettingGroup" style="display:none;">
+            <label style="color:var(--ak-red); font-size:14px;">📌 열 너비 수동 조절</label>
+            <div id="tableColumnWidthWrap">
+                <label style="margin-top:8px;">표 열 너비 (%, 콤마 구분)</label>
+                <input type="text" id="tableColumnWidthsInput" placeholder="예: 25, 35, 20, 20" oninput="updateOutput()">
+                <span class="help-text" id="tableColumnWidthHelp" style="margin-top:5px;">열 너비를 %로 입력하세요. 비우면 자동 너비로 표시됩니다.</span>
+            </div>
+            <div id="timelineColumnWidthWrap" style="display:none;">
+                <label style="margin-top:8px;">타임라인 열 너비 (%)</label>
+                <div class="axis-inputs">
+                    <input type="text" id="timelineWidthLeft" placeholder="좌측 열" oninput="updateOutput()">
+                    <input type="text" id="timelineWidthRight" placeholder="우측 열" oninput="updateOutput()">
+                </div>
+                <span class="help-text" style="margin-top:5px;">예: 33 / 67. 하나만 입력하면 나머지 열은 자동 계산합니다. 둘 다 비우면 기본 너비를 사용합니다.</span>
+            </div>
         </div>
 
         <div class="data-group" style="background-color: #fff; border: 1px solid #ccc;">
@@ -751,6 +768,124 @@
             const display = document.getElementById(`datasetFontDisplay${index}`);
             if (slider && display) display.innerText = `${slider.value}px`;
         });
+    }
+
+    function getRawTableRowsForSizing() {
+        const tableInput = document.getElementById('tableDataInput');
+        const rawText = tableInput ? tableInput.value.trim() : '';
+        if (!rawText) return [];
+
+        let rows = rawText.split('\n');
+        if (rows.length > 2) {
+            const lastLine = rows[rows.length - 1];
+            const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
+            const firstCols = rows[0].indexOf('\t') !== -1 ? rows[0].split('\t') : rows[0].split(',');
+            if (lastCols.length === 1 && firstCols.length > 1 && !lastCols[0].trim().startsWith('##')) {
+                rows = rows.slice(0, -1);
+            }
+        }
+
+        return rows
+            .map(row => (row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',')).map(col => col.trim()))
+            .filter(cols => cols.length && !(cols[0] || '').startsWith('##'));
+    }
+
+    function getMaxRenderableTableColumnCount() {
+        const rows = getRawTableRowsForSizing();
+        if (!rows.length) return 0;
+        return rows.reduce((max, cols) => Math.max(max, cols.length), 0);
+    }
+
+    function parseManualWidthValue(value) {
+        const num = parseFloat(String(value || '').trim());
+        return Number.isFinite(num) && num > 0 ? num : null;
+    }
+
+    function getManualTableColumnWidths(expectedCount) {
+        const input = document.getElementById('tableColumnWidthsInput');
+        if (!input) return [];
+
+        return String(input.value || '')
+            .split(',')
+            .map(part => parseManualWidthValue(part))
+            .slice(0, expectedCount)
+            .map(value => value && value > 0 ? value : null);
+    }
+
+    function getManualTimelineWidths() {
+        const leftInput = document.getElementById('timelineWidthLeft');
+        const rightInput = document.getElementById('timelineWidthRight');
+        const leftRaw = parseManualWidthValue(leftInput ? leftInput.value : '');
+        const rightRaw = parseManualWidthValue(rightInput ? rightInput.value : '');
+
+        if (leftRaw === null && rightRaw === null) {
+            return { left: 33, right: 67 };
+        }
+
+        if (leftRaw !== null && rightRaw === null) {
+            const left = Math.min(Math.max(leftRaw, 5), 95);
+            return { left, right: 100 - left };
+        }
+
+        if (leftRaw === null && rightRaw !== null) {
+            const right = Math.min(Math.max(rightRaw, 5), 95);
+            return { left: 100 - right, right };
+        }
+
+        const total = leftRaw + rightRaw;
+        if (!Number.isFinite(total) || total <= 0) {
+            return { left: 33, right: 67 };
+        }
+
+        return {
+            left: (leftRaw / total) * 100,
+            right: (rightRaw / total) * 100
+        };
+    }
+
+    function refreshColumnWidthControls() {
+        const type = document.getElementById('chartType').value;
+        const group = document.getElementById('columnWidthSettingGroup');
+        const tableWrap = document.getElementById('tableColumnWidthWrap');
+        const timelineWrap = document.getElementById('timelineColumnWidthWrap');
+        const tableHelp = document.getElementById('tableColumnWidthHelp');
+        const tableInput = document.getElementById('tableColumnWidthsInput');
+
+        if (!group || !tableWrap || !timelineWrap) return;
+
+        if (type !== 'table' && type !== 'timeline' && type !== 'chart-table') {
+            group.style.display = 'none';
+            return;
+        }
+
+        group.style.display = 'block';
+
+        if (type === 'timeline') {
+            tableWrap.style.display = 'none';
+            timelineWrap.style.display = 'block';
+            return;
+        }
+
+        tableWrap.style.display = 'block';
+        timelineWrap.style.display = 'none';
+
+        const maxCols = getMaxRenderableTableColumnCount();
+        if (tableInput) {
+            if (maxCols >= 2) {
+                const exampleValues = new Array(Math.min(maxCols, 4)).fill(Math.round(100 / Math.min(maxCols, 4)));
+                tableInput.placeholder = `예: ${exampleValues.join(', ')}`;
+            } else {
+                tableInput.placeholder = '예: 25, 35, 20, 20';
+            }
+        }
+
+        if (tableHelp) {
+            if (maxCols > 0) {
+                tableHelp.innerHTML = `현재 표는 최대 <b>${maxCols}개 열</b>까지 감지됐습니다. 열 너비를 %로 쉼표 구분 입력하세요. 일부 열만 입력하면 나머지는 자동 너비로 표시됩니다.`;
+            } else {
+                tableHelp.innerHTML = '열 너비를 %로 쉼표 구분 입력하세요. 비우면 자동 너비로 표시됩니다.';
+            }
+        }
     }
 
 
@@ -1358,6 +1493,7 @@ function openDataSheet() {
         refreshDatasetLabelDisplayControls();
         refreshDatasetFontControls();
         refreshDatasetColorControls();
+        refreshColumnWidthControls();
         updateOutput();
     }
 
@@ -1387,6 +1523,7 @@ function openDataSheet() {
         refreshDatasetLabelDisplayControls();
         refreshDatasetFontControls();
         refreshDatasetColorControls();
+        refreshColumnWidthControls();
         if(document.getElementById('displayTitle')) document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
         if(document.getElementById('displayName')) document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
 
@@ -1441,6 +1578,7 @@ function openDataSheet() {
         const rows = tsvData.split('\n');
         const fontSizeElem = document.getElementById('globalFontSize');
         const fontSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
+        const timelineWidths = getManualTimelineWidths();
 
         let html = `<div class="timeline-container" style="font-size: ${fontSize}px;">`;
         let autoFootnote = manualFootnote;
@@ -1468,8 +1606,8 @@ function openDataSheet() {
             if(leftText || rightText) {
                 html += `
                 <div class="timeline-row" style="z-index: ${100 - i}; position: relative;">
-                    <div class="timeline-left" style="font-size: ${Math.round(fontSize * 1.1)}px;">${leftText}</div>
-                    <div class="timeline-right" style="font-size: ${fontSize}px;">${rightText}</div>
+                    <div class="timeline-left" style="font-size: ${Math.round(fontSize * 1.1)}px; width:${timelineWidths.left}%;">${leftText}</div>
+                    <div class="timeline-right" style="font-size: ${fontSize}px; width:${timelineWidths.right}%;">${rightText}</div>
                 </div>`;
             }
         }
@@ -1556,7 +1694,18 @@ function openDataSheet() {
                 html += `<div style="background-color:#444; color:white; padding:8px 15px; font-size:${fontSize*0.9}px; font-weight:bold; border-radius:5px; margin-top:20px; margin-bottom:5px; width:100%; box-sizing:border-box;">■ ${blockTitle}</div>`;
             } else {
                 if (!inTable) {
-                    html += `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 5px;"><thead><tr>`;
+                    const visibleColumnIndexes = row.map((cell, cIdx) => cell.hide ? null : cIdx).filter(index => index !== null);
+                    const manualWidths = getManualTableColumnWidths(visibleColumnIndexes.length);
+                    html += `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 5px;">`;
+                    if (visibleColumnIndexes.length) {
+                        html += '<colgroup>';
+                        visibleColumnIndexes.forEach((_, visibleIdx) => {
+                            const widthValue = manualWidths[visibleIdx];
+                            html += `<col${widthValue ? ` style="width:${widthValue}%;"` : ''}>`;
+                        });
+                        html += '</colgroup>';
+                    }
+                    html += '<thead><tr>';
                     row.forEach((cell, cIdx) => { if (!cell.hide) html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="col-${cIdx}">${cell.text}</th>`; });
                     html += '</tr></thead><tbody>';
                     inTable = true;
