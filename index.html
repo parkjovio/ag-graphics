@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 1.3</title>
+    <title>그래픽 보조 데스크 V 2.7</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -56,7 +56,7 @@
         .export-size-hint { font-size: 12px; color: #666; line-height: 1.4; margin-top: 6px; display: block; }
 
         .preview-area { flex: 1; display: flex; justify-content: flex-start; align-items: flex-start; width: 100%; position: sticky; top: 20px;}
-        #capture-area { background: white; width: 750px; padding: 40px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        #capture-area { background: white; width: 750px; padding: 40px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
         
         /* 🚨 제목과 그래프 사이 간격 대폭 좁힘 🚨 */
         .header-line { border-top: 3px solid #000; margin-bottom: 12px; }
@@ -66,10 +66,16 @@
         #chart-container { height: 420px; margin-top: 0px; flex-shrink: 0; transition: height 0.3s ease; position: relative;}
         #pie-side-list { display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 210px; z-index: 5; }
         .pie-side-list-inner { display: flex; flex-direction: column; gap: 10px; }
-        .pie-side-item { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+        .pie-side-item { display: flex; align-items: flex-start; gap: 8px; min-width: 0; cursor: pointer; border-radius: 8px; padding: 4px; margin: -4px; transition: box-shadow 0.15s ease, background-color 0.15s ease; }
+        .pie-side-item:hover { box-shadow: 0 0 0 2px rgba(230,30,43,0.20); background-color: rgba(255,248,248,0.92); }
         .pie-side-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
         .pie-side-text { min-width: 0; color: #111; font-weight: 700; line-height: 1.3; letter-spacing: -0.4px; word-break: keep-all; overflow-wrap: anywhere; }
         .pie-side-text strong { font-weight: 900; }
+        .pie-side-label, .pie-side-value { display: inline-block; border-radius: 5px; padding: 1px 3px; margin: -1px -3px; transition: box-shadow 0.15s ease, background-color 0.15s ease; }
+        .pie-side-label { cursor: text; }
+        .pie-side-value { cursor: ns-resize; }
+        .pie-side-label:hover { box-shadow: 0 0 0 2px rgba(17,17,17,0.14); background: rgba(255,255,255,0.88); }
+        .pie-side-value:hover { box-shadow: 0 0 0 2px rgba(230,30,43,0.22); background: rgba(255,248,248,0.95); }
         #table-container { display: none; margin-top: 5px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
         
         /* 일반 엑셀 표 */
@@ -103,27 +109,160 @@
         .footer-watermark { display: flex; justify-content: flex-end; align-items: center; margin-top: 20px; font-size: 18px; font-weight: bold; color: #111; flex-shrink: 0; font-family: var(--main-font); border-top: 1px solid #eee; padding-top: 15px;}
         .as_logo_img { height: 32px; margin-left: 8px; width: auto; }
 
+
+        /* 사용자 친화형 단계 메뉴 + 신규 기능 UI */
+        .quick-action-bar { display: grid; grid-template-columns: 0.82fr 0.86fr 1.18fr 0.9fr 0.82fr; gap: 6px; margin: -6px 0 10px; }
+        .quick-btn { border: 1px solid #ddd; background: #fff; color: #333; padding: 8px 4px; border-radius: 8px; cursor: pointer; font-weight: 800; font-family: var(--main-font); font-size: 11px; line-height: 1.1; min-height: 36px; word-break: keep-all; white-space: nowrap; text-align: center; letter-spacing: -0.01em; }
+        .quick-btn { position: relative; overflow: hidden; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease; }
+        .quick-btn::before { content: ''; position: absolute; left: 8px; right: 8px; top: 4px; height: 3px; border-radius: 999px; background: currentColor; opacity: 0; transition: opacity 0.15s ease; }
+        .quick-btn:hover { border-color: var(--ak-red); color: var(--ak-red); background: #fff8f8; }
+        .quick-btn.active { color: #fff; border-color: transparent; transform: translateY(-1px); box-shadow: 0 7px 14px rgba(0,0,0,0.14); }
+        .quick-btn.active::before { opacity: 0.75; background: rgba(255,255,255,0.85); }
+        #quickInputBtn:hover { border-color: #0056b3; color: #0056b3; background: #f0f6ff; }
+        #quickInputBtn.active { background: #0056b3; }
+        #quickDataEditBtn:hover { border-color: #111; color: #111; background: #f4f4f4; }
+        #quickDataEditBtn.active { background: #111; }
+        #quickDesignBtn:hover { border-color: var(--ak-red); color: var(--ak-red); background: #fff8f8; }
+        #quickDesignBtn.active { background: var(--ak-red); }
+        #quickSaveBtn:hover { border-color: #2E7D32; color: #2E7D32; background: #f1fbf2; }
+        #quickSaveBtn.active { background: #2E7D32; }
+        #undoBtn { background: #f8f9fb; color: #555; }
+        #undoBtn:hover { border-color: #777; color: #111; background: #fff; }
+        .quick-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .history-status { background: #f6f7fb; border: 1px solid #e4e6ee; border-radius: 8px; padding: 8px 10px; margin-bottom: 14px; font-size: 12px; color: #555; line-height: 1.4; }
+        .panel-sticky-header { position: sticky; top: 0; z-index: 90; background: rgba(255,255,255,0.98); backdrop-filter: blur(8px); padding: 7px 0 8px; margin: -25px 0 12px; border-bottom: 1px solid #edf0f3; box-shadow: 0 6px 14px rgba(0,0,0,0.04); }
+        .panel-sticky-header h2 { margin: 0 0 7px 0; padding-bottom: 6px; font-size: 18px; line-height: 1.25; }
+        .panel-sticky-header .quick-action-bar { gap: 5px; margin: 0 0 6px; }
+        .panel-sticky-header .quick-btn { min-height: 31px; padding: 5px 3px; font-size: 10.5px; border-radius: 7px; }
+        #undoBtn { letter-spacing: -0.03em; }
+        .control-section { scroll-margin-top: 96px; }
+        .panel-sticky-header .history-status { margin: 0; padding: 6px 8px; font-size: 11px; line-height: 1.25; }
+        .control-section { border: 1px solid #e1e4ea; border-radius: 12px; background: #fff; margin: 12px 0; overflow: hidden; transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease; }
+        .control-section:hover { border-color: #cfd6e0; }
+        .control-section[open] { box-shadow: 0 3px 10px rgba(0,0,0,0.04); }
+        .control-section summary { list-style: none; cursor: pointer; padding: 13px 14px 13px 16px; font-weight: 900; color: #222; background: #f8f9fb; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-left: 6px solid transparent; transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease; }
+        .control-section summary::-webkit-details-marker { display: none; }
+        .control-section summary::after { content: '펼치기'; font-size: 11px; color: #777; font-weight: 800; padding: 4px 9px; border-radius: 999px; background: rgba(0,0,0,0.05); transition: background-color 0.18s ease, color 0.18s ease; }
+        .control-section[open] summary::after { content: '접기'; color: var(--ak-red); }
+        .control-section[data-menu-key='input'] { --section-accent: #0056b3; --section-bg: #f0f6ff; --section-open-bg: #e2efff; --section-pill-bg: #dcebff; }
+        .control-section[data-menu-key='dataedit'] { --section-accent: #111111; --section-bg: #f5f5f5; --section-open-bg: #ededed; --section-pill-bg: #e2e2e2; }
+        .control-section[data-menu-key='design'] { --section-accent: var(--ak-red); --section-bg: #fff4f4; --section-open-bg: #ffeaea; --section-pill-bg: #ffdcdc; }
+        .control-section[data-menu-key='save'] { --section-accent: #2E7D32; --section-bg: #f1fbf2; --section-open-bg: #e4f7e7; --section-pill-bg: #d3efd8; }
+        .control-section[data-menu-key] summary { color: var(--section-accent); background: var(--section-bg); border-left-color: var(--section-accent); }
+        .control-section[data-menu-key] summary::after { color: var(--section-accent); background: var(--section-pill-bg); }
+        .control-section[data-menu-key][open] { border-color: var(--section-accent); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
+        .control-section[data-menu-key][open] summary { background: var(--section-open-bg); }
+        .control-section[data-menu-key='input'][open] summary::after,
+        .control-section[data-menu-key='dataedit'][open] summary::after,
+        .control-section[data-menu-key='design'][open] summary::after,
+        .control-section[data-menu-key='save'][open] summary::after { color: var(--section-accent); }
+        .control-section-title { display: inline-flex; align-items: center; gap: 8px; min-width: 0; line-height: 1.2; }
+        .control-section-icon { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; background: var(--section-accent, #777); font-size: 13px; box-shadow: 0 3px 8px rgba(0,0,0,0.14); }
+        .control-section-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .control-section.section-attention { animation: sectionAttention 1.05s ease; }
+        .control-section.section-attention summary { animation: sectionSummaryAttention 1.05s ease; }
+        @keyframes sectionAttention {
+            0% { transform: translateY(0); box-shadow: 0 3px 10px rgba(0,0,0,0.04); }
+            28% { transform: translateY(-2px); box-shadow: 0 0 0 4px var(--section-pill-bg), 0 10px 24px rgba(0,0,0,0.13); border-color: var(--section-accent); }
+            62% { transform: translateY(-1px); box-shadow: 0 0 0 3px var(--section-pill-bg), 0 8px 20px rgba(0,0,0,0.10); border-color: var(--section-accent); }
+            100% { transform: translateY(0); box-shadow: 0 3px 10px rgba(0,0,0,0.04); }
+        }
+        @keyframes sectionSummaryAttention {
+            0% { filter: brightness(1); }
+            28% { filter: brightness(0.97) saturate(1.12); }
+            62% { filter: brightness(0.99) saturate(1.08); }
+            100% { filter: brightness(1); }
+        }
+        .control-section-body { padding: 14px; }
+        .control-section-body > :first-child { margin-top: 0; }
+        .menu-subhead { margin: 4px 0 10px; padding: 9px 10px; border-radius: 9px; background: #f6f7fb; border: 1px solid #e4e6ee; }
+        .menu-subhead:not(:first-child) { margin-top: 16px; }
+        .menu-subhead-title { font-size: 13px; font-weight: 900; color: #222; display: flex; align-items: center; gap: 6px; letter-spacing: -0.02em; }
+        .menu-subhead-desc { margin-top: 3px; font-size: 11px; color: #777; line-height: 1.35; word-break: keep-all; }
+        .parse-summary { margin-top: 8px; padding: 9px 10px; border-radius: 7px; background: #ffffff; border: 1px dashed #8fb8f5; color: #245a9f; font-size: 12px; line-height: 1.45; }
+        .parse-summary.ok { background: #f0fff5; border-color: #7ac794; color: #1d6b37; }
+        .parse-summary.warn { background: #fff8e6; border-color: #f0bf58; color: #8a5b00; }
+        .parse-summary.error { background: #fff0f0; border-color: #f09a9a; color: #a32222; }
+        .palette-preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .palette-btn { border: 1px solid #ddd; background: #fff; color: #333; border-radius: 8px; padding: 9px 8px; cursor: pointer; font-family: var(--main-font); font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 7px; justify-content: flex-start; }
+        .palette-btn:hover, .palette-btn.active { border-color: var(--ak-red); background: #fff8f8; color: var(--ak-red); }
+        .palette-swatch { display: inline-block; width: 13px; height: 13px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12); flex-shrink: 0; }
+        .favorite-btn-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 7px; }
+        .favorite-btn-row button { border: none; background: #444; color: #fff; border-radius: 7px; padding: 9px 5px; cursor: pointer; font-weight: 800; font-family: var(--main-font); }
+        .favorite-btn-row button:hover { background: #111; }
+        .btn-download-svg { background: #555; }
+        .btn-download-svg:hover { background: #222; }
+        .inline-editable { cursor: text; border-radius: 4px; transition: box-shadow 0.15s ease, background-color 0.15s ease; }
+        .inline-editable:hover { box-shadow: 0 0 0 2px rgba(230,30,43,0.12); background-color: rgba(255,255,255,0.55); }
+        .inline-editable[contenteditable="true"] { outline: 2px solid var(--ak-red); background: #fff; padding: 2px 4px; }
+
+        .chart-quick-edit { position: absolute; display: none; min-width: 205px; max-width: 250px; z-index: 30; background: rgba(255,255,255,0.98); border: 2px solid var(--ak-red); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 10px; box-sizing: border-box; font-family: var(--main-font); }
+        .chart-quick-edit-title { font-size: 12px; color: #333; font-weight: 900; line-height: 1.35; margin-bottom: 7px; word-break: keep-all; }
+        .chart-quick-edit-sub { font-size: 11px; color: #777; font-weight: 700; margin-bottom: 7px; }
+        .chart-quick-edit-row { display: flex; gap: 6px; align-items: center; }
+        .chart-quick-edit input { flex: 1; min-width: 0; border: 1px solid #ccc; border-radius: 7px; padding: 8px; font-size: 13px; font-weight: 800; font-family: var(--main-font); box-sizing: border-box; }
+        .chart-quick-edit input:focus { outline: 2px solid rgba(230,30,43,0.18); border-color: var(--ak-red); }
+        .chart-quick-edit button { border: none; border-radius: 7px; padding: 8px 9px; cursor: pointer; font-size: 12px; font-weight: 900; font-family: var(--main-font); }
+        .chart-quick-apply { background: var(--ak-red); color: white; }
+        .chart-quick-close { background: #eee; color: #333; }
+        .chart-quick-edit-help { margin-top: 6px; color: #777; font-size: 11px; line-height: 1.35; }
+        .preview-editable-target { cursor: text; border-radius: 5px; transition: box-shadow 0.15s ease, background-color 0.15s ease; }
+        .preview-editable-target:hover { box-shadow: 0 0 0 2px rgba(230,30,43,0.20); background-color: rgba(255,248,248,0.85); }
+        .preview-quick-edit { z-index: 45; border-color: #111; }
+        .preview-quick-edit .chart-quick-apply { background: #111; }
+        .edit-hover-hint { position: absolute; display: none; z-index: 44; pointer-events: none; background: rgba(17,17,17,0.92); color: #fff; border-radius: 999px; padding: 7px 11px; font-size: 12px; font-weight: 800; line-height: 1; box-shadow: 0 6px 18px rgba(0,0,0,0.18); white-space: nowrap; }
+
         @media screen and (max-width: 768px) {
             body { flex-direction: column; padding: 10px; gap: 15px; }
             .control-panel { width: 100%; padding: 20px; }
             .preview-area { width: 100%; overflow-x: auto; padding-bottom: 10px; position: relative; top: auto; }
             #capture-area { min-width: 750px; }
         }
+
+        @media screen and (max-width: 480px) {
+            .quick-action-bar { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+            .quick-btn { font-size: 10px; padding: 8px 2px; min-height: 36px; }
+            .panel-sticky-header { margin: -20px 0 10px; padding: 7px 0 7px; }
+            .panel-sticky-header h2 { font-size: 17px; margin-bottom: 6px; }
+            .panel-sticky-header .quick-btn { min-height: 34px; padding: 6px 4px; }
+            .panel-sticky-header .history-status { font-size: 10px; padding: 5px 7px; }
+            .control-section[data-menu-key='input'] { --section-bg: #e3f0ff; --section-open-bg: #cfe3ff; --section-pill-bg: #bdd8ff; }
+            .control-section[data-menu-key='dataedit'] { --section-bg: #eeeeee; --section-open-bg: #dcdcdc; --section-pill-bg: #d1d1d1; }
+            .control-section[data-menu-key='design'] { --section-bg: #ffe9e9; --section-open-bg: #ffd2d2; --section-pill-bg: #ffc1c1; }
+            .control-section[data-menu-key='save'] { --section-bg: #e5f7e7; --section-open-bg: #cdefd1; --section-pill-bg: #bde8c4; }
+            .control-section { margin: 10px 0; border-width: 2px; }
+            .control-section summary { padding: 13px 12px 13px 14px; font-size: 14px; border-left-width: 8px; }
+            .control-section[data-menu-key] summary { background: var(--section-bg); }
+            .control-section[open] summary { background: var(--section-open-bg); }
+            .control-section-icon { width: 28px; height: 28px; font-size: 15px; box-shadow: 0 3px 9px rgba(0,0,0,0.20); }
+            .control-section summary::after { font-size: 10.5px; padding: 5px 9px; background: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+            .history-status { font-size: 11px; }
+        }
     </style>
 </head>
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 1.3</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 2.7</h2>
+
+        <div class="quick-action-bar" id="quickActionBar">
+            <button type="button" class="quick-btn" id="undoBtn" onclick="undoLastChange()" title="Ctrl+Z / Command+Z">되돌리기</button>
+            <button type="button" class="quick-btn" id="quickInputBtn" data-default-label="입력" data-open-label="입력" onclick="toggleQuickMenu('input')">입력</button>
+            <button type="button" class="quick-btn" id="quickDataEditBtn" data-default-label="데이터수정" data-open-label="데이터수정" onclick="toggleQuickMenu('dataedit')">데이터수정</button>
+            <button type="button" class="quick-btn" id="quickDesignBtn" data-default-label="디자인" data-open-label="디자인" onclick="toggleQuickMenu('design')">디자인</button>
+            <button type="button" class="quick-btn" id="quickSaveBtn" data-default-label="저장" data-open-label="저장" onclick="toggleQuickMenu('save')">저장</button>
+        </div>
+        <div class="history-status" id="historyStatus">작업 이력이 준비되었습니다.</div>
 
         <div class="ai-input-group">
             <h3>🤖 제미나이 데이터 자동 입력</h3>
             <span class="help-text" style="color: #0056b3; margin-bottom:5px;">제미나이가 생성한 텍스트를 통째로 붙여넣으세요.</span>
             <textarea id="geminiInput" placeholder="[종류] multi-line&#10;[제목] 서울 아파트 가격 추이&#10;..."></textarea>
             <button class="btn-ai" id="autoFillBtn" onclick="parseGeminiData()">🪄 AI 데이터 자동 완성하기</button>
+            <div id="parseSummary" class="parse-summary" aria-live="polite">붙여넣은 데이터가 어떻게 읽혔는지 여기에 표시됩니다.</div>
         </div>
         
-        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div id="chartTypeHeaderRow" style="display: flex; justify-content: space-between; align-items: flex-end;">
             <label style="margin-bottom: 0;">종류 선택</label>
             <span style="font-size: 12px; cursor: pointer; color: var(--ak-red); font-weight: bold; text-decoration: underline;" onclick="loadExampleData()">📝 예시 불러오기</span>
         </div>
@@ -148,6 +287,18 @@
         </select>
 
         <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (엑셀 방식)</button>
+
+        <div class="data-group" id="palettePresetGroup">
+            <label style="color:var(--ak-red); font-size:14px;">🎨 색상 팔레트 프리셋</label>
+            <input type="hidden" id="palettePresetKey" value="asiae">
+            <div class="palette-preset-grid">
+                <button type="button" class="palette-btn active" data-palette="asiae" onclick="applyPalettePreset('asiae')"><span class="palette-swatch" style="background:#E61E2B"></span>아시아경제 기본</button>
+                <button type="button" class="palette-btn" data-palette="economyBlue" onclick="applyPalettePreset('economyBlue')"><span class="palette-swatch" style="background:#1F6FEB"></span>경제 지표용</button>
+                <button type="button" class="palette-btn" data-palette="riskRed" onclick="applyPalettePreset('riskRed')"><span class="palette-swatch" style="background:#C1121F"></span>경고·위험 강조</button>
+                <button type="button" class="palette-btn" data-palette="compareGray" onclick="applyPalettePreset('compareGray')"><span class="palette-swatch" style="background:#555"></span>비교 대조용</button>
+            </div>
+            <span class="help-text" style="margin-top:8px; margin-bottom:0;">그래프·표 강조색을 기사 성격에 맞게 한 번에 바꿉니다.</span>
+        </div>
 
         <div class="data-group" id="labelSettingGroup">
             <label style="color:var(--ak-red); font-size:14px;">📌 수치 표시 방식</label>
@@ -332,12 +483,16 @@
             </div>
         </div>
 
-        <label>제목</label>
-        <input type="text" id="titleInput" value="">
-        
-        <div id="subInputGroup">
-            <label>단위 및 출처</label>
-            <input type="text" id="subInput" value="">
+        <div class="data-group" id="textSettingGroup">
+            <label style="margin-top:0; color:var(--ak-red); font-size:14px;">✍️ 제목·부제목</label>
+            <span class="help-text" style="margin-bottom:8px;">미리보기의 제목이나 부제목을 더블클릭해도 바로 수정할 수 있습니다.</span>
+            <label>제목</label>
+            <input type="text" id="titleInput" value="">
+            
+            <div id="subInputGroup">
+                <label>단위 및 출처</label>
+                <input type="text" id="subInput" value="">
+            </div>
         </div>
         
         <div id="chartInputs">
@@ -408,17 +563,31 @@
             </div>
         </div>
 
-        <div class="data-group" style="background-color: #fff; border: 1px solid #ccc;">
+        <div class="data-group" id="footnoteSettingGroup" style="background-color: #fff; border: 1px solid #ccc;">
             <label style="margin-top:0;">하단 주석 (선택)</label>
             <input type="text" id="footnoteInput" placeholder="예: *보험사들은 대면 영업이 많아..." value="">
         </div>
         
-        <label>기자 이름</label>
-        <input type="text" id="nameInput" value="박조비 기자">
+        <div class="data-group" id="reporterSettingGroup">
+            <label style="margin-top:0;">기자 이름</label>
+            <input type="text" id="nameInput" value="박조비 기자">
+        </div>
         
-        <button class="main-btn" onclick="handleApplyClick()">🔄 수동 적용하기</button>
+        <button class="main-btn" id="applyBtn" onclick="handleApplyClick()">🔄 수동 적용하기</button>
 
-        <div class="export-option-group">
+        <div class="data-group" id="favoriteSettingGroup">
+            <label style="margin-top:0; color:var(--ak-red); font-size:14px;">⭐ 자주 쓰는 설정</label>
+            <input type="text" id="favoriteName" placeholder="예: 증시 선그래프 기본값">
+            <select id="favoriteSelect" style="margin-top:6px;"></select>
+            <div class="favorite-btn-row">
+                <button type="button" onclick="saveFavoriteSettings()">저장</button>
+                <button type="button" onclick="loadFavoriteSettings()">불러오기</button>
+                <button type="button" onclick="deleteFavoriteSettings()">삭제</button>
+            </div>
+            <span class="help-text" style="margin-top:8px; margin-bottom:0;">현재 그래프 종류, 글자 크기, 색상, 입력값을 이 브라우저에 저장합니다.</span>
+        </div>
+
+        <div class="export-option-group" id="exportOptionGroup">
             <label style="margin-top:0; color:var(--ak-red); font-size:14px;">📸 저장 배율 선택</label>
             <div class="export-option-row">
                 <select id="exportScale">
@@ -429,9 +598,10 @@
             <span class="export-size-hint">현재 750px 작업 화면을 기준으로 2배/3배 크기로 고정 저장합니다.</span>
         </div>
 
-        <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 이미지 저장</button>
+        <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 PNG 저장</button>
+        <button onclick="downloadSvg()" class="btn-download btn-download-svg" id="svgDownloadBtn">🖋️ SVG 파일 저장</button>
         
-        <div style="margin-top: 20px; font-size: 13px; color: #888; text-align: center; font-weight: bold;">
+        <div id="creatorFooter" style="margin-top: 20px; font-size: 13px; color: #888; text-align: center; font-weight: bold;">
             만든 이 : 콘텐츠편집2팀, 제미나이
         </div>
     </div>
@@ -467,21 +637,42 @@
         <div id="capture-area">
             <div class="header-line" id="topLine"></div>
             
-            <h1 class="chart-title" id="displayTitle">제목입력</h1>
+            <h1 class="chart-title inline-editable" id="displayTitle" title="더블클릭해서 데이터 수정(제목 수정)">제목입력</h1>
             <br>
-            <span class="chart-subtitle" id="displaySub">(단위 및 출처 입력)</span>
+            <span class="chart-subtitle inline-editable" id="displaySub" title="더블클릭해서 데이터 수정(부제목 수정)">(단위 및 출처 입력)</span>
             
             <div id="chart-container">
                 <canvas id="myChart"></canvas>
                 <div id="pie-side-list" style="display: none;"></div>
+                <div id="chartQuickEdit" class="chart-quick-edit" data-html2canvas-ignore="true">
+                    <div class="chart-quick-edit-title" id="chartQuickEditTitle">데이터 빠른 수정</div>
+                    <div class="chart-quick-edit-sub" id="chartQuickEditSub">항목</div>
+                    <div class="chart-quick-edit-row">
+                        <input type="text" id="chartQuickEditInput" inputmode="decimal" aria-label="그래프 데이터 값 수정">
+                        <button type="button" class="chart-quick-apply" id="chartQuickEditApply">적용</button>
+                        <button type="button" class="chart-quick-close" id="chartQuickEditClose">×</button>
+                    </div>
+                    <div class="chart-quick-edit-help">데이터값 수정 · 더블클릭해서 데이터 수정: 막대·점·원그래프 숫자 줄은 데이터값, 그래프 위 범례는 데이터명을 더블클릭해 수정하세요.</div>
+                </div>
             </div>
 
             <div id="table-container" style="display: none;"></div>
+            <div id="previewQuickEdit" class="chart-quick-edit preview-quick-edit" data-html2canvas-ignore="true">
+                <div class="chart-quick-edit-title" id="previewQuickEditTitle">미리보기 빠른 수정</div>
+                <div class="chart-quick-edit-sub" id="previewQuickEditSub">항목</div>
+                <div class="chart-quick-edit-row">
+                    <input type="text" id="previewQuickEditInput" aria-label="미리보기 텍스트 수정">
+                    <button type="button" class="chart-quick-apply" id="previewQuickEditApply">적용</button>
+                    <button type="button" class="chart-quick-close" id="previewQuickEditClose">×</button>
+                </div>
+                <div class="chart-quick-edit-help">항목명 수정 · 더블클릭해서 데이터 수정: X축 항목·표 셀·원그래프 라벨 안의 항목명 줄을 더블클릭해 수정하세요.</div>
+            </div>
+            <div id="previewHoverHint" class="edit-hover-hint" data-html2canvas-ignore="true">더블클릭해서 데이터 수정</div>
             
-            <div id="displayFootnote"></div>
+            <div id="displayFootnote" class="inline-editable" title="더블클릭해서 데이터 수정(주석 수정)"></div>
             
             <div class="footer-watermark">
-                그래픽&nbsp;&nbsp;<span id="displayName">박조비 기자</span>
+                그래픽&nbsp;&nbsp;<span id="displayName" class="inline-editable" title="더블클릭해서 데이터 수정(기자 이름 수정)">박조비 기자</span>
                 <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
             </div>
         </div>
@@ -493,6 +684,45 @@
     Chart.defaults.font.family = globalFont;
 
     let myChart = null;
+    const EDIT_HOVER_MESSAGE = '더블클릭해서 데이터 수정';
+    const ITEM_EDIT_HOVER_MESSAGE = '항목명 수정 · 더블클릭해서 데이터 수정';
+    const VALUE_EDIT_HOVER_MESSAGE = '데이터값 수정 · 더블클릭해서 데이터 수정';
+    const DATASET_NAME_EDIT_HOVER_MESSAGE = '데이터명 수정 · 더블클릭해서 데이터 수정';
+    const PIE_SPLIT_HOVER_MESSAGE = '항목명/데이터값 구분 · 더블클릭해서 데이터 수정';
+
+    const PALETTE_PRESETS = {
+        asiae: {
+            label: '아시아경제 기본', main: '#E61E2B', accent: '#F48F1F', gray1: '#888888', gray2: '#444444', light: '#bbbbbb', axis: '#666666',
+            bar: ['#E61E2B', '#F48F1F', '#888888', '#444444'],
+            line: ['#111111', '#E61E2B', '#888888', '#bbbbbb'],
+            pie: ['#E61E2B', '#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9']
+        },
+        economyBlue: {
+            label: '경제 지표용', main: '#1F6FEB', accent: '#4FA3FF', gray1: '#6E879F', gray2: '#2F4154', light: '#A9CFFB', axis: '#3f5f7f',
+            bar: ['#1F6FEB', '#4FA3FF', '#8EC5FF', '#2F4154'],
+            line: ['#1F6FEB', '#0B3D91', '#4FA3FF', '#7B8794'],
+            pie: ['#1F6FEB', '#4FA3FF', '#8EC5FF', '#BFDFFF', '#6E879F', '#D6E9FF']
+        },
+        riskRed: {
+            label: '경고·위험 강조', main: '#C1121F', accent: '#FF6B35', gray1: '#777777', gray2: '#333333', light: '#F7A072', axis: '#8a1c1c',
+            bar: ['#C1121F', '#E61E2B', '#FF6B35', '#7A0C12'],
+            line: ['#C1121F', '#111111', '#FF6B35', '#777777'],
+            pie: ['#C1121F', '#E61E2B', '#FF6B35', '#777777', '#AAAAAA', '#DDDDDD']
+        },
+        compareGray: {
+            label: '비교 대조용', main: '#E61E2B', accent: '#555555', gray1: '#999999', gray2: '#222222', light: '#CFCFCF', axis: '#666666',
+            bar: ['#E61E2B', '#555555', '#AFAFAF', '#222222'],
+            line: ['#E61E2B', '#555555', '#999999', '#222222'],
+            pie: ['#E61E2B', '#555555', '#888888', '#BBBBBB', '#D6D6D6', '#EEEEEE']
+        }
+    };
+    let activePaletteKey = 'asiae';
+
+    const FAVORITE_STORAGE_KEY = 'akGraphicDeskFavoritesV14';
+    const HISTORY_LIMIT = 50;
+    let undoStack = [];
+    let isRestoringState = false;
+    let historyDebounceTimer = null;
 
     let initializedChartTypes = new Set();
     const NORMAL_CHART_DPR = Math.max(window.devicePixelRatio || 1, 1);
@@ -529,6 +759,1321 @@
             exportWidth: baseWidth * exportScale,
             exportHeight: baseHeight * exportScale
         };
+    }
+
+
+    const QUICK_MENU_CONFIG = {
+        input: { buttonId: 'quickInputBtn', sectionIds: ['sectionGemini'] },
+        dataedit: { buttonId: 'quickDataEditBtn', sectionIds: ['sectionDataEdit'] },
+        design: { buttonId: 'quickDesignBtn', sectionIds: ['sectionDesign'] },
+        save: { buttonId: 'quickSaveBtn', sectionIds: ['sectionExport'] }
+    };
+
+    function syncQuickMenuButtons(activeKey = '') {
+        Object.entries(QUICK_MENU_CONFIG).forEach(([menuKey, config]) => {
+            const btn = document.getElementById(config.buttonId);
+            if (!btn) return;
+            const defaultLabel = btn.dataset.defaultLabel || btn.textContent;
+            const openLabel = btn.dataset.openLabel || defaultLabel;
+            btn.classList.toggle('active', menuKey === activeKey);
+            btn.textContent = menuKey === activeKey ? openLabel : defaultLabel;
+        });
+    }
+
+    function closeOtherQuickMenus(activeKey = '') {
+        Object.entries(QUICK_MENU_CONFIG).forEach(([menuKey, config]) => {
+            if (menuKey === activeKey) return;
+            config.sectionIds.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) section.open = false;
+            });
+        });
+    }
+
+    function getQuickMenuOpenState(menuKey) {
+        const config = QUICK_MENU_CONFIG[menuKey];
+        if (!config) return false;
+        return config.sectionIds.some(sectionId => {
+            const section = document.getElementById(sectionId);
+            return !!(section && section.open);
+        });
+    }
+
+    function openQuickMenu(menuKey, options = {}) {
+        const config = QUICK_MENU_CONFIG[menuKey];
+        if (!config) return;
+        closeOtherQuickMenus(menuKey);
+        let firstSection = null;
+        config.sectionIds.forEach(sectionId => {
+            const section = document.getElementById(sectionId);
+            if (!section) return;
+            section.open = true;
+            if (!firstSection) firstSection = section;
+        });
+        syncQuickMenuButtons(menuKey);
+        if (options.scroll !== false && firstSection) {
+            firstSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        if (options.highlight !== false && firstSection) {
+            highlightControlSection(firstSection, options.scroll === false ? 0 : 220);
+        }
+    }
+
+    function closeQuickMenu(menuKey) {
+        const config = QUICK_MENU_CONFIG[menuKey];
+        if (!config) return;
+        config.sectionIds.forEach(sectionId => {
+            const section = document.getElementById(sectionId);
+            if (section) section.open = false;
+        });
+        syncQuickMenuButtons('');
+    }
+
+    function toggleQuickMenu(menuKey) {
+        if (getQuickMenuOpenState(menuKey)) {
+            closeQuickMenu(menuKey);
+            return;
+        }
+        openQuickMenu(menuKey, { scroll: true });
+    }
+
+    function scrollToControlSection(sectionId) {
+        const menuKey = Object.keys(QUICK_MENU_CONFIG).find(key => QUICK_MENU_CONFIG[key].sectionIds.includes(sectionId));
+        if (menuKey) {
+            openQuickMenu(menuKey, { scroll: true });
+            return;
+        }
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        section.open = true;
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        highlightControlSection(section, 220);
+    }
+
+    const CONTROL_SECTION_ICONS = {
+        input: '✍️',
+        dataedit: '📊',
+        design: '🎨',
+        save: '💾'
+    };
+
+    function highlightControlSection(section, delay = 0) {
+        if (!section) return;
+        window.setTimeout(() => {
+            section.classList.remove('section-attention');
+            void section.offsetWidth;
+            section.classList.add('section-attention');
+            window.setTimeout(() => section.classList.remove('section-attention'), 1150);
+        }, delay);
+    }
+
+    function createControlSection(id, summaryText, open = false, menuKey = '') {
+        const details = document.createElement('details');
+        details.className = 'control-section';
+        details.id = id;
+        if (menuKey) details.dataset.menuKey = menuKey;
+        if (open) details.open = true;
+        const summary = document.createElement('summary');
+        const titleWrap = document.createElement('span');
+        titleWrap.className = 'control-section-title';
+
+        const icon = document.createElement('span');
+        icon.className = 'control-section-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = CONTROL_SECTION_ICONS[menuKey] || '•';
+
+        const label = document.createElement('span');
+        label.className = 'control-section-label';
+        label.textContent = summaryText;
+
+        titleWrap.appendChild(icon);
+        titleWrap.appendChild(label);
+        summary.appendChild(titleWrap);
+        const body = document.createElement('div');
+        body.className = 'control-section-body';
+        details.appendChild(summary);
+        details.appendChild(body);
+        return { details, body };
+    }
+
+    function appendExisting(body, selectors) {
+        selectors.forEach(selector => {
+            const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
+            if (el) body.appendChild(el);
+        });
+    }
+
+    function createMenuSubhead(title, description) {
+        const wrap = document.createElement('div');
+        wrap.className = 'menu-subhead';
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'menu-subhead-title';
+        titleEl.textContent = title;
+        wrap.appendChild(titleEl);
+
+        if (description) {
+            const descEl = document.createElement('div');
+            descEl.className = 'menu-subhead-desc';
+            descEl.textContent = description;
+            wrap.appendChild(descEl);
+        }
+
+        return wrap;
+    }
+
+    function bindExclusiveMenuBehavior(detailsEl) {
+        if (!detailsEl || detailsEl.dataset.exclusiveBound === 'true') return;
+        detailsEl.addEventListener('toggle', () => {
+            const menuKey = detailsEl.dataset.menuKey || '';
+            if (!menuKey) return;
+            if (detailsEl.open) {
+                closeOtherQuickMenus(menuKey);
+                syncQuickMenuButtons(menuKey);
+            } else {
+                const hasOpenMenu = Object.keys(QUICK_MENU_CONFIG).some(key => getQuickMenuOpenState(key));
+                if (!hasOpenMenu) syncQuickMenuButtons('');
+            }
+        });
+        detailsEl.dataset.exclusiveBound = 'true';
+    }
+
+    function setupStickyControlHeader(panel, quickBar) {
+        if (!panel || !quickBar) return null;
+        let stickyHeader = document.getElementById('panelStickyHeader');
+        if (stickyHeader) return stickyHeader;
+        const title = panel.querySelector('h2');
+        const historyStatus = document.getElementById('historyStatus');
+        stickyHeader = document.createElement('div');
+        stickyHeader.className = 'panel-sticky-header';
+        stickyHeader.id = 'panelStickyHeader';
+        if (title) panel.insertBefore(stickyHeader, title);
+        else panel.insertBefore(stickyHeader, panel.firstChild);
+        [title, quickBar, historyStatus].forEach(el => {
+            if (el) stickyHeader.appendChild(el);
+        });
+        return stickyHeader;
+    }
+
+    function buildFriendlyControlMenu() {
+        const panel = document.querySelector('.control-panel');
+        const quickBar = document.getElementById('quickActionBar');
+        if (!panel || panel.dataset.menuBuilt === 'true' || !quickBar) return;
+        const stickyHeader = setupStickyControlHeader(panel, quickBar);
+
+        const geminiSection = createControlSection('sectionGemini', '1) 입력', true, 'input');
+        const dataEditSection = createControlSection('sectionDataEdit', '2) 데이터수정', true, 'dataedit');
+        const designSection = createControlSection('sectionDesign', '3) 디자인', false, 'design');
+        const exportSection = createControlSection('sectionExport', '4) 저장', false, 'save');
+
+        const anchor = stickyHeader || quickBar;
+        anchor.insertAdjacentElement('afterend', geminiSection.details);
+        geminiSection.details.insertAdjacentElement('afterend', dataEditSection.details);
+        dataEditSection.details.insertAdjacentElement('afterend', designSection.details);
+        designSection.details.insertAdjacentElement('afterend', exportSection.details);
+
+        appendExisting(geminiSection.body, [
+            '.ai-input-group'
+        ]);
+        dataEditSection.body.appendChild(createMenuSubhead('📊 그래프 데이터', '그래프 종류, X축 항목, 수치 데이터, 표 데이터를 수정합니다.'));
+        appendExisting(dataEditSection.body, [
+            '#chartTypeHeaderRow', '#chartType', '#openSheetBtn', '#chartInputs', '#tableInputs'
+        ]);
+        dataEditSection.body.appendChild(createMenuSubhead('✍️ 텍스트 수정', '제목, 단위·출처, 하단 주석, 기자명을 수정합니다.'));
+        appendExisting(dataEditSection.body, [
+            '#textSettingGroup', '#footnoteSettingGroup', '#reporterSettingGroup'
+        ]);
+        appendExisting(designSection.body, [
+            '#palettePresetGroup', '#labelSettingGroup', '#koreanNumberGroup', '#highlightSettingGroup',
+            '#fontSizeSettingGroup', '#datasetLabelSizeGroup', '#datasetLabelColorGroup', '#columnWidthSettingGroup'
+        ]);
+        appendExisting(exportSection.body, [
+            '#applyBtn', '#favoriteSettingGroup', '#exportOptionGroup', '#downloadBtn', '#svgDownloadBtn', '#creatorFooter'
+        ]);
+
+        [geminiSection.details, dataEditSection.details, designSection.details, exportSection.details].forEach(bindExclusiveMenuBehavior);
+        syncQuickMenuButtons('input');
+
+        panel.dataset.menuBuilt = 'true';
+    }
+
+    function getActivePalette() {
+        return PALETTE_PRESETS[activePaletteKey] || PALETTE_PRESETS.asiae;
+    }
+
+    function syncPaletteButtons() {
+        document.querySelectorAll('.palette-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.palette === activePaletteKey);
+        });
+        const hidden = document.getElementById('palettePresetKey');
+        if (hidden) hidden.value = activePaletteKey;
+    }
+
+    function applyPalettePreset(key, options = {}) {
+        if (!PALETTE_PRESETS[key]) key = 'asiae';
+        activePaletteKey = key;
+        const palette = getActivePalette();
+        document.documentElement.style.setProperty('--ak-red', palette.main);
+        document.documentElement.style.setProperty('--ak-orange', palette.accent);
+        syncPaletteButtons();
+        if (!options.skipUpdate) updateOutput();
+        if (!options.skipHistory) recordHistoryCheckpoint(`팔레트: ${palette.label}`);
+    }
+
+    function parseLabelSeries(raw) {
+        const text = String(raw || '').trim();
+        if (!text) return [];
+        const delimiter = text.includes('\t') ? /\t+/ : (text.includes('\n') && !text.includes(',') ? /\r?\n+/ : /,/);
+        return text.split(delimiter).map(item => item.trim()).filter(item => item !== '');
+    }
+
+    function parseNumericSeries(raw) {
+        const text = String(raw || '').trim();
+        if (!text) return [];
+        const matches = text.match(/[-+]?\d{1,3}(?:,\d{3})+(?:\.\d+)?|[-+]?\d+(?:\.\d+)?/g);
+        if (!matches) return [];
+        return matches.map(value => Number(String(value).replace(/,/g, ''))).filter(value => Number.isFinite(value));
+    }
+
+    function normalizeNumberInput(raw) {
+        const values = parseNumericSeries(raw);
+        return values.length ? values.join(', ') : String(raw || '').trim();
+    }
+
+    function getStateControlElements() {
+        return Array.from(document.querySelectorAll('.control-panel input, .control-panel textarea, .control-panel select'))
+            .filter(el => el.id && el.type !== 'button' && el.type !== 'submit');
+    }
+
+    function serializeControlState() {
+        const values = {};
+        getStateControlElements().forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                values[el.id] = { type: el.type, checked: el.checked };
+            } else if (el.multiple) {
+                values[el.id] = { type: 'multiple', value: Array.from(el.selectedOptions).map(option => option.value) };
+            } else {
+                values[el.id] = { type: el.type || el.tagName.toLowerCase(), value: el.value };
+            }
+        });
+        values.__activePaletteKey = activePaletteKey;
+        return values;
+    }
+
+    function restoreControlState(state) {
+        if (!state) return;
+        isRestoringState = true;
+        Object.entries(state).forEach(([id, payload]) => {
+            if (id === '__activePaletteKey') return;
+            const el = document.getElementById(id);
+            if (!el || !payload) return;
+            if (payload.type === 'checkbox' || payload.type === 'radio') {
+                el.checked = !!payload.checked;
+            } else if (payload.type === 'multiple') {
+                const values = Array.isArray(payload.value) ? payload.value : [];
+                Array.from(el.options || []).forEach(option => option.selected = values.includes(option.value));
+            } else if ('value' in payload) {
+                el.value = payload.value;
+            }
+        });
+        if (state.__activePaletteKey) {
+            applyPalettePreset(state.__activePaletteKey, { skipUpdate: true, skipHistory: true });
+        }
+        isRestoringState = false;
+        toggleInputs();
+        updateOutput();
+        updateFavoriteSelect();
+        updateHistoryStatus();
+    }
+
+    function recordHistoryCheckpoint(label = '작업') {
+        if (isRestoringState) return;
+        const snapshot = serializeControlState();
+        const serialized = JSON.stringify(snapshot);
+        const lastSerialized = undoStack.length ? JSON.stringify(undoStack[undoStack.length - 1].state) : '';
+        if (serialized === lastSerialized) return;
+        undoStack.push({ label, state: snapshot, time: Date.now() });
+        if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
+        updateHistoryStatus();
+    }
+
+    function scheduleHistoryCheckpoint(label = '입력 변경') {
+        if (isRestoringState) return;
+        clearTimeout(historyDebounceTimer);
+        historyDebounceTimer = setTimeout(() => recordHistoryCheckpoint(label), 350);
+    }
+
+    function undoLastChange() {
+        clearTimeout(historyDebounceTimer);
+        if (undoStack.length <= 1) {
+            updateHistoryStatus('되돌릴 작업이 없습니다.');
+            return;
+        }
+        undoStack.pop();
+        const previous = undoStack[undoStack.length - 1];
+        restoreControlState(previous.state);
+        updateHistoryStatus(`되돌림: ${previous.label || '이전 상태'}`);
+    }
+
+    function updateHistoryStatus(message) {
+        const status = document.getElementById('historyStatus');
+        const undoBtn = document.getElementById('undoBtn');
+        const count = Math.max(0, undoStack.length - 1);
+        if (undoBtn) undoBtn.disabled = count === 0;
+        if (status) status.textContent = message || `되돌리기 가능 단계: ${count}개 · Ctrl+Z / Command+Z 사용 가능`;
+    }
+
+    function initHistoryControls() {
+        document.addEventListener('input', (event) => {
+            if (event.target && event.target.closest && event.target.closest('.control-panel')) {
+                scheduleHistoryCheckpoint('입력 변경');
+            }
+        });
+        document.addEventListener('change', (event) => {
+            if (event.target && event.target.closest && event.target.closest('.control-panel')) {
+                scheduleHistoryCheckpoint('설정 변경');
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            const isUndo = (event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z';
+            if (!isUndo) return;
+            event.preventDefault();
+            undoLastChange();
+        });
+    }
+
+    function getFavorites() {
+        try {
+            return JSON.parse(localStorage.getItem(FAVORITE_STORAGE_KEY) || '{}') || {};
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function setFavorites(favorites) {
+        localStorage.setItem(FAVORITE_STORAGE_KEY, JSON.stringify(favorites || {}));
+    }
+
+    function updateFavoriteSelect() {
+        const select = document.getElementById('favoriteSelect');
+        if (!select) return;
+        const current = select.value;
+        const favorites = getFavorites();
+        const names = Object.keys(favorites).sort((a, b) => a.localeCompare(b, 'ko'));
+        select.innerHTML = names.length
+            ? names.map(name => `<option value="${name.replace(/"/g, '&quot;')}">${name}</option>`).join('')
+            : '<option value="">저장된 설정 없음</option>';
+        if (names.includes(current)) select.value = current;
+    }
+
+    function saveFavoriteSettings() {
+        const nameInput = document.getElementById('favoriteName');
+        const name = (nameInput && nameInput.value.trim()) || `내 설정 ${new Date().toLocaleDateString('ko-KR')}`;
+        const favorites = getFavorites();
+        favorites[name] = serializeControlState();
+        setFavorites(favorites);
+        updateFavoriteSelect();
+        const select = document.getElementById('favoriteSelect');
+        if (select) select.value = name;
+        updateHistoryStatus(`즐겨찾기 저장: ${name}`);
+    }
+
+    function loadFavoriteSettings() {
+        const select = document.getElementById('favoriteSelect');
+        const name = select ? select.value : '';
+        const favorites = getFavorites();
+        if (!name || !favorites[name]) {
+            alert('불러올 설정이 없습니다. 먼저 저장해 주세요.');
+            return;
+        }
+        restoreControlState(favorites[name]);
+        recordHistoryCheckpoint(`즐겨찾기 불러오기: ${name}`);
+    }
+
+    function deleteFavoriteSettings() {
+        const select = document.getElementById('favoriteSelect');
+        const name = select ? select.value : '';
+        const favorites = getFavorites();
+        if (!name || !favorites[name]) {
+            alert('삭제할 설정이 없습니다.');
+            return;
+        }
+        delete favorites[name];
+        setFavorites(favorites);
+        updateFavoriteSelect();
+        updateHistoryStatus(`즐겨찾기 삭제: ${name}`);
+    }
+
+    function setupInlineEditing() {
+        const editableMap = [
+            { displayId: 'displayTitle', inputId: 'titleInput', emptyText: '제목입력' },
+            { displayId: 'displaySub', inputId: 'subInput', emptyText: '' },
+            { displayId: 'displayFootnote', inputId: 'footnoteInput', emptyText: '' },
+            { displayId: 'displayName', inputId: 'nameInput', emptyText: '기자 이름' }
+        ];
+
+        editableMap.forEach(({ displayId, inputId, emptyText }) => {
+            const displayEl = document.getElementById(displayId);
+            const inputEl = document.getElementById(inputId);
+            if (!displayEl || !inputEl) return;
+
+            const finish = () => {
+                if (displayEl.getAttribute('contenteditable') !== 'true') return;
+                displayEl.removeAttribute('contenteditable');
+                inputEl.value = displayEl.innerText.trim() || emptyText;
+                updateOutput();
+                recordHistoryCheckpoint('미리보기 직접 편집');
+            };
+
+            displayEl.addEventListener('dblclick', () => {
+                if (displayEl.style.display === 'none') return;
+                displayEl.setAttribute('contenteditable', 'true');
+                displayEl.focus();
+                const range = document.createRange();
+                range.selectNodeContents(displayEl);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
+            displayEl.addEventListener('blur', finish);
+            displayEl.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    displayEl.blur();
+                } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    displayEl.removeAttribute('contenteditable');
+                    updateOutput();
+                }
+            });
+        });
+    }
+
+    function setParseSummary(message, status = 'ok') {
+        const summary = document.getElementById('parseSummary');
+        if (!summary) return;
+        summary.className = `parse-summary ${status}`;
+        summary.textContent = message;
+    }
+
+    function analyzeParsedState(mappedType) {
+        const labels = parseLabelSeries(document.getElementById('labelsInput')?.value || '');
+        const datasetInputs = [1, 2, 3, 4].map(index => document.getElementById(`dataInput${index}`)?.value || '');
+        const datasetNames = [1, 2, 3, 4].map(index => document.getElementById(`dataName${index}`)?.value || `데이터${index}`);
+        const activeDatasets = datasetInputs
+            .map((raw, index) => ({ index, name: datasetNames[index], values: parseNumericSeries(raw), raw }))
+            .filter(item => item.raw.trim() !== '' || item.values.length);
+        const warnings = [];
+        activeDatasets.forEach(item => {
+            if (labels.length && item.values.length && item.values.length !== labels.length) {
+                warnings.push(`${item.name || `데이터${item.index + 1}`} ${item.values.length}개`);
+            }
+        });
+        const typeLabel = document.querySelector(`#chartType option[value="${mappedType}"]`)?.textContent?.replace(/^[^가-힣A-Za-z0-9]+/, '').trim() || mappedType;
+        const datasetSummary = activeDatasets.length ? `${activeDatasets.length}개 데이터 묶음` : '데이터 없음';
+        const labelSummary = labels.length ? `${labels.length}개 항목` : '항목 없음';
+        if (warnings.length) {
+            return { status: 'warn', message: `이렇게 읽었습니다: ${typeLabel} · ${labelSummary} · ${datasetSummary}. 항목 수와 수치 수가 다릅니다(${warnings.join(', ')}).` };
+        }
+        return { status: 'ok', message: `이렇게 읽었습니다: ${typeLabel} · ${labelSummary} · ${datasetSummary}.` };
+    }
+
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function makePreviewEditAttrs(kind, rowIndex, colIndex, value) {
+        return `data-preview-edit-kind="${kind}" data-row-index="${rowIndex}" data-col-index="${colIndex}" data-edit-value="${escapeHtml(value)}"`;
+    }
+
+    function splitLabelInputPreservingEmpty(raw) {
+        const text = String(raw || '').trim();
+        if (!text) return [];
+        if (text.includes('\t')) return text.split(/\t+/).map(item => item.trim());
+        if (text.includes('\n') && !text.includes(',')) return text.split(/\r?\n+/).map(item => item.trim());
+        return text.split(',').map(item => item.trim());
+    }
+
+    function buildChartLabelEditState(labelIndex, title = 'X축 항목명 수정') {
+        const labels = (myChart && myChart.data && Array.isArray(myChart.data.labels)) ? myChart.data.labels : [];
+        if (labelIndex < 0 || labels[labelIndex] === undefined) return null;
+        const currentLabel = String(labels[labelIndex] ?? '');
+        return {
+            kind: 'chart-label',
+            labelIndex,
+            value: currentLabel,
+            title,
+            sub: `항목 ${labelIndex + 1} · 현재 항목명`
+        };
+    }
+
+    function buildDatasetNameEditState(datasetIndex, title = '데이터명 수정') {
+        if (!myChart || !myChart.data || !Array.isArray(myChart.data.datasets)) return null;
+        const dataset = myChart.data.datasets[datasetIndex];
+        if (!dataset) return null;
+        const sourceInputIndex = dataset._sourceInputIndex || (datasetIndex + 1);
+        const nameInput = document.getElementById('dataName' + sourceInputIndex);
+        const currentName = (nameInput ? nameInput.value : dataset.label) || dataset.label || `데이터 ${sourceInputIndex}`;
+        return {
+            kind: 'dataset-name',
+            datasetIndex,
+            sourceInputIndex,
+            value: currentName,
+            title,
+            sub: `데이터 ${sourceInputIndex} 이름 · 현재 데이터명`
+        };
+    }
+
+    function getChartLegendNameHitFromEvent(event) {
+        if (!myChart || !myChart.legend || !myChart.data || !Array.isArray(myChart.data.datasets)) return null;
+        const legend = myChart.legend;
+        const hitBoxes = Array.isArray(legend.legendHitBoxes) ? legend.legendHitBoxes : [];
+        const legendItems = Array.isArray(legend.legendItems) ? legend.legendItems : [];
+        if (!hitBoxes.length || !legendItems.length) return null;
+
+        const canvas = myChart.canvas || document.getElementById('myChart');
+        if (!canvas) return null;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        for (let i = 0; i < hitBoxes.length; i++) {
+            const box = hitBoxes[i];
+            if (!box) continue;
+            const left = box.left ?? box.x ?? 0;
+            const top = box.top ?? box.y ?? 0;
+            const width = box.width ?? 0;
+            const height = box.height ?? 0;
+            const padX = 8;
+            const padY = 6;
+            if (x < left - padX || x > left + width + padX || y < top - padY || y > top + height + padY) continue;
+
+            const item = legendItems[i] || {};
+            const datasetIndex = Number.isInteger(item.datasetIndex) ? item.datasetIndex : i;
+            const state = buildDatasetNameEditState(datasetIndex, '데이터명 수정');
+            if (!state) return null;
+            return { ...state, bounds: { left, top, width, height } };
+        }
+
+        return null;
+    }
+
+    function focusPreviewQuickEditInput() {
+        const previewInput = document.getElementById('previewQuickEditInput');
+        if (!previewInput) return;
+        setTimeout(() => {
+            previewInput.focus();
+            previewInput.select();
+        }, 0);
+    }
+
+    function getChartLabelHitFromEvent(event) {
+        if (!myChart || !myChart.scales || !myChart.data || !Array.isArray(myChart.data.labels)) return null;
+        const labels = myChart.data.labels;
+        if (!labels.length) return null;
+        const canvas = myChart.canvas || document.getElementById('myChart');
+        if (!canvas) return null;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const chartType = document.getElementById('chartType')?.value || '';
+        if (chartType === 'pie') {
+            const pieTarget = getPieDataLabelTargetFromEvent(event);
+            return pieTarget && pieTarget.editKind === 'label'
+                ? buildChartLabelEditState(pieTarget.hit.index, '원그래프 항목명 수정')
+                : null;
+        }
+        const isHorizontal = chartType.startsWith('h-');
+        const scale = isHorizontal ? myChart.scales.y : myChart.scales.x;
+        if (!scale || typeof scale.getPixelForTick !== 'function') return null;
+
+        if (!isHorizontal) {
+            const labelZoneTop = Math.min(scale.top ?? 0, myChart.chartArea?.bottom ?? 0) - 6;
+            const labelZoneBottom = (scale.bottom ?? rect.height) + 24;
+            if (y < labelZoneTop || y > labelZoneBottom) return null;
+        } else {
+            const labelZoneLeft = Math.max(0, (scale.left ?? 0) - 90);
+            const labelZoneRight = (scale.right ?? 0) + 14;
+            if (x < labelZoneLeft || x > labelZoneRight) return null;
+        }
+
+        let nearestIndex = -1;
+        let nearestDistance = Infinity;
+        labels.forEach((_, index) => {
+            const pixel = scale.getPixelForTick(index);
+            const distance = Math.abs((isHorizontal ? y : x) - pixel);
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestIndex = index;
+            }
+        });
+
+        const stepPixels = labels.length > 1
+            ? Math.abs(scale.getPixelForTick(1) - scale.getPixelForTick(0))
+            : 70;
+        const threshold = Math.max(18, Math.min(90, stepPixels * 0.48));
+        if (nearestIndex < 0 || nearestDistance > threshold) return null;
+        return buildChartLabelEditState(nearestIndex, 'X축 항목명 수정');
+    }
+
+    let previewQuickEditState = null;
+    let previewQuickEditHideTimer = null;
+    let previewHoverHintHideTimer = null;
+
+    function hidePreviewHoverHint() {
+        const hint = document.getElementById('previewHoverHint');
+        if (!hint) return;
+        clearTimeout(previewHoverHintHideTimer);
+        hint.style.display = 'none';
+    }
+
+    function schedulePreviewHoverHintHide(delay = 80) {
+        clearTimeout(previewHoverHintHideTimer);
+        previewHoverHintHideTimer = setTimeout(() => hidePreviewHoverHint(), delay);
+    }
+
+    function positionPreviewHoverHint(hint, event) {
+        const captureArea = document.getElementById('capture-area');
+        if (!captureArea || !hint) return;
+        const rect = captureArea.getBoundingClientRect();
+        const hintWidth = hint.offsetWidth || 170;
+        const hintHeight = hint.offsetHeight || 32;
+        let left = event.clientX - rect.left + 14;
+        let top = event.clientY - rect.top - hintHeight - 10;
+        const maxLeft = Math.max(8, rect.width - hintWidth - 8);
+        const maxTop = Math.max(8, rect.height - hintHeight - 8);
+        left = Math.min(Math.max(8, left), maxLeft);
+        top = Math.min(Math.max(8, top), maxTop);
+        hint.style.left = left + 'px';
+        hint.style.top = top + 'px';
+    }
+
+    function showPreviewHoverHint(event, message = EDIT_HOVER_MESSAGE) {
+        const hint = document.getElementById('previewHoverHint');
+        const editor = document.getElementById('previewQuickEdit');
+        const input = document.getElementById('previewQuickEditInput');
+        if (!hint) return;
+        if (editor && editor.style.display !== 'none' && input && document.activeElement === input) return;
+        hint.textContent = message;
+        hint.style.display = 'block';
+        positionPreviewHoverHint(hint, event);
+        clearTimeout(previewHoverHintHideTimer);
+    }
+
+    function hidePreviewQuickEditor(force = false) {
+        const editor = document.getElementById('previewQuickEdit');
+        const input = document.getElementById('previewQuickEditInput');
+        if (!editor) return;
+        if (!force && input && document.activeElement === input) return;
+        clearTimeout(previewQuickEditHideTimer);
+        editor.style.display = 'none';
+        previewQuickEditState = null;
+    }
+
+    function schedulePreviewQuickEditorHide(delay = 450) {
+        clearTimeout(previewQuickEditHideTimer);
+        previewQuickEditHideTimer = setTimeout(() => hidePreviewQuickEditor(false), delay);
+    }
+
+    function positionPreviewQuickEditor(editor, event) {
+        const captureArea = document.getElementById('capture-area');
+        if (!captureArea || !editor) return;
+        const rect = captureArea.getBoundingClientRect();
+        const editorWidth = editor.offsetWidth || 230;
+        const editorHeight = editor.offsetHeight || 120;
+        let left = event.clientX - rect.left + 14;
+        let top = event.clientY - rect.top + 14;
+        const maxLeft = Math.max(8, rect.width - editorWidth - 8);
+        const maxTop = Math.max(8, rect.height - editorHeight - 8);
+        left = Math.min(Math.max(8, left), maxLeft);
+        top = Math.min(Math.max(8, top), maxTop);
+        editor.style.left = left + 'px';
+        editor.style.top = top + 'px';
+    }
+
+    function showPreviewQuickEditor(event, state) {
+        const editor = document.getElementById('previewQuickEdit');
+        const title = document.getElementById('previewQuickEditTitle');
+        const sub = document.getElementById('previewQuickEditSub');
+        const input = document.getElementById('previewQuickEditInput');
+        if (!editor || !title || !sub || !input || !state) return;
+        if (document.activeElement === input) return;
+
+        const stateKey = JSON.stringify({
+            kind: state.kind,
+            labelIndex: state.labelIndex,
+            rowIndex: state.rowIndex,
+            colIndex: state.colIndex,
+            datasetIndex: state.datasetIndex,
+            sourceInputIndex: state.sourceInputIndex
+        });
+        title.textContent = state.title || '미리보기 빠른 수정';
+        sub.textContent = state.sub || '';
+        if (!previewQuickEditState || previewQuickEditState.key !== stateKey) {
+            input.value = state.value || '';
+        }
+        previewQuickEditState = { ...state, key: stateKey };
+        hidePreviewHoverHint();
+        editor.style.display = 'block';
+        positionPreviewQuickEditor(editor, event);
+        clearTimeout(previewQuickEditHideTimer);
+    }
+
+    function updateTableDataCell(rowIndex, colIndex, value, options = {}) {
+        const tableInput = document.getElementById('tableDataInput');
+        if (!tableInput) return false;
+        const rows = String(tableInput.value || '').split(/\r?\n/);
+        while (rows.length <= rowIndex) rows.push('');
+        const delimiter = rows[rowIndex].includes('\t') ? '\t' : ',';
+        const cells = rows[rowIndex] === '' ? [] : rows[rowIndex].split(delimiter);
+        while (cells.length <= colIndex) cells.push('');
+        if (options.blockHeader) {
+            const cleanValue = String(value || '').replace(/^##\s*/, '').trim();
+            cells[0] = '## ' + cleanValue;
+        } else {
+            cells[colIndex] = String(value || '').trim();
+        }
+        rows[rowIndex] = cells.join(delimiter);
+        tableInput.value = rows.join('\n');
+        return true;
+    }
+
+    function commitPreviewQuickEdit() {
+        const input = document.getElementById('previewQuickEditInput');
+        if (!input || !previewQuickEditState) return;
+        const valueText = String(input.value || '').trim();
+        if (previewQuickEditState.kind === 'chart-label') {
+            const labelsInput = document.getElementById('labelsInput');
+            if (!labelsInput) return;
+            const labels = splitLabelInputPreservingEmpty(labelsInput.value);
+            while (labels.length <= previewQuickEditState.labelIndex) labels.push('');
+            labels[previewQuickEditState.labelIndex] = valueText;
+            labelsInput.value = labels.join(', ');
+            updateOutput();
+            recordHistoryCheckpoint('X축 항목 직접 수정');
+            hidePreviewQuickEditor(true);
+            hidePreviewHoverHint();
+            return;
+        }
+
+        if (previewQuickEditState.kind === 'dataset-name') {
+            const targetInput = document.getElementById('dataName' + previewQuickEditState.sourceInputIndex);
+            if (!targetInput) return;
+            targetInput.value = valueText;
+            updateOutput();
+            recordHistoryCheckpoint('그래프 위 데이터명 직접 수정');
+            hidePreviewQuickEditor(true);
+            hidePreviewHoverHint();
+            return;
+        }
+
+        if (previewQuickEditState.kind === 'table-cell' || previewQuickEditState.kind === 'table-block-header') {
+            const ok = updateTableDataCell(
+                Number(previewQuickEditState.rowIndex),
+                Number(previewQuickEditState.colIndex),
+                valueText,
+                { blockHeader: previewQuickEditState.kind === 'table-block-header' }
+            );
+            if (!ok) return;
+            updateOutput();
+            recordHistoryCheckpoint('텍스트 표 직접 수정');
+            hidePreviewQuickEditor(true);
+            hidePreviewHoverHint();
+        }
+    }
+
+    function setupPreviewQuickEditing() {
+        const editor = document.getElementById('previewQuickEdit');
+        const input = document.getElementById('previewQuickEditInput');
+        const applyBtn = document.getElementById('previewQuickEditApply');
+        const closeBtn = document.getElementById('previewQuickEditClose');
+        const tableContainer = document.getElementById('table-container');
+        if (!editor || !input || !applyBtn || !closeBtn || !tableContainer || editor.dataset.previewEditReady === 'true') return;
+
+        const buildStateFromTarget = (target) => {
+            if (!target) return null;
+            const kind = target.dataset.previewEditKind || 'table-cell';
+            const rowIndex = Number(target.dataset.rowIndex || 0);
+            const colIndex = Number(target.dataset.colIndex || 0);
+            const value = target.dataset.editValue !== undefined ? target.dataset.editValue : target.innerText.trim();
+            const colLabel = colIndex === 0 ? '첫 번째 칸' : `${colIndex + 1}번째 칸`;
+            return {
+                kind,
+                rowIndex,
+                colIndex,
+                value,
+                title: kind === 'table-block-header' ? '표 소제목 빠른 수정' : '텍스트 표 빠른 수정',
+                sub: `${rowIndex + 1}행 · ${colLabel}`
+            };
+        };
+
+        tableContainer.addEventListener('mousemove', (event) => {
+            const target = event.target.closest('[data-preview-edit-kind]');
+            if (!target || !tableContainer.contains(target)) {
+                schedulePreviewHoverHintHide(80);
+                return;
+            }
+            showPreviewHoverHint(event, EDIT_HOVER_MESSAGE);
+        });
+
+        tableContainer.addEventListener('dblclick', (event) => {
+            const target = event.target.closest('[data-preview-edit-kind]');
+            if (!target || !tableContainer.contains(target)) return;
+            const state = buildStateFromTarget(target);
+            if (!state) return;
+            showPreviewQuickEditor(event, state);
+            setTimeout(() => {
+                input.focus();
+                input.select();
+            }, 0);
+        });
+
+        tableContainer.addEventListener('mouseleave', () => schedulePreviewHoverHintHide(80));
+        editor.addEventListener('mouseenter', () => clearTimeout(previewQuickEditHideTimer));
+        editor.addEventListener('mouseleave', () => {});
+        applyBtn.addEventListener('click', commitPreviewQuickEdit);
+        closeBtn.addEventListener('click', () => hidePreviewQuickEditor(true));
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                commitPreviewQuickEdit();
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                hidePreviewQuickEditor(true);
+            }
+        });
+        input.addEventListener('change', commitPreviewQuickEdit);
+        document.addEventListener('mousedown', (event) => {
+            if (editor.style.display === 'none') return;
+            if (editor.contains(event.target)) return;
+            hidePreviewQuickEditor(true);
+        });
+        editor.dataset.previewEditReady = 'true';
+    }
+
+
+    let chartQuickEditState = null;
+    let chartQuickEditHideTimer = null;
+
+    function hideChartQuickEditor(force = false) {
+        const editor = document.getElementById('chartQuickEdit');
+        const input = document.getElementById('chartQuickEditInput');
+        if (!editor) return;
+        if (!force && input && document.activeElement === input) return;
+        clearTimeout(chartQuickEditHideTimer);
+        editor.style.display = 'none';
+        chartQuickEditState = null;
+    }
+
+    function scheduleChartQuickEditorHide(delay = 450) {
+        clearTimeout(chartQuickEditHideTimer);
+        chartQuickEditHideTimer = setTimeout(() => hideChartQuickEditor(false), delay);
+    }
+
+    function formatQuickEditValue(value) {
+        const numberValue = Number(value);
+        if (!Number.isFinite(numberValue)) return String(value ?? '');
+        return Number.isInteger(numberValue) ? String(numberValue) : String(numberValue);
+    }
+
+    function splitEditableDataSeries(raw) {
+        const text = String(raw || '').trim();
+        if (!text) return [];
+        if (text.includes('\t')) return text.split(/\t+/).map(item => item.trim());
+        if (text.includes('\n') && !text.includes(',')) return text.split(/\r?\n+/).map(item => item.trim());
+        return text.split(',').map(item => item.trim());
+    }
+
+    function arraysAlmostEqual(a, b) {
+        if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            const av = Number(a[i]);
+            const bv = Number(b[i]);
+            if (!Number.isFinite(av) || !Number.isFinite(bv)) return false;
+            if (Math.abs(av - bv) > 0.0000001) return false;
+        }
+        return true;
+    }
+
+    function attachDatasetSourceMetadata(datasets, sourceArrays) {
+        const usedSources = new Set();
+        datasets.forEach((dataset, datasetIndex) => {
+            let matchedSource = -1;
+            for (let i = 0; i < sourceArrays.length; i++) {
+                if (usedSources.has(i)) continue;
+                const source = sourceArrays[i];
+                if (!Array.isArray(source) || source.length === 0) continue;
+                if (arraysAlmostEqual(dataset.data, source)) {
+                    matchedSource = i;
+                    usedSources.add(i);
+                    break;
+                }
+            }
+            dataset._sourceInputIndex = matchedSource >= 0 ? matchedSource + 1 : datasetIndex + 1;
+        });
+    }
+
+    function getChartHitFromEvent(event) {
+        if (!myChart) return null;
+        const elements = myChart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+        if (!elements || !elements.length) return null;
+        const hit = elements[0];
+        if (!hit || hit.datasetIndex === undefined || hit.index === undefined) return null;
+        return hit;
+    }
+
+
+    function getPieDataLabelTargetFromEvent(event) {
+        const chartType = document.getElementById('chartType')?.value || '';
+        if (chartType !== 'pie' || !myChart) return null;
+
+        const hit = getChartHitFromEvent(event);
+        if (!hit) return null;
+
+        const dataset = myChart.data.datasets[hit.datasetIndex] || {};
+        const context = {
+            chart: myChart,
+            dataset,
+            datasetIndex: hit.datasetIndex,
+            dataIndex: hit.index
+        };
+
+        if (getPieRatio(context) <= 0 || getPieIsOutside(context)) return null;
+
+        const meta = myChart.getDatasetMeta(hit.datasetIndex);
+        const arc = meta && meta.data ? meta.data[hit.index] : null;
+        if (!arc) return null;
+
+        const position = typeof arc.tooltipPosition === 'function'
+            ? arc.tooltipPosition()
+            : { x: arc.x, y: arc.y };
+        if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return null;
+
+        const canvas = myChart.canvas || document.getElementById('myChart');
+        if (!canvas) return null;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        const label = (myChart.data.labels && myChart.data.labels[hit.index]) ? String(myChart.data.labels[hit.index]).trim() : '';
+        const rawValue = Array.isArray(dataset.data) ? dataset.data[hit.index] : '';
+        const isKoreanNumber = document.getElementById('koreanNumberType') && document.getElementById('koreanNumberType').value === 'apply';
+        const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
+        const displayValue = String(isKoreanNumber ? formatKoreanNumber(rawValue, subText) : rawValue);
+        const labelLines = label ? wrapPieInsideLabel(label, 11, 4).split('\n').filter(Boolean) : [];
+        const lines = labelLines.concat([displayValue]);
+        if (!lines.length) return null;
+
+        const datasetFontSize = getDatasetLabelFontSize(hit.datasetIndex);
+        const fontConfig = getPieFont(context, datasetFontSize / 18);
+        const fontSize = Number(fontConfig.size) || datasetFontSize || 18;
+        const lineHeight = Math.max(16, Math.round(fontSize * 1.25));
+        const paddingX = 10;
+        const paddingY = 6;
+
+        const ctx = myChart.ctx;
+        let maxWidth = 0;
+        if (ctx && typeof ctx.measureText === 'function') {
+            ctx.save();
+            ctx.font = `${fontConfig.weight || '900'} ${fontSize}px ${globalFont || 'sans-serif'}`;
+            lines.forEach(line => {
+                const width = ctx.measureText(String(line)).width;
+                if (width > maxWidth) maxWidth = width;
+            });
+            ctx.restore();
+        } else {
+            maxWidth = Math.max(...lines.map(line => String(line).length * fontSize * 0.62));
+        }
+
+        const textHeight = lineHeight * lines.length;
+        const left = position.x - (maxWidth / 2) - paddingX;
+        const right = position.x + (maxWidth / 2) + paddingX;
+        const top = position.y - (textHeight / 2) - paddingY;
+        const bottom = position.y + (textHeight / 2) + paddingY;
+
+        if (x < left || x > right || y < top || y > bottom) return null;
+
+        const innerTop = position.y - (textHeight / 2);
+        const rawLineIndex = Math.floor((y - innerTop) / lineHeight);
+        const lineIndex = Math.max(0, Math.min(lines.length - 1, rawLineIndex));
+        const valueLineIndex = Math.max(0, lines.length - 1);
+        const editKind = (lineIndex >= valueLineIndex || labelLines.length === 0) ? 'value' : 'label';
+
+        return {
+            hit,
+            editKind,
+            lineIndex,
+            label,
+            rawValue,
+            displayValue,
+            bounds: { left, right, top, bottom }
+        };
+    }
+
+    function focusChartQuickEditInput() {
+        const input = document.getElementById('chartQuickEditInput');
+        if (!input) return;
+        setTimeout(() => {
+            input.focus();
+            input.select();
+        }, 0);
+    }
+
+    function positionChartQuickEditor(editor, event) {
+        const container = document.getElementById('chart-container');
+        if (!container || !editor) return;
+        const containerRect = container.getBoundingClientRect();
+        const editorWidth = editor.offsetWidth || 220;
+        const editorHeight = editor.offsetHeight || 120;
+        let left = event.clientX - containerRect.left + 14;
+        let top = event.clientY - containerRect.top + 14;
+        const maxLeft = Math.max(8, containerRect.width - editorWidth - 8);
+        const maxTop = Math.max(8, containerRect.height - editorHeight - 8);
+        left = Math.min(Math.max(8, left), maxLeft);
+        top = Math.min(Math.max(8, top), maxTop);
+        editor.style.left = left + 'px';
+        editor.style.top = top + 'px';
+    }
+
+    function showChartQuickEditor(event, hit) {
+        if (!myChart || !hit) return;
+        const editor = document.getElementById('chartQuickEdit');
+        const title = document.getElementById('chartQuickEditTitle');
+        const sub = document.getElementById('chartQuickEditSub');
+        const input = document.getElementById('chartQuickEditInput');
+        if (!editor || !title || !sub || !input) return;
+        if (document.activeElement === input) return;
+
+        const dataset = myChart.data.datasets[hit.datasetIndex] || {};
+        const sourceInputIndex = dataset._sourceInputIndex || (hit.datasetIndex + 1);
+        const label = (myChart.data.labels && myChart.data.labels[hit.index]) ? myChart.data.labels[hit.index] : '항목 ' + (hit.index + 1);
+        const nameInput = document.getElementById('dataName' + sourceInputIndex);
+        const datasetName = dataset.label || (nameInput ? nameInput.value : '') || '데이터 ' + sourceInputIndex;
+        const rawValue = Array.isArray(dataset.data) ? dataset.data[hit.index] : '';
+        const stateKey = sourceInputIndex + '|' + hit.datasetIndex + '|' + hit.index;
+
+        const currentChartType = document.getElementById('chartType')?.value || '';
+        title.textContent = (currentChartType === 'pie' ? '원그래프 숫자 수정' : '데이터값 수정') + ' · ' + label;
+        sub.textContent = datasetName + ' · 현재 데이터값 ' + formatQuickEditValue(rawValue);
+        if (!chartQuickEditState || chartQuickEditState.key !== stateKey) {
+            input.value = formatQuickEditValue(rawValue);
+        }
+        chartQuickEditState = {
+            key: stateKey,
+            datasetIndex: hit.datasetIndex,
+            dataIndex: hit.index,
+            sourceInputIndex,
+            label,
+            datasetName
+        };
+        editor.style.display = 'block';
+        positionChartQuickEditor(editor, event);
+        clearTimeout(chartQuickEditHideTimer);
+    }
+
+    function commitChartQuickEdit() {
+        const input = document.getElementById('chartQuickEditInput');
+        if (!input || !chartQuickEditState) return;
+        const valueText = String(input.value || '').trim();
+        const numericValue = Number(valueText.replace(/,/g, ''));
+        if (!Number.isFinite(numericValue)) {
+            alert('숫자만 입력해 주세요. 예: 1234 또는 -5.6');
+            input.focus();
+            input.select();
+            return;
+        }
+
+        const targetInput = document.getElementById('dataInput' + chartQuickEditState.sourceInputIndex);
+        if (!targetInput) return;
+        const values = splitEditableDataSeries(targetInput.value);
+        while (values.length <= chartQuickEditState.dataIndex) values.push('');
+        values[chartQuickEditState.dataIndex] = String(numericValue);
+        targetInput.value = values.join(', ');
+
+        updateOutput();
+        recordHistoryCheckpoint('그래프 위 데이터 직접 수정');
+        hideChartQuickEditor(true);
+    }
+
+    function setupPieSideListQuickEditing() {
+        const pieSideList = document.getElementById('pie-side-list');
+        if (!pieSideList || pieSideList.dataset.pieEditReady === 'true') return;
+
+        const getTarget = (event) => {
+            const target = event.target && event.target.closest ? event.target.closest('.pie-side-item[data-pie-edit-index]') : null;
+            return target && pieSideList.contains(target) ? target : null;
+        };
+
+        pieSideList.addEventListener('mousemove', (event) => {
+            const target = getTarget(event);
+            if (!target) {
+                schedulePreviewHoverHintHide(80);
+                return;
+            }
+            hidePreviewQuickEditor(true);
+            const isValueTarget = !!(event.target && event.target.closest && event.target.closest('.pie-side-value'));
+            const isLabelTarget = !!(event.target && event.target.closest && event.target.closest('.pie-side-label'));
+            const hoverMessage = isValueTarget ? VALUE_EDIT_HOVER_MESSAGE : (isLabelTarget ? ITEM_EDIT_HOVER_MESSAGE : PIE_SPLIT_HOVER_MESSAGE);
+            showPreviewHoverHint(event, hoverMessage);
+        });
+
+        pieSideList.addEventListener('dblclick', (event) => {
+            const target = getTarget(event);
+            if (!target) return;
+            const dataIndex = parseInt(target.dataset.pieEditIndex, 10);
+            if (Number.isNaN(dataIndex)) return;
+
+            hidePreviewHoverHint();
+            if (event.target && event.target.closest && event.target.closest('.pie-side-value')) {
+                showChartQuickEditor(event, { datasetIndex: 0, index: dataIndex });
+                const input = document.getElementById('chartQuickEditInput');
+                if (input) {
+                    setTimeout(() => {
+                        input.focus();
+                        input.select();
+                    }, 0);
+                }
+                return;
+            }
+
+            hideChartQuickEditor(true);
+            const labelState = buildChartLabelEditState(dataIndex, '원그래프 항목명 수정');
+            if (!labelState) return;
+            showPreviewQuickEditor(event, labelState);
+            focusPreviewQuickEditInput();
+        });
+
+        pieSideList.addEventListener('mouseleave', () => {
+            schedulePreviewHoverHintHide(80);
+            scheduleChartQuickEditorHide(450);
+        });
+
+        pieSideList.dataset.pieEditReady = 'true';
+    }
+
+    function setupChartQuickEditing() {
+        const canvas = document.getElementById('myChart');
+        const editor = document.getElementById('chartQuickEdit');
+        const input = document.getElementById('chartQuickEditInput');
+        const applyBtn = document.getElementById('chartQuickEditApply');
+        const closeBtn = document.getElementById('chartQuickEditClose');
+        if (!canvas || !editor || !input || editor.dataset.quickEditReady === 'true') return;
+
+        canvas.addEventListener('mousemove', (event) => {
+            const type = document.getElementById('chartType')?.value || '';
+            if (type === 'table' || type === 'list' || type === 'timeline') {
+                hideChartQuickEditor(true);
+                hidePreviewHoverHint();
+                canvas.style.cursor = '';
+                return;
+            }
+
+            if (type === 'pie') {
+                const pieTarget = getPieDataLabelTargetFromEvent(event);
+                if (pieTarget) {
+                    hideChartQuickEditor(true);
+                    hidePreviewQuickEditor(true);
+                    canvas.style.cursor = pieTarget.editKind === 'value' ? 'ns-resize' : 'text';
+                    showPreviewHoverHint(event, pieTarget.editKind === 'value' ? VALUE_EDIT_HOVER_MESSAGE : ITEM_EDIT_HOVER_MESSAGE);
+                    return;
+                }
+                canvas.style.cursor = '';
+                scheduleChartQuickEditorHide(350);
+                schedulePreviewHoverHintHide(80);
+                return;
+            }
+
+            const legendHit = getChartLegendNameHitFromEvent(event);
+            if (legendHit) {
+                hideChartQuickEditor(true);
+                hidePreviewQuickEditor(true);
+                canvas.style.cursor = 'text';
+                showPreviewHoverHint(event, DATASET_NAME_EDIT_HOVER_MESSAGE);
+                return;
+            }
+
+            const hit = getChartHitFromEvent(event);
+            if (!hit) {
+                const labelHit = getChartLabelHitFromEvent(event);
+                if (labelHit) {
+                    hideChartQuickEditor(true);
+                    canvas.style.cursor = 'text';
+                    showPreviewHoverHint(event, EDIT_HOVER_MESSAGE);
+                    return;
+                }
+                canvas.style.cursor = '';
+                scheduleChartQuickEditorHide(350);
+                schedulePreviewHoverHintHide(80);
+                return;
+            }
+            canvas.style.cursor = 'ns-resize';
+            hidePreviewHoverHint();
+            hidePreviewQuickEditor(true);
+            showChartQuickEditor(event, hit);
+        });
+
+        canvas.addEventListener('mouseleave', () => { canvas.style.cursor = ''; scheduleChartQuickEditorHide(450); schedulePreviewHoverHintHide(80); });
+        canvas.addEventListener('dblclick', (event) => {
+            const type = document.getElementById('chartType')?.value || '';
+            if (type === 'pie') {
+                const pieTarget = getPieDataLabelTargetFromEvent(event);
+                if (!pieTarget) return;
+                hidePreviewHoverHint();
+                if (pieTarget.editKind === 'value') {
+                    hidePreviewQuickEditor(true);
+                    showChartQuickEditor(event, pieTarget.hit);
+                    focusChartQuickEditInput();
+                    return;
+                }
+                hideChartQuickEditor(true);
+                const labelState = buildChartLabelEditState(pieTarget.hit.index, '원그래프 항목명 수정');
+                if (!labelState) return;
+                showPreviewQuickEditor(event, labelState);
+                focusPreviewQuickEditInput();
+                return;
+            }
+
+            const legendHit = getChartLegendNameHitFromEvent(event);
+            if (legendHit) {
+                hideChartQuickEditor(true);
+                showPreviewQuickEditor(event, legendHit);
+                focusPreviewQuickEditInput();
+                return;
+            }
+
+            if (editor.style.display !== 'none') {
+                input.focus();
+                input.select();
+                return;
+            }
+            const labelHit = getChartLabelHitFromEvent(event);
+            if (labelHit) {
+                showPreviewQuickEditor(event, labelHit);
+                focusPreviewQuickEditInput();
+            }
+        });
+
+        editor.addEventListener('mouseenter', () => clearTimeout(chartQuickEditHideTimer));
+        editor.addEventListener('mouseleave', () => scheduleChartQuickEditorHide(450));
+        applyBtn.addEventListener('click', commitChartQuickEdit);
+        closeBtn.addEventListener('click', () => hideChartQuickEditor(true));
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                commitChartQuickEdit();
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                hideChartQuickEditor(true);
+            }
+        });
+        input.addEventListener('change', commitChartQuickEdit);
+        editor.dataset.quickEditReady = 'true';
     }
 
     function updateExportSizeHint() {
@@ -599,13 +2144,14 @@
     }
 
     function getPieColors(values) {
-        const grayPalette = ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
+        const palette = getActivePalette();
+        const grayPalette = palette.pie && palette.pie.length ? palette.pie.slice(1) : ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
         const numericValues = values.map(v => Number(v) || 0);
         const maxValue = Math.max(...numericValues);
         const maxIndex = numericValues.indexOf(maxValue);
         let grayCursor = 0;
         return numericValues.map((_, index) => {
-            if (index === maxIndex) return '#E61E2B';
+            if (index === maxIndex) return palette.main || '#E61E2B';
             const color = grayPalette[grayCursor % grayPalette.length];
             grayCursor += 1;
             return color;
@@ -695,6 +2241,7 @@
 
         const total = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
         const items = labels.map((label, index) => ({
+            index,
             label: (label || '').trim(),
             rawValue: Number(values[index]) || 0,
             ratio: total > 0 ? (Number(values[index]) || 0) / total : 0,
@@ -718,10 +2265,10 @@
                 ${items.map(item => {
                     const displayValue = isKoreanNumber ? formatKoreanNumber(item.rawValue, subText) : item.rawValue;
                     return `
-                        <div class="pie-side-item">
+                        <div class="pie-side-item preview-editable-target" data-pie-edit-index="${item.index}" title="${PIE_SPLIT_HOVER_MESSAGE}" aria-label="${PIE_SPLIT_HOVER_MESSAGE}">
                             <span class="pie-side-dot" style="background:${item.color};"></span>
                             <div class="pie-side-text" style="font-size:${itemFontSize}px;">
-                                ${item.label ? `${item.label} <strong>${displayValue}</strong>` : `<strong>${displayValue}</strong>`}
+                                ${item.label ? `<span class="pie-side-label" title="${ITEM_EDIT_HOVER_MESSAGE}" aria-label="${ITEM_EDIT_HOVER_MESSAGE}">${escapeHtml(item.label)}</span> <strong class="pie-side-value" title="${VALUE_EDIT_HOVER_MESSAGE}" aria-label="${VALUE_EDIT_HOVER_MESSAGE}">${escapeHtml(displayValue)}</strong>` : `<strong class="pie-side-value" title="${VALUE_EDIT_HOVER_MESSAGE}" aria-label="${VALUE_EDIT_HOVER_MESSAGE}">${escapeHtml(displayValue)}</strong>`}
                             </div>
                         </div>
                     `;
@@ -735,7 +2282,7 @@
     function getCurrentLabels() {
         const labelsInput = document.getElementById('labelsInput');
         if (!labelsInput) return [];
-        return labelsInput.value.split(',').map(item => item.trim()).filter(Boolean);
+        return parseLabelSeries(labelsInput.value);
     }
 
     function getCurrentDatasetNames(typeOverride) {
@@ -1140,14 +2687,15 @@
     }
 
     function getMutedColor(index, type = 'bar') {
-        const barPalette = ['#BDBDBD', '#8F8F8F', '#D6D6D6', '#6F6F6F'];
-        const linePalette = ['#4F4F4F', '#7B7B7B', '#A0A0A0', '#C0C0C0'];
-        const palette = type === 'line' ? linePalette : barPalette;
-        return palette[index % palette.length];
+        const palette = getActivePalette();
+        const barPalette = palette.bar || ['#BDBDBD', '#8F8F8F', '#D6D6D6', '#6F6F6F'];
+        const linePalette = palette.line || ['#4F4F4F', '#7B7B7B', '#A0A0A0', '#C0C0C0'];
+        const source = type === 'line' ? linePalette : barPalette;
+        return source[index % source.length];
     }
 
     function getPieMutedColors(length) {
-        const palette = ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
+        const palette = getActivePalette().pie || ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
         return Array.from({ length }, (_, index) => palette[index % palette.length]);
     }
 
@@ -1201,11 +2749,11 @@ function openDataSheet() {
         document.getElementById('sheetTh3').style.display = useD3 ? 'table-cell' : 'none';
         document.getElementById('sheetTh4').style.display = useD4 ? 'table-cell' : 'none';
 
-        const labels = document.getElementById('labelsInput').value.split(',').map(s => s.trim());
-        const d1 = document.getElementById('dataInput1').value.split(',').map(s => s.trim());
-        const d2 = document.getElementById('dataInput2').value.split(',').map(s => s.trim());
-        const d3 = document.getElementById('dataInput3').value.split(',').map(s => s.trim());
-        const d4 = document.getElementById('dataInput4').value.split(',').map(s => s.trim());
+        const labels = parseLabelSeries(document.getElementById('labelsInput').value);
+        const d1 = parseNumericSeries(document.getElementById('dataInput1').value).map(String);
+        const d2 = parseNumericSeries(document.getElementById('dataInput2').value).map(String);
+        const d3 = parseNumericSeries(document.getElementById('dataInput3').value).map(String);
+        const d4 = parseNumericSeries(document.getElementById('dataInput4').value).map(String);
 
         const tbody = document.getElementById('modalTbody'); tbody.innerHTML = '';
         let maxLen = Math.max(labels.length, d1.length, (useD2 ? d2.length : 0), (useD3 ? d3.length : 0), (useD4 ? d4.length : 0));
@@ -1263,7 +2811,7 @@ function openDataSheet() {
             document.getElementById('dataInput3').value = d3.join(', ');
             document.getElementById('dataInput4').value = d4.join(', ');
         }
-        closeDataSheet(); updateOutput();
+        closeDataSheet(); updateOutput(); recordHistoryCheckpoint('데이터 시트 편집');
     }
 
     function loadExampleData() {
@@ -1375,24 +2923,50 @@ function openDataSheet() {
             document.getElementById('dataName2').value = '항목2'; document.getElementById('dataInput2').value = '15, 25, 35';
         }
         toggleInputs();
+        recordHistoryCheckpoint('예시 불러오기');
     }
 
     function parseGeminiData(options = {}) {
         const { preserveSelectedType = false, silent = false } = options;
-        const text = document.getElementById('geminiInput').value;
+        const inputEl = document.getElementById('geminiInput');
+        const text = inputEl ? inputEl.value : '';
         if (!text.trim()) {
             if (!silent) alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요.");
+            setParseSummary('붙여넣은 내용이 없습니다.', 'error');
             return false;
         }
 
         const currentSelectedType = document.getElementById('chartType').value;
+        const parsedData = {};
+        const unknownLines = [];
+        let currentTag = '';
+        const allowedTags = new Set([
+            '[종류]', '[제목]', '[부제목]', '[X축]',
+            '[데이터1이름]', '[데이터1수치]', '[데이터2이름]', '[데이터2수치]',
+            '[데이터3이름]', '[데이터3수치]', '[데이터4이름]', '[데이터4수치]',
+            '[Y좌측최소]', '[Y좌측최대]', '[Y우측최소]', '[Y우측최대]', '[하단주석]', '[표데이터]'
+        ]);
 
-        let parsedData = {}; let currentTag = '';
+        const tagLinePattern = /^\s*(\[[^\]]+\])\s*[:：]?\s*(.*)$/;
         const lines = text.split(/\r?\n/);
         for (let line of lines) {
+            const match = line.match(tagLinePattern);
+            if (match) {
+                currentTag = match[1].trim();
+                if (!parsedData[currentTag]) parsedData[currentTag] = '';
+                if (!allowedTags.has(currentTag)) unknownLines.push(currentTag);
+                const inlineValue = (match[2] || '').trim();
+                if (inlineValue) parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + inlineValue;
+                continue;
+            }
             const trimmedLine = line.trim();
-            if (/^\[.+\]$/.test(trimmedLine)) { currentTag = trimmedLine; parsedData[currentTag] = ''; }
-            else if (currentTag) { if (parsedData[currentTag] !== '' || trimmedLine !== '') parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine; }
+            if (currentTag) {
+                if (parsedData[currentTag] !== '' || trimmedLine !== '') {
+                    parsedData[currentTag] += (parsedData[currentTag] ? '\n' : '') + trimmedLine;
+                }
+            } else if (trimmedLine) {
+                unknownLines.push(trimmedLine.slice(0, 20));
+            }
         }
         const extract = (tag) => parsedData[tag] ? parsedData[tag].trim() : '';
 
@@ -1426,17 +3000,24 @@ function openDataSheet() {
         document.getElementById('chartType').value = preserveSelectedType ? currentSelectedType : mappedType;
         document.getElementById('titleInput').value = extract('[제목]');
         document.getElementById('subInput').value = extract('[부제목]');
-        document.getElementById('labelsInput').value = extract('[X축]');
-        document.getElementById('dataName1').value = extract('[데이터1이름]'); document.getElementById('dataInput1').value = extract('[데이터1수치]');
-        document.getElementById('dataName2').value = extract('[데이터2이름]'); document.getElementById('dataInput2').value = extract('[데이터2수치]');
-        document.getElementById('dataName3').value = extract('[데이터3이름]'); document.getElementById('dataInput3').value = extract('[데이터3수치]');
-        document.getElementById('dataName4').value = extract('[데이터4이름]'); document.getElementById('dataInput4').value = extract('[데이터4수치]');
-        document.getElementById('yMin').value = extract('[Y좌측최소]'); document.getElementById('yMax').value = extract('[Y좌측최대]');
-        document.getElementById('y1Min').value = extract('[Y우측최소]'); document.getElementById('y1Max').value = extract('[Y우측최대]');
+        document.getElementById('labelsInput').value = parseLabelSeries(extract('[X축]')).join(', ');
+        document.getElementById('dataName1').value = extract('[데이터1이름]'); document.getElementById('dataInput1').value = normalizeNumberInput(extract('[데이터1수치]'));
+        document.getElementById('dataName2').value = extract('[데이터2이름]'); document.getElementById('dataInput2').value = normalizeNumberInput(extract('[데이터2수치]'));
+        document.getElementById('dataName3').value = extract('[데이터3이름]'); document.getElementById('dataInput3').value = normalizeNumberInput(extract('[데이터3수치]'));
+        document.getElementById('dataName4').value = extract('[데이터4이름]'); document.getElementById('dataInput4').value = normalizeNumberInput(extract('[데이터4수치]'));
+        document.getElementById('yMin').value = normalizeNumberInput(extract('[Y좌측최소]'));
+        document.getElementById('yMax').value = normalizeNumberInput(extract('[Y좌측최대]'));
+        document.getElementById('y1Min').value = normalizeNumberInput(extract('[Y우측최소]'));
+        document.getElementById('y1Max').value = normalizeNumberInput(extract('[Y우측최대]'));
         document.getElementById('footnoteInput').value = extract('[하단주석]');
-        const tableData = extract('[표데이터]'); if (tableData) document.getElementById('tableDataInput').value = tableData;
+        const tableData = extract('[표데이터]');
+        if (tableData) document.getElementById('tableDataInput').value = tableData;
 
         toggleInputs();
+
+        const analysis = analyzeParsedState(document.getElementById('chartType').value);
+        const unknownSuffix = unknownLines.length ? ` 확인 필요: 알 수 없는 태그/행 ${[...new Set(unknownLines)].slice(0, 3).join(', ')}` : '';
+        setParseSummary(analysis.message + unknownSuffix, unknownLines.length ? 'warn' : analysis.status);
 
         const btn = document.getElementById('autoFillBtn');
         if (!silent && btn) {
@@ -1445,6 +3026,7 @@ function openDataSheet() {
             setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = '#0056b3'; }, 2000);
         }
 
+        recordHistoryCheckpoint('제미나이 데이터 자동 입력');
         return true;
     }
 
@@ -1505,10 +3087,22 @@ function openDataSheet() {
         const defaultNames = ['박조비 기자', '기자 이름', '기자이름'];
 
         if (currentName === '' || defaultNames.includes(currentName)) {
-            alert('기자 이름을 수정해주세요');
-            nameInput.focus();
-            nameInput.select();
-            return false;
+            const suggestedName = currentName && !defaultNames.includes(currentName) ? currentName : '';
+            const reporterName = window.prompt('저장 전에 들어갈 기자 이름을 입력해주세요.', suggestedName);
+            if (reporterName === null) return false;
+
+            const cleanName = reporterName.trim();
+            if (cleanName === '' || defaultNames.includes(cleanName)) {
+                alert('기자 이름을 입력해야 저장할 수 있습니다.');
+                return false;
+            }
+
+            nameInput.value = cleanName;
+            const displayName = document.getElementById('displayName');
+            if (displayName) displayName.innerText = cleanName;
+            updateOutput();
+            recordHistoryCheckpoint('저장 전 기자 이름 입력');
+            return true;
         }
         return true;
     }
@@ -1582,10 +3176,10 @@ function openDataSheet() {
 
         let html = `<div class="timeline-container" style="font-size: ${fontSize}px;">`;
         let autoFootnote = manualFootnote;
-        let tableRows = [...rows];
+        let tableRows = rows.map((row, rowIndex) => ({ row, rowIndex }));
 
         if (tableRows.length > 2) {
-            const lastLine = tableRows[tableRows.length - 1];
+            const lastLine = tableRows[tableRows.length - 1].row;
             const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
             if (lastCols.length === 1 && !lastCols[0].startsWith('##')) {
                 if (autoFootnote === '') autoFootnote = lastCols[0].trim();
@@ -1594,11 +3188,12 @@ function openDataSheet() {
         }
 
         for (let i = 0; i < tableRows.length; i++) {
-            let cols = tableRows[i].indexOf('\t') !== -1 ? tableRows[i].split('\t') : tableRows[i].split(',');
+            const sourceRowIndex = tableRows[i].rowIndex;
+            let cols = tableRows[i].row.indexOf('\t') !== -1 ? tableRows[i].row.split('\t') : tableRows[i].row.split(',');
             cols = cols.map(c => c.trim());
             
             if (i === 0 && (cols[0] === '일자' || cols[0] === '구분' || cols[0] === '날짜' || cols[0] === '연도') && cols.length > 1) continue;
-            if (cols[0].startsWith('##')) continue; 
+            if ((cols[0] || '').startsWith('##')) continue; 
 
             let leftText = cols[0] || '';
             let rightText = cols[1] || '';
@@ -1606,8 +3201,8 @@ function openDataSheet() {
             if(leftText || rightText) {
                 html += `
                 <div class="timeline-row" style="z-index: ${100 - i}; position: relative;">
-                    <div class="timeline-left" style="font-size: ${Math.round(fontSize * 1.1)}px; width:${timelineWidths.left}%;">${leftText}</div>
-                    <div class="timeline-right" style="font-size: ${fontSize}px; width:${timelineWidths.right}%;">${rightText}</div>
+                    <div class="timeline-left preview-editable-target" ${makePreviewEditAttrs('table-cell', sourceRowIndex, 0, leftText)} style="font-size: ${Math.round(fontSize * 1.1)}px; width:${timelineWidths.left}%;">${escapeHtml(leftText)}</div>
+                    <div class="timeline-right preview-editable-target" ${makePreviewEditAttrs('table-cell', sourceRowIndex, 1, rightText)} style="font-size: ${fontSize}px; width:${timelineWidths.right}%;">${escapeHtml(rightText)}</div>
                 </div>`;
             }
         }
@@ -1627,6 +3222,7 @@ function openDataSheet() {
         let currentListHTML = '';
 
         for (let i = 0; i < rows.length; i++) {
+            const sourceRowIndex = i;
             let cols = rows[i].indexOf('\t') !== -1 ? rows[i].split('\t') : rows[i].split(',');
             cols = cols.map(c => c.trim());
             if (cols.length === 1 && i === rows.length - 1 && autoFootnote === '') { autoFootnote = cols[0]; break; }
@@ -1637,10 +3233,10 @@ function openDataSheet() {
             if (cat && cat !== '^') {
                 if (currentListHTML !== '') { html += `<div class="list-item-group">${currentListHTML}</div>`; currentListHTML = ''; }
                 let headerFontSize = Math.round(fontSize * 1.1);
-                html += `<div class="list-header-box" style="font-size: ${headerFontSize}px;">${cat}</div>`;
-                if (val) currentListHTML += `<div class="list-item" style="font-size: ${fontSize}px;">${val}</div>`;
+                html += `<div class="list-header-box preview-editable-target" ${makePreviewEditAttrs('table-cell', sourceRowIndex, 0, cat)} style="font-size: ${headerFontSize}px;">${escapeHtml(cat)}</div>`;
+                if (val) currentListHTML += `<div class="list-item preview-editable-target" ${makePreviewEditAttrs('table-cell', sourceRowIndex, 1, val)} style="font-size: ${fontSize}px;">${escapeHtml(val)}</div>`;
             } else if (cat === '^' || cat === '') {
-                if (val) currentListHTML += `<div class="list-item" style="font-size: ${fontSize}px;">${val}</div>`;
+                if (val) currentListHTML += `<div class="list-item preview-editable-target" ${makePreviewEditAttrs('table-cell', sourceRowIndex, 1, val)} style="font-size: ${fontSize}px;">${escapeHtml(val)}</div>`;
             }
         }
         if (currentListHTML !== '') html += `<div class="list-item-group">${currentListHTML}</div>`;
@@ -1658,19 +3254,22 @@ function openDataSheet() {
         const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
 
         let html = ''; let inTable = false;
-        let tableRows = [...rows]; let autoFootnote = manualFootnote;
+        let tableRows = rows.map((row, rowIndex) => ({ row, rowIndex })); let autoFootnote = manualFootnote;
 
         if (tableRows.length > 2) {
-            const lastLine = tableRows[tableRows.length - 1];
+            const lastLine = tableRows[tableRows.length - 1].row;
             const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
-            const headerCols = tableRows[0].indexOf('\t') !== -1 ? tableRows[0].split('\t') : tableRows[0].split(',');
+            const headerCols = tableRows[0].row.indexOf('\t') !== -1 ? tableRows[0].row.split('\t') : tableRows[0].row.split(',');
             if (lastCols.length === 1 && headerCols.length > 1 && !lastCols[0].startsWith('##')) { 
                 if (autoFootnote === '') autoFootnote = lastCols[0].trim(); tableRows.pop(); 
             }
         }
 
-        const matrix = tableRows.map(row => (row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',')).map(c => c.trim()));
-        const cells = matrix.map(row => row.map(col => ({ text: col, rowspan: 1, hide: false })));
+        const matrix = tableRows.map(item => ({
+            sourceRow: item.rowIndex,
+            cols: (item.row.indexOf('\t') !== -1 ? item.row.split('\t') : item.row.split(',')).map(c => c.trim())
+        }));
+        const cells = matrix.map(rowObj => rowObj.cols.map((col, cIdx) => ({ text: col, rowspan: 1, hide: false, sourceRow: rowObj.sourceRow, sourceCol: cIdx })));
 
         if (cells.length > 0) {
             const numCols = cells.reduce((max, r) => Math.max(max, r.length), 0);
@@ -1678,7 +3277,7 @@ function openDataSheet() {
                 let mergeStartRow = 0;
                 for (let r = 1; r < cells.length; r++) {
                     if (cells[r][c] && cells[r][c].text === '^') { 
-                        if (cells[mergeStartRow] && !cells[mergeStartRow][0].text.startsWith('##')) {
+                        if (cells[mergeStartRow] && cells[mergeStartRow][0] && !cells[mergeStartRow][0].text.startsWith('##')) {
                             cells[mergeStartRow][c].rowspan++; cells[r][c].hide = true; 
                         }
                     } else { mergeStartRow = r; }
@@ -1687,11 +3286,12 @@ function openDataSheet() {
         }
 
         cells.forEach((row, rIdx) => {
+            if (!row.length) return;
             const isBlockHeader = row[0].text.startsWith('##');
             if (isBlockHeader) {
                 if (inTable) { html += '</tbody></table>'; inTable = false; }
                 let blockTitle = row[0].text.replace('##', '').trim();
-                html += `<div style="background-color:#444; color:white; padding:8px 15px; font-size:${fontSize*0.9}px; font-weight:bold; border-radius:5px; margin-top:20px; margin-bottom:5px; width:100%; box-sizing:border-box;">■ ${blockTitle}</div>`;
+                html += `<div class="preview-editable-target" ${makePreviewEditAttrs('table-block-header', row[0].sourceRow, 0, blockTitle)} style="background-color:#444; color:white; padding:8px 15px; font-size:${fontSize*0.9}px; font-weight:bold; border-radius:5px; margin-top:20px; margin-bottom:5px; width:100%; box-sizing:border-box;">■ ${escapeHtml(blockTitle)}</div>`;
             } else {
                 if (!inTable) {
                     const visibleColumnIndexes = row.map((cell, cIdx) => cell.hide ? null : cIdx).filter(index => index !== null);
@@ -1706,7 +3306,7 @@ function openDataSheet() {
                         html += '</colgroup>';
                     }
                     html += '<thead><tr>';
-                    row.forEach((cell, cIdx) => { if (!cell.hide) html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="col-${cIdx}">${cell.text}</th>`; });
+                    row.forEach((cell, cIdx) => { if (!cell.hide) html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="preview-editable-target col-${cIdx}" ${makePreviewEditAttrs('table-cell', cell.sourceRow, cell.sourceCol, cell.text)}>${escapeHtml(cell.text)}</th>`; });
                     html += '</tr></thead><tbody>';
                     inTable = true;
                 } else {
@@ -1715,7 +3315,7 @@ function openDataSheet() {
                         if (!cell.hide) {
                             let cellText = cell.text; let cleanText = cellText.replace(/,/g, '');
                             if (isKoreanNumber && cellText !== '' && !isNaN(cleanText)) cellText = formatKoreanNumber(Number(cleanText), subText);
-                            html += `<td${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="col-${cIdx}">${cellText}</td>`;
+                            html += `<td${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="preview-editable-target col-${cIdx}" ${makePreviewEditAttrs('table-cell', cell.sourceRow, cell.sourceCol, cell.text)}>${escapeHtml(cellText)}</td>`;
                         }
                     });
                     html += '</tr>';
@@ -1731,11 +3331,12 @@ function openDataSheet() {
         const chartContainer = document.getElementById('chart-container');
         const pieSideList = document.getElementById('pie-side-list');
 
+        hideChartQuickEditor(true);
         if (myChart != null) myChart.destroy();
         
-        const labels = document.getElementById('labelsInput').value.split(',').map(item => item.trim());
+        const labels = parseLabelSeries(document.getElementById('labelsInput').value);
         const highlightConfig = getHighlightConfig(chartType, labels);
-        const dataVals1 = document.getElementById('dataInput1').value.split(',').map(item => parseFloat(item.trim()));
+        const dataVals1 = parseNumericSeries(document.getElementById('dataInput1').value);
                 if(chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
         if (pieSideList) {
             pieSideList.style.display = 'none';
@@ -1745,32 +3346,34 @@ function openDataSheet() {
         const name1 = document.getElementById('dataName1').value;
         let datasets = [];
 
-        const dataVals2 = document.getElementById('dataInput2') && document.getElementById('dataInput2').value ? document.getElementById('dataInput2').value.split(',').map(item => parseFloat(item.trim())) : null;
+        const dataVals2 = document.getElementById('dataInput2') && document.getElementById('dataInput2').value ? parseNumericSeries(document.getElementById('dataInput2').value) : null;
         const name2 = document.getElementById('dataName2') ? document.getElementById('dataName2').value : '';
-        const dataVals3 = document.getElementById('dataInput3') && document.getElementById('dataInput3').value ? document.getElementById('dataInput3').value.split(',').map(item => parseFloat(item.trim())) : null;
+        const dataVals3 = document.getElementById('dataInput3') && document.getElementById('dataInput3').value ? parseNumericSeries(document.getElementById('dataInput3').value) : null;
         const name3 = document.getElementById('dataName3') ? document.getElementById('dataName3').value : '';
-        const dataVals4 = document.getElementById('dataInput4') && document.getElementById('dataInput4').value ? document.getElementById('dataInput4').value.split(',').map(item => parseFloat(item.trim())) : null;
+        const dataVals4 = document.getElementById('dataInput4') && document.getElementById('dataInput4').value ? parseNumericSeries(document.getElementById('dataInput4').value) : null;
         const name4 = document.getElementById('dataName4') ? document.getElementById('dataName4').value : '';
 
-        const akRed = '#E61E2B'; const akOrange = '#F48F1F'; const akGray1 = '#888888'; const akGray2 = '#444444';
+        const palette = getActivePalette();
+        const akRed = palette.main; const akOrange = palette.accent; const akGray1 = palette.gray1; const akGray2 = palette.gray2; const akLight = palette.light;
+        const linePalette = palette.line || [akRed, akOrange, akGray1, akGray2];
 
         let isHorizontal = chartType.startsWith('h-');
         let normType = chartType.replace('h-', '');
 
         if (normType === 'multi-line' || normType === 'combo' || normType === 'multi-combo' || normType === 'multi-bar' || normType === 'stacked-combo' || normType === 'stacked-bar') {
             if (normType === 'multi-line') {
-                datasets.push({ type: 'line', label: name1, data: dataVals1, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                datasets.push({ type: 'line', label: name1, data: dataVals1, borderColor: linePalette[0] || '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: linePalette[0] || '#111111', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
                 if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akGray1, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akGray1, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
-                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#bbbbbb', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#bbbbbb', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: akLight, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akLight, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
             } else if (normType === 'combo') {
-                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, barPercentage: 0.55, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akLight, borderRadius: 4, barPercentage: 0.55, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
                 if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
                 if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
-                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: linePalette[0] || '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: linePalette[0] || '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
             } else if (normType === 'multi-combo') {
-                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: '#bbbbbb', borderRadius: 4, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
-                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#888888', borderRadius: 4, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akLight, borderRadius: 4, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akGray1, borderRadius: 4, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
                 if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
                 if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
             } else if (normType === 'multi-bar') {
@@ -1780,13 +3383,13 @@ function openDataSheet() {
                 if(dataVals4) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: akGray2, borderRadius: 4 });
             } else if (normType === 'stacked-combo') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
-                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: '#bbbbbb', yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akLight, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
                 if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
-                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: linePalette[0] || '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: linePalette[0] || '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
             } else if (normType === 'stacked-bar') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed });
                 if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akOrange });
-                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: '#bbbbbb' });
+                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akLight });
                 if(dataVals4) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: akGray1 });
             }
         } else {
@@ -1818,6 +3421,7 @@ function openDataSheet() {
             });
         }
 
+        attachDatasetSourceMetadata(datasets, [dataVals1, dataVals2, dataVals3, dataVals4]);
         applyHighlightToDatasets(datasets, labels, normType, highlightConfig);
 
         let yMin = document.getElementById('yMin').value;
@@ -1871,7 +3475,8 @@ function openDataSheet() {
                         display: (normType === 'multi-line' || normType === 'combo' || normType === 'multi-combo' || normType === 'multi-bar' || normType === 'stacked-combo' || normType === 'stacked-bar'),
                         position: 'top', align: 'end',
                         labels: { font: { size: Math.round(16 * scale), weight: 'bold' }, color: '#111' },
-                        padding: { bottom: 25 }
+                        padding: { bottom: 25 },
+                        onClick: function() {}
                     },
                     tooltip: { enabled: false },
                     datalabels: {
@@ -2050,6 +3655,8 @@ function openDataSheet() {
     }
 
     async function downloadImage() {
+        hideChartQuickEditor(true);
+        hidePreviewQuickEditor(true);
         if (!validateReporterName()) return;
 
         const captureDiv = document.getElementById('capture-area');
@@ -2112,11 +3719,139 @@ function openDataSheet() {
         }
     }
 
+
+    function collectInlineCss() {
+        let css = '';
+        Array.from(document.styleSheets).forEach(sheet => {
+            try {
+                Array.from(sheet.cssRules || []).forEach(rule => { css += rule.cssText + '\n'; });
+            } catch (error) {
+                // Cross-origin style sheets are skipped safely.
+            }
+        });
+        return css;
+    }
+
+    function cloneCaptureAreaForSvg() {
+        const captureDiv = document.getElementById('capture-area');
+        const clone = captureDiv.cloneNode(true);
+        const originalCanvases = captureDiv.querySelectorAll('canvas');
+        const clonedCanvases = clone.querySelectorAll('canvas');
+        clonedCanvases.forEach((canvas, index) => {
+            const originalCanvas = originalCanvases[index];
+            if (!originalCanvas) return;
+            const img = document.createElement('img');
+            img.src = originalCanvas.toDataURL('image/png');
+            img.style.width = originalCanvas.style.width || `${originalCanvas.clientWidth || 650}px`;
+            img.style.height = originalCanvas.style.height || `${originalCanvas.clientHeight || 420}px`;
+            img.style.display = 'block';
+            img.alt = 'chart preview';
+            canvas.replaceWith(img);
+        });
+        clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+        const quickEditorClone = clone.querySelector('#chartQuickEdit');
+        if (quickEditorClone) quickEditorClone.remove();
+        const previewEditorClone = clone.querySelector('#previewQuickEdit');
+        if (previewEditorClone) previewEditorClone.remove();
+        const previewHintClone = clone.querySelector('#previewHoverHint');
+        if (previewHintClone) previewHintClone.remove();
+        return clone;
+    }
+
+    async function downloadSvg() {
+        hideChartQuickEditor(true);
+        hidePreviewQuickEditor(true);
+        if (!validateReporterName()) return;
+        const captureDiv = document.getElementById('capture-area');
+        const btn = document.getElementById('svgDownloadBtn');
+        const originalText = btn ? btn.innerText : '';
+        const { exportScale, baseWidth, baseHeight, exportWidth, exportHeight } = getFixedExportSize();
+        const chartExportDpr = Math.max(EXPORT_CHART_DPR, exportScale * 2);
+
+        if (btn) {
+            btn.innerText = '\u23F3 SVG \uC0DD\uC131 \uC911...';
+            btn.style.backgroundColor = '#666';
+        }
+
+        try {
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+
+            await setChartPixelRatio(chartExportDpr);
+            await waitForNextPaint();
+
+            const renderedCanvas = await html2canvas(captureDiv, {
+                scale: exportScale,
+                width: baseWidth,
+                height: baseHeight,
+                windowWidth: baseWidth,
+                windowHeight: baseHeight,
+                useCORS: true,
+                allowTaint: false,
+                backgroundColor: '#ffffff',
+                logging: false
+            });
+
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = exportWidth;
+            finalCanvas.height = exportHeight;
+            const finalCtx = finalCanvas.getContext('2d');
+            finalCtx.fillStyle = '#ffffff';
+            finalCtx.fillRect(0, 0, exportWidth, exportHeight);
+            finalCtx.drawImage(renderedCanvas, 0, 0, exportWidth, exportHeight);
+
+            const pngDataUrl = finalCanvas.toDataURL('image/png');
+            const now = new Date().toISOString();
+            const svg = [
+                '<?xml version="1.0" encoding="UTF-8"?>',
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' + exportWidth + '" height="' + exportHeight + '" viewBox="0 0 ' + exportWidth + ' ' + exportHeight + '" version="1.1">',
+                '  <title>Asiae graphic</title>',
+                '  <desc>Generated by Graphic Desk at ' + now + '. This compatibility SVG embeds the rendered graphic as a PNG image.</desc>',
+                '  <rect width="100%" height="100%" fill="#ffffff"/>',
+                '  <image href="' + pngDataUrl + '" xlink:href="' + pngDataUrl + '" x="0" y="0" width="' + exportWidth + '" height="' + exportHeight + '" preserveAspectRatio="xMinYMin meet"/>',
+                '</svg>'
+            ].join('\n');
+
+            const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const type = document.getElementById('chartType').value;
+            const filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
+            link.download = filePrefix + 'svg_' + exportScale + 'x_' + new Date().getTime() + '.svg';
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error(err);
+            alert('SVG \uC800\uC7A5 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4. PNG \uC800\uC7A5\uC744 \uC774\uC6A9\uD574 \uC8FC\uC138\uC694.');
+        } finally {
+            await setChartPixelRatio(NORMAL_CHART_DPR);
+            updateExportSizeHint();
+            if (btn) {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = '#555';
+            }
+        }
+    }
+
+
     window.onload = function() { 
+        buildFriendlyControlMenu();
+        initHistoryControls();
+        setupInlineEditing();
+        setupChartQuickEditing();
+        setupPreviewQuickEditing();
+        setupPieSideListQuickEditing();
+        updateFavoriteSelect();
+        applyPalettePreset('asiae', { skipUpdate: true, skipHistory: true });
         const initialType = document.getElementById('chartType').value;
         initializedChartTypes.add(initialType);
         loadExampleData();
         updateExportSizeHint();
+        setParseSummary('제미나이 텍스트를 붙여넣으면 파싱 요약이 표시됩니다.', 'ok');
 
         const exportScaleEl = document.getElementById('exportScale');
         if (exportScaleEl) {
@@ -2138,7 +3873,8 @@ function openDataSheet() {
         refreshDatasetFontControls();
         refreshDatasetColorControls();
 
-        document.getElementById('tableDataInput').addEventListener('keydown', function(e) {
+        const tableDataInputEl = document.getElementById('tableDataInput');
+        if (tableDataInputEl) tableDataInputEl.addEventListener('keydown', function(e) {
             if (e.key === 'Tab') {
                 e.preventDefault();
                 const start = this.selectionStart;
@@ -2147,6 +3883,8 @@ function openDataSheet() {
                 this.selectionStart = this.selectionEnd = start + 1;
             }
         });
+
+        recordHistoryCheckpoint('초기 상태');
     };
 </script>
 </body>
