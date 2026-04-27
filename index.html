@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 2.7</title>
+    <title>그래픽 보조 데스크 V 1.6</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -63,7 +63,7 @@
         .chart-title { font-size: 32px; font-weight: 900; margin: 0 0 5px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
         .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline; line-height: 1.4; word-break: keep-all;}
         
-        #chart-container { height: 420px; margin-top: 0px; flex-shrink: 0; transition: height 0.3s ease; position: relative;}
+        #chart-container { height: 420px; margin-top: 0px; flex-shrink: 0; transition: none; position: relative;}
         #pie-side-list { display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 210px; z-index: 5; }
         .pie-side-list-inner { display: flex; flex-direction: column; gap: 10px; }
         .pie-side-item { display: flex; align-items: flex-start; gap: 8px; min-width: 0; cursor: pointer; border-radius: 8px; padding: 4px; margin: -4px; transition: box-shadow 0.15s ease, background-color 0.15s ease; }
@@ -243,7 +243,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 2.7</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 1.6</h2>
 
         <div class="quick-action-bar" id="quickActionBar">
             <button type="button" class="quick-btn" id="undoBtn" onclick="undoLastChange()" title="Ctrl+Z / Command+Z">되돌리기</button>
@@ -740,6 +740,21 @@
         await waitForNextPaint();
     }
 
+    function stabilizeChartLayout() {
+        if (!myChart) return;
+
+        const resizeAndUpdate = () => {
+            if (!myChart) return;
+            myChart.resize();
+            myChart.update('none');
+        };
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(resizeAndUpdate);
+        });
+        window.setTimeout(resizeAndUpdate, 80);
+    }
+
     function getSelectedExportScale() {
         const exportScaleEl = document.getElementById('exportScale');
         const exportScale = exportScaleEl ? parseInt(exportScaleEl.value, 10) : 3;
@@ -1030,9 +1045,57 @@
     function parseNumericSeries(raw) {
         const text = String(raw || '').trim();
         if (!text) return [];
-        const matches = text.match(/[-+]?\d{1,3}(?:,\d{3})+(?:\.\d+)?|[-+]?\d+(?:\.\d+)?/g);
-        if (!matches) return [];
-        return matches.map(value => Number(String(value).replace(/,/g, ''))).filter(value => Number.isFinite(value));
+
+        // 콤마(,)가 '값 구분자'인지 '천 단위 구분자'인지 구분한다.
+        // 기존 정규식은 1182,929,501,385 같은 데이터열에서
+        // 929,501,385를 하나의 큰 숫자로 잘못 읽었다.
+        const normalizeToken = (value) => String(value || '')
+            .trim()
+            .replace(/[−–—]/g, '-')
+            .replace(/\s+/g, '');
+        const singleThousandsNumberPattern = /^[-+]?\d{1,3}(?:,\d{3})+(?:\.\d+)?$/;
+        const plainNumberPattern = /^[-+]?\d+(?:\.\d+)?$/;
+
+        const parseToken = (token) => {
+            const cleaned = normalizeToken(token);
+            if (!cleaned) return null;
+            if (!plainNumberPattern.test(cleaned) && !singleThousandsNumberPattern.test(cleaned)) return null;
+            const numberValue = Number(cleaned.replace(/,/g, ''));
+            return Number.isFinite(numberValue) ? numberValue : null;
+        };
+
+        const normalizedText = normalizeToken(text);
+        if (!/[\t\r\n;]/.test(text) && singleThousandsNumberPattern.test(normalizedText)) {
+            return [parseToken(text)].filter(value => value !== null);
+        }
+
+        const tokens = [];
+        const pushSegment = (segment) => {
+            const trimmed = String(segment || '').trim();
+            if (!trimmed) return;
+
+            const compact = normalizeToken(trimmed);
+            if (singleThousandsNumberPattern.test(compact) || !trimmed.includes(',')) {
+                tokens.push(trimmed);
+                return;
+            }
+
+            // 콤마 뒤에 공백이 있으면 "1,234, 2,345"처럼 천 단위 콤마를 살린 값 목록으로 본다.
+            // 공백이 없으면 "1182,929,501"처럼 데이터열을 빠르게 붙여넣은 것으로 보고 콤마를 값 구분자로 본다.
+            if (/[,，]\s+/.test(trimmed)) tokens.push(...trimmed.split(/[,，]\s+/));
+            else tokens.push(...trimmed.split(/[,，]/));
+        };
+
+        if (/[\t\r\n;]/.test(text)) {
+            text.split(/[\t\r\n;]+/).forEach(pushSegment);
+        } else if (text.includes(',') || text.includes('，')) {
+            pushSegment(text);
+        } else {
+            const matches = text.match(/[-+]?(?:\d+(?:\.\d+)?)/g) || [];
+            tokens.push(...matches);
+        }
+
+        return tokens.map(parseToken).filter(value => value !== null);
     }
 
     function normalizeNumberInput(raw) {
@@ -2098,9 +2161,11 @@
             } else {
                 loadExampleData();
             }
-            return;
+        } else {
+            toggleInputs();
         }
-        toggleInputs();
+
+        stabilizeChartLayout();
     }
 
     function formatKoreanNumber(num, subText = '') {
@@ -3332,12 +3397,15 @@ function openDataSheet() {
         const pieSideList = document.getElementById('pie-side-list');
 
         hideChartQuickEditor(true);
-        if (myChart != null) myChart.destroy();
+        if (myChart != null) {
+            myChart.destroy();
+            myChart = null;
+        }
         
         const labels = parseLabelSeries(document.getElementById('labelsInput').value);
         const highlightConfig = getHighlightConfig(chartType, labels);
         const dataVals1 = parseNumericSeries(document.getElementById('dataInput1').value);
-                if(chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
+        if (chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
         if (pieSideList) {
             pieSideList.style.display = 'none';
             pieSideList.innerHTML = '';
@@ -3652,6 +3720,8 @@ function openDataSheet() {
         if (normType === 'pie' && pieSideList) {
             renderPieSideList(labels, dataVals1, datasets[0].backgroundColor);
         }
+
+        stabilizeChartLayout();
     }
 
     async function downloadImage() {
