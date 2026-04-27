@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 2.7</title>
+    <title>그래픽 보조 데스크 V 2.8</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -243,7 +243,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 2.7</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 2.8</h2>
 
         <div class="quick-action-bar" id="quickActionBar">
             <button type="button" class="quick-btn" id="undoBtn" onclick="undoLastChange()" title="Ctrl+Z / Command+Z">되돌리기</button>
@@ -1042,19 +1042,22 @@
         return text.split(delimiter).map(item => item.trim()).filter(item => item !== '');
     }
 
-    function parseNumericSeries(raw) {
+    function parseNumericSeries(raw, expectedCount = null) {
         const text = String(raw || '').trim();
         if (!text) return [];
 
         // 콤마(,)가 '값 구분자'인지 '천 단위 구분자'인지 구분한다.
-        // 기존 정규식은 1182,929,501,385 같은 데이터열에서
-        // 929,501,385를 하나의 큰 숫자로 잘못 읽었다.
+        // 예: 813,827,833처럼 항목 수와 같은 콤마 목록은 데이터열로,
+        // 1,234 또는 1,234,567처럼 한 값만 입력한 경우는 천 단위 숫자로 읽는다.
         const normalizeToken = (value) => String(value || '')
             .trim()
             .replace(/[−–—]/g, '-')
-            .replace(/\s+/g, '');
+            .replace(/\s+/g, '')
+            .replace(/，/g, ',');
         const singleThousandsNumberPattern = /^[-+]?\d{1,3}(?:,\d{3})+(?:\.\d+)?$/;
         const plainNumberPattern = /^[-+]?\d+(?:\.\d+)?$/;
+        const expectedLength = Number.isInteger(Number(expectedCount)) ? Number(expectedCount) : null;
+        const hasExpectedSeriesLength = expectedLength !== null && expectedLength > 1;
 
         const parseToken = (token) => {
             const cleaned = normalizeToken(token);
@@ -1064,8 +1067,27 @@
             return Number.isFinite(numberValue) ? numberValue : null;
         };
 
+        const parseTokenList = (list) => list.map(parseToken).filter(value => value !== null);
+        const splitCommaSeries = (value) => String(value || '').split(/[,，]/).map(item => item.trim()).filter(Boolean);
+        const canReadAsPlainSeries = (list) => list.length > 1 && list.every(item => plainNumberPattern.test(normalizeToken(item)));
+
         const normalizedText = normalizeToken(text);
-        if (!/[\t\r\n;]/.test(text) && singleThousandsNumberPattern.test(normalizedText)) {
+        const hasHardDelimiter = /[\t\r\n;]/.test(text);
+
+        if (!hasHardDelimiter && (text.includes(',') || text.includes('，'))) {
+            const commaSeries = splitCommaSeries(text);
+            if (hasExpectedSeriesLength && commaSeries.length === expectedLength && canReadAsPlainSeries(commaSeries)) {
+                return parseTokenList(commaSeries);
+            }
+
+            // 공백 없이 3자리 숫자들이 길게 이어진 예시 데이터(100,200,300,400 등)를
+            // 거대한 한 숫자로 오해하지 않도록, 3개 이상이면 데이터열로 본다.
+            if (expectedLength === null && !/[,，]\s+/.test(text) && commaSeries.length >= 3 && canReadAsPlainSeries(commaSeries)) {
+                return parseTokenList(commaSeries);
+            }
+        }
+
+        if (!hasHardDelimiter && singleThousandsNumberPattern.test(normalizedText)) {
             return [parseToken(text)].filter(value => value !== null);
         }
 
@@ -1075,7 +1097,7 @@
             if (!trimmed) return;
 
             const compact = normalizeToken(trimmed);
-            if (singleThousandsNumberPattern.test(compact) || !trimmed.includes(',')) {
+            if (singleThousandsNumberPattern.test(compact) || !/[，,]/.test(trimmed)) {
                 tokens.push(trimmed);
                 return;
             }
@@ -1086,7 +1108,7 @@
             else tokens.push(...trimmed.split(/[,，]/));
         };
 
-        if (/[\t\r\n;]/.test(text)) {
+        if (hasHardDelimiter) {
             text.split(/[\t\r\n;]+/).forEach(pushSegment);
         } else if (text.includes(',') || text.includes('，')) {
             pushSegment(text);
@@ -1095,11 +1117,11 @@
             tokens.push(...matches);
         }
 
-        return tokens.map(parseToken).filter(value => value !== null);
+        return parseTokenList(tokens);
     }
 
-    function normalizeNumberInput(raw) {
-        const values = parseNumericSeries(raw);
+    function normalizeNumberInput(raw, expectedCount = null) {
+        const values = parseNumericSeries(raw, expectedCount);
         return values.length ? values.join(', ') : String(raw || '').trim();
     }
 
@@ -1324,7 +1346,7 @@
         const datasetInputs = [1, 2, 3, 4].map(index => document.getElementById(`dataInput${index}`)?.value || '');
         const datasetNames = [1, 2, 3, 4].map(index => document.getElementById(`dataName${index}`)?.value || `데이터${index}`);
         const activeDatasets = datasetInputs
-            .map((raw, index) => ({ index, name: datasetNames[index], values: parseNumericSeries(raw), raw }))
+            .map((raw, index) => ({ index, name: datasetNames[index], values: parseNumericSeries(raw, labels.length), raw }))
             .filter(item => item.raw.trim() !== '' || item.values.length);
         const warnings = [];
         activeDatasets.forEach(item => {
@@ -2815,10 +2837,10 @@ function openDataSheet() {
         document.getElementById('sheetTh4').style.display = useD4 ? 'table-cell' : 'none';
 
         const labels = parseLabelSeries(document.getElementById('labelsInput').value);
-        const d1 = parseNumericSeries(document.getElementById('dataInput1').value).map(String);
-        const d2 = parseNumericSeries(document.getElementById('dataInput2').value).map(String);
-        const d3 = parseNumericSeries(document.getElementById('dataInput3').value).map(String);
-        const d4 = parseNumericSeries(document.getElementById('dataInput4').value).map(String);
+        const d1 = parseNumericSeries(document.getElementById('dataInput1').value, labels.length).map(String);
+        const d2 = parseNumericSeries(document.getElementById('dataInput2').value, labels.length).map(String);
+        const d3 = parseNumericSeries(document.getElementById('dataInput3').value, labels.length).map(String);
+        const d4 = parseNumericSeries(document.getElementById('dataInput4').value, labels.length).map(String);
 
         const tbody = document.getElementById('modalTbody'); tbody.innerHTML = '';
         let maxLen = Math.max(labels.length, d1.length, (useD2 ? d2.length : 0), (useD3 ? d3.length : 0), (useD4 ? d4.length : 0));
@@ -2937,8 +2959,8 @@ function openDataSheet() {
             document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
             document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
             document.getElementById('labelsInput').value = "'25.1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, '26.1, 2";
-            document.getElementById('dataName1').value = '계절조정 실업자'; document.getElementById('dataInput1').value = '813,827,833,813,806,792,783,816,796,804,827,976,899,877';
-            document.getElementById('dataName2').value = '계절조정 실업률'; document.getElementById('dataInput2').value = '2.8,2.8,2.8,2.7,2.7,2.7,2.7,2.8,2.7,2.7,2.8,3.3,3.0,2.9';
+            document.getElementById('dataName1').value = '계절조정 실업자'; document.getElementById('dataInput1').value = '813, 827, 833, 813, 806, 792, 783, 816, 796, 804, 827, 976, 899, 877';
+            document.getElementById('dataName2').value = '계절조정 실업률'; document.getElementById('dataInput2').value = '2.8, 2.8, 2.8, 2.7, 2.7, 2.7, 2.7, 2.8, 2.7, 2.7, 2.8, 3.3, 3.0, 2.9';
             document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'multi-combo') {
             document.getElementById('titleInput').value = '한국 에너지 자급도 추이';
@@ -3065,11 +3087,13 @@ function openDataSheet() {
         document.getElementById('chartType').value = preserveSelectedType ? currentSelectedType : mappedType;
         document.getElementById('titleInput').value = extract('[제목]');
         document.getElementById('subInput').value = extract('[부제목]');
-        document.getElementById('labelsInput').value = parseLabelSeries(extract('[X축]')).join(', ');
-        document.getElementById('dataName1').value = extract('[데이터1이름]'); document.getElementById('dataInput1').value = normalizeNumberInput(extract('[데이터1수치]'));
-        document.getElementById('dataName2').value = extract('[데이터2이름]'); document.getElementById('dataInput2').value = normalizeNumberInput(extract('[데이터2수치]'));
-        document.getElementById('dataName3').value = extract('[데이터3이름]'); document.getElementById('dataInput3').value = normalizeNumberInput(extract('[데이터3수치]'));
-        document.getElementById('dataName4').value = extract('[데이터4이름]'); document.getElementById('dataInput4').value = normalizeNumberInput(extract('[데이터4수치]'));
+        const parsedLabels = parseLabelSeries(extract('[X축]'));
+        const expectedDataCount = parsedLabels.length;
+        document.getElementById('labelsInput').value = parsedLabels.join(', ');
+        document.getElementById('dataName1').value = extract('[데이터1이름]'); document.getElementById('dataInput1').value = normalizeNumberInput(extract('[데이터1수치]'), expectedDataCount);
+        document.getElementById('dataName2').value = extract('[데이터2이름]'); document.getElementById('dataInput2').value = normalizeNumberInput(extract('[데이터2수치]'), expectedDataCount);
+        document.getElementById('dataName3').value = extract('[데이터3이름]'); document.getElementById('dataInput3').value = normalizeNumberInput(extract('[데이터3수치]'), expectedDataCount);
+        document.getElementById('dataName4').value = extract('[데이터4이름]'); document.getElementById('dataInput4').value = normalizeNumberInput(extract('[데이터4수치]'), expectedDataCount);
         document.getElementById('yMin').value = normalizeNumberInput(extract('[Y좌측최소]'));
         document.getElementById('yMax').value = normalizeNumberInput(extract('[Y좌측최대]'));
         document.getElementById('y1Min').value = normalizeNumberInput(extract('[Y우측최소]'));
@@ -3404,7 +3428,7 @@ function openDataSheet() {
         
         const labels = parseLabelSeries(document.getElementById('labelsInput').value);
         const highlightConfig = getHighlightConfig(chartType, labels);
-        const dataVals1 = parseNumericSeries(document.getElementById('dataInput1').value);
+        const dataVals1 = parseNumericSeries(document.getElementById('dataInput1').value, labels.length);
         if (chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
         if (pieSideList) {
             pieSideList.style.display = 'none';
@@ -3414,11 +3438,11 @@ function openDataSheet() {
         const name1 = document.getElementById('dataName1').value;
         let datasets = [];
 
-        const dataVals2 = document.getElementById('dataInput2') && document.getElementById('dataInput2').value ? parseNumericSeries(document.getElementById('dataInput2').value) : null;
+        const dataVals2 = document.getElementById('dataInput2') && document.getElementById('dataInput2').value ? parseNumericSeries(document.getElementById('dataInput2').value, labels.length) : null;
         const name2 = document.getElementById('dataName2') ? document.getElementById('dataName2').value : '';
-        const dataVals3 = document.getElementById('dataInput3') && document.getElementById('dataInput3').value ? parseNumericSeries(document.getElementById('dataInput3').value) : null;
+        const dataVals3 = document.getElementById('dataInput3') && document.getElementById('dataInput3').value ? parseNumericSeries(document.getElementById('dataInput3').value, labels.length) : null;
         const name3 = document.getElementById('dataName3') ? document.getElementById('dataName3').value : '';
-        const dataVals4 = document.getElementById('dataInput4') && document.getElementById('dataInput4').value ? parseNumericSeries(document.getElementById('dataInput4').value) : null;
+        const dataVals4 = document.getElementById('dataInput4') && document.getElementById('dataInput4').value ? parseNumericSeries(document.getElementById('dataInput4').value, labels.length) : null;
         const name4 = document.getElementById('dataName4') ? document.getElementById('dataName4').value : '';
 
         const palette = getActivePalette();
