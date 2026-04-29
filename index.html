@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 2.9</title>
+    <title>그래픽 보조 데스크 V 2.8</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -138,7 +138,7 @@
         .panel-sticky-header .quick-action-bar { gap: 5px; margin: 0 0 6px; }
         .panel-sticky-header .quick-btn { min-height: 31px; padding: 5px 3px; font-size: 10.5px; border-radius: 7px; }
         #undoBtn { letter-spacing: -0.03em; }
-        .control-section { scroll-margin-top: 96px; }
+        .control-section { scroll-margin-top: var(--control-scroll-offset, 150px); }
         .panel-sticky-header .history-status { margin: 0; padding: 6px 8px; font-size: 11px; line-height: 1.25; }
         .panel-sticky-header .always-apply-wrap { margin-top: 7px; }
         .panel-sticky-header #applyBtn { font-size: 13px; min-height: 38px; }
@@ -251,7 +251,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 2.9</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 2.8</h2>
 
         <div class="quick-action-bar" id="quickActionBar">
             <button type="button" class="quick-btn" id="undoBtn" onclick="undoLastChange()" title="Ctrl+Z / Command+Z">되돌리기</button>
@@ -836,6 +836,30 @@
         });
     }
 
+    function getStickyHeaderScrollOffset() {
+        const stickyHeader = document.getElementById('panelStickyHeader');
+        if (!stickyHeader) return 0;
+        const rect = stickyHeader.getBoundingClientRect();
+        const styles = window.getComputedStyle(stickyHeader);
+        const marginBottom = parseFloat(styles.marginBottom) || 0;
+        return Math.ceil(rect.height + marginBottom + 2);
+    }
+
+    function updateControlScrollOffset() {
+        const offset = getStickyHeaderScrollOffset();
+        if (offset > 0) {
+            document.documentElement.style.setProperty('--control-scroll-offset', offset + 'px');
+        }
+        return offset;
+    }
+
+    function scrollControlSectionBelowApply(section, behavior = 'smooth') {
+        if (!section) return;
+        const offset = updateControlScrollOffset();
+        const absoluteTop = section.getBoundingClientRect().top + window.pageYOffset;
+        window.scrollTo({ top: Math.max(0, absoluteTop - offset), behavior });
+    }
+
     function openQuickMenu(menuKey, options = {}) {
         const config = QUICK_MENU_CONFIG[menuKey];
         if (!config) return;
@@ -849,7 +873,7 @@
         });
         syncQuickMenuButtons(menuKey);
         if (options.scroll !== false && firstSection) {
-            firstSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            requestAnimationFrame(() => scrollControlSectionBelowApply(firstSection, 'smooth'));
         }
         if (options.highlight !== false && firstSection) {
             highlightControlSection(firstSection, options.scroll === false ? 0 : 220);
@@ -883,7 +907,7 @@
         const section = document.getElementById(sectionId);
         if (!section) return;
         section.open = true;
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        requestAnimationFrame(() => scrollControlSectionBelowApply(section, 'smooth'));
         highlightControlSection(section, 220);
     }
 
@@ -1048,6 +1072,8 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
 
         [geminiSection.details, dataEditSection.details, designSection.details, exportSection.details].forEach(bindExclusiveMenuBehavior);
         syncQuickMenuButtons('input');
+        updateControlScrollOffset();
+        window.addEventListener('resize', updateControlScrollOffset);
 
         panel.dataset.menuBuilt = 'true';
     }
