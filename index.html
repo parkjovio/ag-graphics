@@ -306,6 +306,7 @@
                 <option value="all" selected>전체 기본값: 모든 데이터에 표시</option>
                 <option value="last">전체 기본값: 맨 끝 데이터만 표시 (강조)</option>
                 <option value="none">전체 기본값: 표시 안 함 (숫자 숨김)</option>
+                <option value="selected">전체 기본값: 선택한 데이터만 표시</option>
             </select>
             <span class="help-text" style="margin-top:8px;">아래에서 데이터 묶음별로 따로 바꿀 수 있습니다. ‘전체 설정 따름’을 두면 위 기본값을 그대로 사용합니다.</span>
 
@@ -316,6 +317,7 @@
                     <option value="all">모든 데이터에 표시</option>
                     <option value="last">맨 끝 데이터만 표시 (강조)</option>
                     <option value="none">표시 안 함 (숫자 숨김)</option>
+                    <option value="selected">선택한 데이터만 표시</option>
                 </select>
             </div>
 
@@ -326,6 +328,7 @@
                     <option value="all">모든 데이터에 표시</option>
                     <option value="last">맨 끝 데이터만 표시 (강조)</option>
                     <option value="none">표시 안 함 (숫자 숨김)</option>
+                    <option value="selected">선택한 데이터만 표시</option>
                 </select>
             </div>
 
@@ -336,6 +339,7 @@
                     <option value="all">모든 데이터에 표시</option>
                     <option value="last">맨 끝 데이터만 표시 (강조)</option>
                     <option value="none">표시 안 함 (숫자 숨김)</option>
+                    <option value="selected">선택한 데이터만 표시</option>
                 </select>
             </div>
 
@@ -346,7 +350,17 @@
                     <option value="all">모든 데이터에 표시</option>
                     <option value="last">맨 끝 데이터만 표시 (강조)</option>
                     <option value="none">표시 안 함 (숫자 숨김)</option>
+                    <option value="selected">선택한 데이터만 표시</option>
                 </select>
+            </div>
+            <div id="labelTargetSelectWrap" style="display:none; margin-top:10px; border-top:1px dashed #ddd; padding-top:10px;">
+                <label id="labelTargetSelectLabel" style="margin-top:0; color:#333;">수치를 표시할 개별 데이터 선택</label>
+                <select id="labelDisplayTargets" class="label-target-select" multiple size="7" onchange="updateOutput()"></select>
+                <div class="label-target-tools">
+                    <button type="button" onclick="selectAllLabelDisplayTargets(true)">전체 선택</button>
+                    <button type="button" onclick="selectAllLabelDisplayTargets(false)">전체 해제</button>
+                </div>
+                <span class="help-text" style="margin-top:8px; margin-bottom:0;">‘선택한 데이터만 표시’를 고른 데이터 묶음에만 적용됩니다. 여러 항목 선택/해제는 Windows Ctrl, Mac Command를 누르고 클릭하세요.</span>
             </div>
         </div>
 
@@ -2528,11 +2542,14 @@
         const group = document.getElementById('labelSettingGroup');
         if (!group) return;
 
-        if (type === 'table' || type === 'list' || type === 'timeline' || type === 'pie') {
+        if (type === 'table' || type === 'list' || type === 'timeline') {
+            group.style.display = 'none';
             return;
         }
 
+        group.style.display = 'block';
         const datasetNames = getCurrentDatasetNames(type);
+        const isPie = type === 'pie';
 
         [1, 2, 3, 4].forEach(index => {
             const wrap = document.getElementById(`datasetLabelDisplayWrap${index}`);
@@ -2540,13 +2557,15 @@
             if (!wrap || !label) return;
 
             const datasetName = datasetNames[index - 1];
-            if (datasetName) {
+            if (datasetName && (!isPie || index === 1)) {
                 wrap.style.display = 'block';
                 label.innerText = `${datasetName} 수치 표시 방식`;
             } else {
                 wrap.style.display = 'none';
             }
         });
+
+        refreshLabelDisplayTargetOptions(type, datasetNames);
     }
 
     function getDatasetLabelDisplayType(datasetIndex) {
@@ -2560,6 +2579,62 @@
     function anyDatasetUsesLastDisplay(datasets) {
         if (!Array.isArray(datasets) || !datasets.length) return false;
         return datasets.some((_, index) => getDatasetLabelDisplayType(index) === 'last');
+    }
+
+    function getLabelDisplayTargetValue(datasetIndex, labelIndex) {
+        return `${datasetIndex}|${labelIndex}`;
+    }
+
+    function getSelectedLabelDisplayTargets() {
+        const select = document.getElementById('labelDisplayTargets');
+        if (!select) return new Set();
+        return new Set(Array.from(select.selectedOptions || []).map(option => option.value));
+    }
+
+    function refreshLabelDisplayTargetOptions(type, datasetNames) {
+        const wrap = document.getElementById('labelTargetSelectWrap');
+        const select = document.getElementById('labelDisplayTargets');
+        const title = document.getElementById('labelTargetSelectLabel');
+        if (!wrap || !select) return;
+
+        const labels = getCurrentLabels();
+        const dataInputs = [1, 2, 3, 4].map(index => document.getElementById(`dataInput${index}`)?.value || '');
+        const activeDatasetCount = type === 'pie' ? 1 : Math.max(1, datasetNames.length);
+        const usesSelected = [0, 1, 2, 3].some(index => index < activeDatasetCount && getDatasetLabelDisplayType(index) === 'selected');
+
+        if (!usesSelected || !labels.length) {
+            wrap.style.display = 'none';
+            return;
+        }
+
+        const previousSelected = getSelectedLabelDisplayTargets();
+        const options = [];
+        for (let datasetIndex = 0; datasetIndex < activeDatasetCount; datasetIndex++) {
+            const datasetName = datasetNames[datasetIndex] || `데이터 ${datasetIndex + 1}`;
+            const values = parseNumericSeries(dataInputs[datasetIndex], labels.length);
+            labels.forEach((label, labelIndex) => {
+                const value = values[labelIndex];
+                const valueText = value !== undefined ? ` · ${value}` : '';
+                const optionValue = getLabelDisplayTargetValue(datasetIndex, labelIndex);
+                const optionText = type === 'pie'
+                    ? `${label}${valueText}`
+                    : `${datasetName} / ${label}${valueText}`;
+                options.push({ value: optionValue, text: optionText });
+            });
+        }
+
+        select.innerHTML = options.map(option => `<option value="${escapeHtml(option.value)}"${previousSelected.has(option.value) ? ' selected' : ''}>${escapeHtml(option.text)}</option>`).join('');
+        select.size = Math.min(12, Math.max(5, options.length));
+        wrap.style.display = 'block';
+        if (title) title.innerText = type === 'pie' ? '수치를 표시할 원그래프 조각 선택' : '수치를 표시할 개별 데이터 선택';
+    }
+
+    function selectAllLabelDisplayTargets(shouldSelect) {
+        const select = document.getElementById('labelDisplayTargets');
+        if (!select) return;
+        Array.from(select.options || []).forEach(option => option.selected = !!shouldSelect);
+        updateOutput();
+        recordHistoryCheckpoint(shouldSelect ? '수치 표시 대상 전체 선택' : '수치 표시 대상 전체 해제');
     }
 
     function refreshDatasetFontControls() {
@@ -3146,8 +3221,7 @@ function openDataSheet() {
             if(document.getElementById('tableInputs')) document.getElementById('tableInputs').style.display = 'none';
             if(openSheetBtn) openSheetBtn.style.display = 'flex';
 
-            if (type === 'pie') labelSettingGroup.style.display = 'none';
-            else labelSettingGroup.style.display = 'block';
+            labelSettingGroup.style.display = 'block';
 
             if (type.includes('multi-') || type.includes('combo') || type.includes('stacked')) {
                 ds2Group.style.display = 'block'; ds3Group.style.display = 'block'; ds4Group.style.display = 'block';
@@ -3523,6 +3597,7 @@ function openDataSheet() {
         const labelDisplayTypeElem = document.getElementById('labelDisplayType');
         const labelDisplayType = labelDisplayTypeElem ? labelDisplayTypeElem.value : 'all';
         const datasetLabelDisplayTypes = datasets.map((_, index) => getDatasetLabelDisplayType(index));
+        const selectedLabelDisplayTargets = getSelectedLabelDisplayTargets();
         const hasLastDisplay = anyDatasetUsesLastDisplay(datasets);
         const isKoreanNumberElem = document.getElementById('koreanNumberType');
         const isKoreanNumber = isKoreanNumberElem ? isKoreanNumberElem.value === 'apply' : false;
@@ -3575,6 +3650,9 @@ function openDataSheet() {
                         display: function(context) {
                             const datasetDisplayType = datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType;
                             if (datasetDisplayType === 'none') return false;
+                            if (datasetDisplayType === 'selected') {
+                                if (!selectedLabelDisplayTargets.has(getLabelDisplayTargetValue(context.datasetIndex, context.dataIndex))) return false;
+                            }
                             if (normType === 'pie') {
                                 return !getPieIsOutside(context) && getPieRatio(context) > 0;
                             }
