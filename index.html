@@ -130,6 +130,9 @@
         #undoBtn:hover { border-color: #777; color: #111; background: #fff; }
         .quick-btn:disabled { opacity: 0.45; cursor: not-allowed; }
         .history-status { background: #f6f7fb; border: 1px solid #e4e6ee; border-radius: 8px; padding: 8px 10px; margin-bottom: 14px; font-size: 12px; color: #555; line-height: 1.4; }
+        .always-apply-wrap { margin: 7px 0 0; }
+        .always-apply-wrap .main-btn { margin-top: 0; padding: 10px 12px; box-shadow: 0 6px 14px rgba(230,30,43,0.20); }
+        .always-apply-hint { display: block; margin-top: 5px; font-size: 11px; color: #777; line-height: 1.25; text-align: center; word-break: keep-all; }
         .panel-sticky-header { position: sticky; top: 0; z-index: 90; background: rgba(255,255,255,0.98); backdrop-filter: blur(8px); padding: 7px 0 8px; margin: -25px 0 12px; border-bottom: 1px solid #edf0f3; box-shadow: 0 6px 14px rgba(0,0,0,0.04); }
         .panel-sticky-header h2 { margin: 0 0 7px 0; padding-bottom: 6px; font-size: 18px; line-height: 1.25; }
         .panel-sticky-header .quick-action-bar { gap: 5px; margin: 0 0 6px; }
@@ -137,6 +140,8 @@
         #undoBtn { letter-spacing: -0.03em; }
         .control-section { scroll-margin-top: 96px; }
         .panel-sticky-header .history-status { margin: 0; padding: 6px 8px; font-size: 11px; line-height: 1.25; }
+        .panel-sticky-header .always-apply-wrap { margin-top: 7px; }
+        .panel-sticky-header #applyBtn { font-size: 13px; min-height: 38px; }
         .control-section { border: 1px solid #e1e4ea; border-radius: 12px; background: #fff; margin: 12px 0; overflow: hidden; transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease; }
         .control-section:hover { border-color: #cfd6e0; }
         .control-section[open] { box-shadow: 0 3px 10px rgba(0,0,0,0.04); }
@@ -226,6 +231,9 @@
             .panel-sticky-header h2 { font-size: 17px; margin-bottom: 6px; }
             .panel-sticky-header .quick-btn { min-height: 34px; padding: 6px 4px; }
             .panel-sticky-header .history-status { font-size: 10px; padding: 5px 7px; }
+            .panel-sticky-header .always-apply-wrap { margin-top: 6px; }
+            .panel-sticky-header #applyBtn { font-size: 12px; min-height: 37px; padding: 9px 10px; }
+            .panel-sticky-header .always-apply-hint { font-size: 10px; margin-top: 4px; }
             .control-section[data-menu-key='input'] { --section-bg: #e3f0ff; --section-open-bg: #cfe3ff; --section-pill-bg: #bdd8ff; }
             .control-section[data-menu-key='dataedit'] { --section-bg: #eeeeee; --section-open-bg: #dcdcdc; --section-pill-bg: #d1d1d1; }
             .control-section[data-menu-key='design'] { --section-bg: #ffe9e9; --section-open-bg: #ffd2d2; --section-pill-bg: #ffc1c1; }
@@ -984,13 +992,31 @@
         return stickyHeader;
     }
 
+    function setupAlwaysVisibleApplyButton(stickyHeader) {
+        const applyBtn = document.getElementById('applyBtn');
+        if (!stickyHeader || !applyBtn || document.getElementById('alwaysApplyWrap')) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'always-apply-wrap';
+        wrap.id = 'alwaysApplyWrap';
+
+        const hint = document.createElement('span');
+        hint.className = 'always-apply-hint';
+        hint.textContent = '데이터를 조금씩 고친 뒤 바로 눌러 반영하세요.';
+
+        wrap.appendChild(applyBtn);
+        wrap.appendChild(hint);
+        stickyHeader.appendChild(wrap);
+    }
+
     function buildFriendlyControlMenu() {
         const panel = document.querySelector('.control-panel');
         const quickBar = document.getElementById('quickActionBar');
         if (!panel || panel.dataset.menuBuilt === 'true' || !quickBar) return;
         const stickyHeader = setupStickyControlHeader(panel, quickBar);
 
-        const geminiSection = createControlSection('sectionGemini', '1) 입력', true, 'input');
+                setupAlwaysVisibleApplyButton(stickyHeader);
+const geminiSection = createControlSection('sectionGemini', '1) 입력', true, 'input');
         const dataEditSection = createControlSection('sectionDataEdit', '2) 데이터수정', true, 'dataedit');
         const designSection = createControlSection('sectionDesign', '3) 디자인', false, 'design');
         const exportSection = createControlSection('sectionExport', '4) 저장', false, 'save');
@@ -1017,7 +1043,7 @@
             '#fontSizeSettingGroup', '#datasetLabelSizeGroup', '#datasetLabelColorGroup', '#columnWidthSettingGroup'
         ]);
         appendExisting(exportSection.body, [
-            '#applyBtn', '#favoriteSettingGroup', '#exportOptionGroup', '#downloadBtn', '#svgDownloadBtn', '#creatorFooter'
+            '#favoriteSettingGroup', '#exportOptionGroup', '#downloadBtn', '#svgDownloadBtn', '#creatorFooter'
         ]);
 
         [geminiSection.details, dataEditSection.details, designSection.details, exportSection.details].forEach(bindExclusiveMenuBehavior);
