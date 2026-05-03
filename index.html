@@ -33,6 +33,9 @@
         .modal-table th { background: #f4f4f4; font-size: 13px; color: #555;}
         .modal-table input { width: 90%; border: 1px solid #ccc; border-radius: 3px; text-align: center; padding: 6px; font-family: var(--main-font); }
         .modal-table input:focus { border-color: var(--ak-red); outline: none; background: #fffafa;}
+        .modal-table .sheet-header-input { width: 92%; border: 1px solid #cfcfcf; border-radius: 6px; background: #fff; color: #333; font-size: 14px; font-weight: 900; line-height: 1.2; padding: 8px 6px; box-sizing: border-box; }
+        .modal-table .sheet-header-input:focus { border-color: var(--ak-red); outline: 2px solid rgba(230,30,43,0.14); background: #fffafa; }
+        .modal-table .sheet-reference-header { color: #555; font-size: 13px; font-weight: 900; word-break: keep-all; }
         .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;}
         .modal-btns button { width: auto; margin: 0; padding: 10px 20px;}
 
@@ -306,18 +309,7 @@
             font-weight: 900;
             letter-spacing: -0.04em;
         }
-        #sectionDesign .data-group > label:first-child::after {
-            content: var(--design-group-tag, '설정');
-            margin-left: auto;
-            padding: 3px 8px;
-            border-radius: 999px;
-            background: var(--design-group-chip-bg);
-            color: var(--design-group-accent);
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: -0.03em;
-            white-space: nowrap;
-        }
+        #sectionDesign .data-group > label:first-child::after { content: none !important; display: none !important; }
         #sectionDesign .data-group select,
         #sectionDesign .data-group input[type="text"],
         #sectionDesign .data-group textarea {
@@ -332,17 +324,17 @@
         }
         #sectionDesign .data-group .font-size-display { color: var(--design-group-accent); }
         #sectionDesign .data-group input[type="range"] { accent-color: var(--design-group-accent); }
-        #sectionDesign #palettePresetGroup { --design-group-accent: #7c3aed; --design-group-bg: #f5f0ff; --design-group-chip-bg: #eadcff; --design-group-tag: '팔레트'; }
-        #sectionDesign #labelSettingGroup { --design-group-accent: #2563eb; --design-group-bg: #eff6ff; --design-group-chip-bg: #dbeafe; --design-group-tag: '표시'; }
-        #sectionDesign #koreanNumberGroup { --design-group-accent: #0f766e; --design-group-bg: #ecfdf5; --design-group-chip-bg: #ccfbf1; --design-group-tag: '단위'; }
-        #sectionDesign #highlightSettingGroup { --design-group-accent: #dc2626; --design-group-bg: #fff1f2; --design-group-chip-bg: #ffe4e6; --design-group-tag: '강조'; }
-        #sectionDesign #fontSizeSettingGroup { --design-group-accent: #b45309; --design-group-bg: #fffbeb; --design-group-chip-bg: #fef3c7; --design-group-tag: '전체 글자'; }
-        #sectionDesign #datasetLabelSizeGroup { --design-group-accent: #6d28d9; --design-group-bg: #f5f3ff; --design-group-chip-bg: #ede9fe; --design-group-tag: '수치 크기'; }
-        #sectionDesign #datasetLabelColorGroup { --design-group-accent: #0891b2; --design-group-bg: #ecfeff; --design-group-chip-bg: #cffafe; --design-group-tag: '수치 색상'; }
-        #sectionDesign #referenceLabelStyleGroup { --design-group-accent: #475569; --design-group-bg: #f8fafc; --design-group-chip-bg: #e2e8f0; --design-group-tag: '참고 텍스트'; }
-        #sectionDesign #axisSettingGroup { --design-group-accent: #4338ca; --design-group-bg: #eef2ff; --design-group-chip-bg: #e0e7ff; --design-group-tag: '축 범위'; }
-        #sectionDesign #columnWidthSettingGroup { --design-group-accent: #15803d; --design-group-bg: #f0fdf4; --design-group-chip-bg: #dcfce7; --design-group-tag: '열 너비'; }
-        #sectionDesign #tableColorSettingGroup { --design-group-accent: #0f766e; --design-group-bg: #ecfdf5; --design-group-chip-bg: #ccfbf1; --design-group-tag: '표 색상'; }
+        #sectionDesign #palettePresetGroup { --design-group-accent: #7c3aed; --design-group-bg: #f5f0ff; --design-group-chip-bg: #eadcff; }
+        #sectionDesign #labelSettingGroup { --design-group-accent: #2563eb; --design-group-bg: #eff6ff; --design-group-chip-bg: #dbeafe; }
+        #sectionDesign #koreanNumberGroup { --design-group-accent: #0f766e; --design-group-bg: #ecfdf5; --design-group-chip-bg: #ccfbf1; }
+        #sectionDesign #highlightSettingGroup { --design-group-accent: #dc2626; --design-group-bg: #fff1f2; --design-group-chip-bg: #ffe4e6; }
+        #sectionDesign #fontSizeSettingGroup { --design-group-accent: #b45309; --design-group-bg: #fffbeb; --design-group-chip-bg: #fef3c7; }
+        #sectionDesign #datasetLabelSizeGroup { --design-group-accent: #6d28d9; --design-group-bg: #f5f3ff; --design-group-chip-bg: #ede9fe; }
+        #sectionDesign #datasetLabelColorGroup { --design-group-accent: #0891b2; --design-group-bg: #ecfeff; --design-group-chip-bg: #cffafe; }
+        #sectionDesign #referenceLabelStyleGroup { --design-group-accent: #475569; --design-group-bg: #f8fafc; --design-group-chip-bg: #e2e8f0; }
+        #sectionDesign #axisSettingGroup { --design-group-accent: #4338ca; --design-group-bg: #eef2ff; --design-group-chip-bg: #e0e7ff; }
+        #sectionDesign #columnWidthSettingGroup { --design-group-accent: #15803d; --design-group-bg: #f0fdf4; --design-group-chip-bg: #dcfce7; }
+        #sectionDesign #tableColorSettingGroup { --design-group-accent: #0f766e; --design-group-bg: #ecfdf5; --design-group-chip-bg: #ccfbf1; }
         #sectionDesign .palette-btn.active {
             border-color: var(--design-group-accent);
             color: var(--design-group-accent);
@@ -378,7 +370,7 @@
         .inline-editable:hover { box-shadow: 0 0 0 2px rgba(230,30,43,0.12); background-color: rgba(255,255,255,0.55); }
         .inline-editable[contenteditable="true"] { outline: 2px solid var(--ak-red); background: #fff; padding: 2px 4px; }
 
-        .chart-quick-edit { position: absolute; display: none; min-width: 205px; max-width: 250px; z-index: 30; background: rgba(255,255,255,0.98); border: 2px solid var(--ak-red); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); padding: 10px; box-sizing: border-box; font-family: var(--main-font); }
+        .chart-quick-edit { position: absolute; display: none; min-width: 205px; max-width: 250px; z-index: 99999; background: #ffffff; border: 3px solid var(--ak-red); border-radius: 12px; box-shadow: 0 14px 34px rgba(0,0,0,0.28), 0 0 0 4px rgba(255,255,255,0.96); padding: 10px; box-sizing: border-box; font-family: var(--main-font); }
         .chart-quick-edit-title { font-size: 12px; color: #333; font-weight: 900; line-height: 1.35; margin-bottom: 7px; word-break: keep-all; }
         .chart-quick-edit-sub { font-size: 11px; color: #777; font-weight: 700; margin-bottom: 7px; }
         .chart-quick-edit-row { display: flex; gap: 6px; align-items: center; }
@@ -390,8 +382,14 @@
         .chart-quick-edit-help { margin-top: 6px; color: #777; font-size: 11px; line-height: 1.35; }
         .preview-editable-target { cursor: text; border-radius: 5px; transition: box-shadow 0.15s ease, background-color 0.15s ease; }
         .preview-editable-target:hover { box-shadow: 0 0 0 2px rgba(230,30,43,0.20); background-color: rgba(255,248,248,0.85); }
-        .preview-quick-edit { z-index: 45; border-color: #111; }
+        .preview-quick-edit { z-index: 100000; border-color: #111; }
         .preview-quick-edit .chart-quick-apply { background: #111; }
+
+        #chartQuickEdit, #previewQuickEdit {
+            z-index: 100000 !important;
+            background: #ffffff !important;
+            opacity: 1 !important;
+        }
         .edit-hover-hint { position: absolute; display: none; z-index: 44; pointer-events: none; background: rgba(17,17,17,0.92); color: #fff; border-radius: 999px; padding: 7px 11px; font-size: 12px; font-weight: 800; line-height: 1; box-shadow: 0 6px 18px rgba(0,0,0,0.18); white-space: nowrap; }
 
         @media screen and (max-width: 768px) {
@@ -439,7 +437,7 @@
         }
 
 
-        /* 참고 텍스트 고급 입력칸: 열기/접기 표시를 실제 열린 상태와 맞춤 */
+        /* 추가 텍스트 고급 입력칸: 열기/접기 표시를 실제 열린 상태와 맞춤 */
         .reference-advanced > summary {
             display: flex !important;
             align-items: center;
@@ -603,28 +601,28 @@
             <option value="chart-table">📊+📋 혼합그래프 + 텍스트 표 동시 출력</option>
         </select>
 
-        <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (수치·참고 텍스트)</button>
+        <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (수치·추가 텍스트)</button>
 
         <div class="data-group" id="palettePresetGroup">
             <label style="color:var(--ak-red); font-size:14px;">🎨 색상 팔레트 프리셋</label>
             <input type="hidden" id="palettePresetKey" value="asiae">
             <div class="palette-preset-grid">
                 <button type="button" class="palette-btn active" data-palette="asiae" onclick="applyPalettePreset('asiae')"><span class="palette-swatch" style="background:#E61E2B"></span>아시아경제 기본</button>
-                <button type="button" class="palette-btn" data-palette="economyBlue" onclick="applyPalettePreset('economyBlue')"><span class="palette-swatch" style="background:#1F6FEB"></span>경제 지표용</button>
-                <button type="button" class="palette-btn" data-palette="riskRed" onclick="applyPalettePreset('riskRed')"><span class="palette-swatch" style="background:#C1121F"></span>경고·위험 강조</button>
-                <button type="button" class="palette-btn" data-palette="compareGray" onclick="applyPalettePreset('compareGray')"><span class="palette-swatch" style="background:#555"></span>비교 대조용</button>
-                <button type="button" class="palette-btn" data-palette="rainbow" onclick="applyPalettePreset('rainbow')"><span class="palette-swatch" style="background:linear-gradient(135deg,#E61E2B,#F48F1F,#FFD23F,#2E8B57,#2F6BFF,#8A2BE2)"></span>무지개색 계열</button>
-                <button type="button" class="palette-btn" data-palette="monotone" onclick="applyPalettePreset('monotone')"><span class="palette-swatch" style="background:#555"></span>모노톤 계열</button>
-                <button type="button" class="palette-btn" data-palette="pastel" onclick="applyPalettePreset('pastel')"><span class="palette-swatch" style="background:linear-gradient(135deg,#FF9AA2,#FFDAC1,#B5EAD7,#C7CEEA)"></span>파스텔 계열</button>
+                <button type="button" class="palette-btn" data-palette="riskRed" onclick="applyPalettePreset('riskRed')"><span class="palette-swatch" style="background:linear-gradient(135deg,#8B0000,#C1121F,#E85D04,#F48C06)"></span>붉은색 계열</button>
+                <button type="button" class="palette-btn" data-palette="cyan" onclick="applyPalettePreset('cyan')"><span class="palette-swatch" style="background:linear-gradient(135deg,#064E3B,#15803D,#65A30D,#A3E635)"></span>초록색 계열</button>
+                <button type="button" class="palette-btn" data-palette="purple" onclick="applyPalettePreset('purple')"><span class="palette-swatch" style="background:linear-gradient(135deg,#3B0764,#7E22CE,#C026D3,#F0ABFC)"></span>보라색 계열</button>
+                <button type="button" class="palette-btn" data-palette="rainbow" onclick="applyPalettePreset('rainbow')"><span class="palette-swatch" style="background:linear-gradient(135deg,#D00000,#FF7B00,#FFD60A,#2D9D41,#0057FF,#7B2CBF)"></span>무지개색 계열</button>
+                <button type="button" class="palette-btn" data-palette="monotone" onclick="applyPalettePreset('monotone')"><span class="palette-swatch" style="background:linear-gradient(135deg,#111,#444,#888,#D9D9D9)"></span>모노톤 계열</button>
+                <button type="button" class="palette-btn" data-palette="pastel" onclick="applyPalettePreset('pastel')"><span class="palette-swatch" style="background:linear-gradient(135deg,#FF8FAB,#FFC857,#8BD3DD,#B8A1FF)"></span>파스텔 계열</button>
                 <button type="button" class="palette-btn" data-palette="deep" onclick="applyPalettePreset('deep')"><span class="palette-swatch" style="background:linear-gradient(135deg,#0B3D91,#00876C,#7B2CBF,#C1121F)"></span>딥컬러 계열</button>
-                <button type="button" class="palette-btn" data-palette="earth" onclick="applyPalettePreset('earth')"><span class="palette-swatch" style="background:linear-gradient(135deg,#7F5539,#A68A64,#588157,#BC6C25)"></span>어스톤 계열</button>
-                <button type="button" class="palette-btn" data-palette="cool" onclick="applyPalettePreset('cool')"><span class="palette-swatch" style="background:linear-gradient(135deg,#0077B6,#00B4D8,#48CAE4,#7209B7)"></span>쿨톤 계열</button>
+                <button type="button" class="palette-btn" data-palette="earth" onclick="applyPalettePreset('earth')"><span class="palette-swatch" style="background:linear-gradient(135deg,#5E3023,#BC6C25,#6A994E,#386641)"></span>어스톤 계열</button>
+                <button type="button" class="palette-btn" data-palette="cool" onclick="applyPalettePreset('cool')"><span class="palette-swatch" style="background:linear-gradient(135deg,#003566,#0077B6,#00B4D8,#7209B7)"></span>쿨톤 계열</button>
             </div>
             <span class="help-text" style="margin-top:8px; margin-bottom:0;">그래프·표 강조색을 기사 성격에 맞게 한 번에 바꿉니다.</span>
         </div>
 
         <div class="data-group" id="labelSettingGroup">
-            <label style="color:var(--ak-red); font-size:14px;">📌 수치 표시 방식</label>
+            <label style="color:var(--ak-red); font-size:14px;">📌 수치 표기 유무</label>
             <select id="labelDisplayType" onchange="updateOutput()">
                 <option value="all" selected>전체 기본값: 모든 데이터에 표시</option>
                 <option value="none">전체 기본값: 표시 안 함 (숫자 숨김)</option>
@@ -633,7 +631,7 @@
             <span class="help-text" style="margin-top:8px;">아래에서 데이터 묶음별로 따로 바꿀 수 있습니다. ‘기본값 따름’을 두면 위 기본값을 그대로 사용합니다.</span>
 
             <div id="datasetLabelDisplayWrap1" style="margin-top:8px;">
-                <label id="datasetLabelDisplayLabel1" style="margin-top:0;">데이터 1 수치 표시 방식</label>
+                <label id="datasetLabelDisplayLabel1" style="margin-top:0;">데이터 1 수치 표기 유무</label>
                 <select id="datasetLabelDisplayType1" onchange="updateOutput()">
                     <option value="follow" selected>기본값 따름</option>
                     <option value="all">모든 데이터에 표시</option>
@@ -643,7 +641,7 @@
             </div>
 
             <div id="datasetLabelDisplayWrap2" style="display:none; margin-top:8px;">
-                <label id="datasetLabelDisplayLabel2" style="margin-top:0;">데이터 2 수치 표시 방식</label>
+                <label id="datasetLabelDisplayLabel2" style="margin-top:0;">데이터 2 수치 표기 유무</label>
                 <select id="datasetLabelDisplayType2" onchange="updateOutput()">
                     <option value="follow" selected>기본값 따름</option>
                     <option value="all">모든 데이터에 표시</option>
@@ -653,7 +651,7 @@
             </div>
 
             <div id="datasetLabelDisplayWrap3" style="display:none; margin-top:8px;">
-                <label id="datasetLabelDisplayLabel3" style="margin-top:0;">데이터 3 수치 표시 방식</label>
+                <label id="datasetLabelDisplayLabel3" style="margin-top:0;">데이터 3 수치 표기 유무</label>
                 <select id="datasetLabelDisplayType3" onchange="updateOutput()">
                     <option value="follow" selected>기본값 따름</option>
                     <option value="all">모든 데이터에 표시</option>
@@ -663,7 +661,7 @@
             </div>
 
             <div id="datasetLabelDisplayWrap4" style="display:none; margin-top:8px;">
-                <label id="datasetLabelDisplayLabel4" style="margin-top:0;">데이터 4 수치 표시 방식</label>
+                <label id="datasetLabelDisplayLabel4" style="margin-top:0;">데이터 4 수치 표기 유무</label>
                 <select id="datasetLabelDisplayType4" onchange="updateOutput()">
                     <option value="follow" selected>기본값 따름</option>
                     <option value="all">모든 데이터에 표시</option>
@@ -692,7 +690,7 @@
 
 
         <div class="data-group" id="highlightSettingGroup">
-            <label style="color:var(--ak-red); font-size:14px;">📌 강조 데이터 표시</label>
+            <label style="color:var(--ak-red); font-size:14px;">📌 강조할 데이터 표시</label>
             <span class="help-text" style="font-size:11px; margin-top:2px; margin-bottom:6px; color:#777;">선택/해제는 Ctrl+클릭</span>
             <select id="highlightMode" onchange="updateOutput()">
                 <option value="none" selected>기본 스타일 유지</option>
@@ -713,7 +711,7 @@
         </div>
 
         <div class="data-group" id="fontSizeSettingGroup">
-            <label style="color:var(--ak-red); font-size:14px;">📌 표/그래프 글자 크기 미세 조절</label>
+            <label style="color:var(--ak-red); font-size:14px;">📌전체 글자 크기</label>
             <div class="slider-group">
                 <input type="range" id="globalFontSize" min="12" max="32" value="20" oninput="document.getElementById('fontSizeDisplay').innerText = this.value + 'px'; updateOutput();">
                 <span id="fontSizeDisplay" class="font-size-display">20px</span>
@@ -722,7 +720,7 @@
         </div>
 
         <div class="data-group" id="datasetLabelSizeGroup">
-            <label style="color:var(--ak-red); font-size:14px;">📌 데이터별 수치 글자 크기</label>
+            <label style="color:var(--ak-red); font-size:14px;">📌 데이터 글자 크기</label>
             <span class="help-text">그래프 위 숫자(값 라벨)만 데이터 묶음별로 따로 조절합니다.</span>
 
             <div id="datasetFontWrap1" style="margin-top:8px;">
@@ -759,7 +757,7 @@
         </div>
 
         <div class="data-group" id="datasetLabelColorGroup">
-            <label style="color:var(--ak-red); font-size:14px;">📌 데이터별 수치 글자 색상</label>
+            <label style="color:var(--ak-red); font-size:14px;">📌 데이터 글자 색상</label>
             <span class="help-text">그래프 위 숫자(값 라벨) 색상을 데이터 묶음별로 따로 지정합니다.</span>
 
             <div id="datasetColorWrap1" style="margin-top:8px;">
@@ -829,10 +827,10 @@
 
 
         <div class="data-group" id="referenceLabelStyleGroup">
-            <label style="color:var(--ak-red); font-size:14px;">📌 참고 텍스트 스타일</label>
-            <span class="reference-visible-note">(참고 텍스트 데이터가 있을 경우)</span>
-            <span class="help-text">숫자와 참고 문구가 헷갈리지 않도록 참고 텍스트 크기와 색상을 따로 조절합니다.</span>
-            <label style="margin-top:8px;">참고 텍스트 글씨 크기</label>
+            <label style="color:var(--ak-red); font-size:14px;">📌 추가 텍스트 스타일</label>
+            <span class="reference-visible-note">(추가 텍스트 데이터가 있을 경우)</span>
+            <span class="help-text">숫자와 추가 텍스트가 헷갈리지 않도록 추가 텍스트 크기와 색상을 따로 조절합니다.</span>
+            <label style="margin-top:8px;">글씨 크기</label>
             <div class="slider-group">
                 <input type="range" id="referenceFontSize" min="8" max="30" value="14" oninput="updateReferenceFontDisplay(); updateOutput();">
                 <span id="referenceFontDisplay" class="font-size-display">14px</span>
@@ -844,7 +842,7 @@
             </div>
             <div class="reference-style-row">
                 <div>
-                    <label style="margin-top:8px;">참고 텍스트 색상</label>
+                    <label style="margin-top:8px;">색상</label>
                     <select id="referenceFontColor" onchange="updateOutput()">
                         <option value="autoContrast" selected>자동: 배경 대비</option>
                         <option value="auto">자동: 분리되는 회색</option>
@@ -858,7 +856,7 @@
                     </select>
                 </div>
                 <div>
-                    <label style="margin-top:8px;">참고 텍스트 굵기</label>
+                    <label style="margin-top:8px;">굵기</label>
                     <select id="referenceFontWeight" onchange="setReferenceFontWeight(this.value)">
                         <option value="700" selected>보통 강조</option>
                         <option value="400">얇게</option>
@@ -927,6 +925,7 @@
 
 
         <div class="hidden-data-storage" aria-hidden="true">
+            <input type="hidden" id="labelHeaderNameInput" value="항목(라벨)">
             <textarea id="referenceInput1"></textarea>
             <textarea id="referenceInput2"></textarea>
             <textarea id="referenceInput3"></textarea>
@@ -1004,7 +1003,7 @@
 
     <div class="modal-overlay" id="sheetModal">
         <div class="modal-content">
-            <div class="modal-header has-help-tooltip" id="sheetModalHeader" data-help-tooltip="수치와 참고 텍스트를 한 번에 편집합니다. 표 모드에서는 셀을 클릭한 뒤 위/왼쪽 병합을 사용할 수 있습니다.">
+            <div class="modal-header has-help-tooltip" id="sheetModalHeader" data-help-tooltip="수치와 추가 텍스트를 한 번에 편집합니다. 표 모드에서는 셀을 클릭한 뒤 위/왼쪽 병합을 사용할 수 있습니다.">
                 <h3 style="margin:0;" id="sheetModalTitle">📊 데이터 시트 편집</h3>
                 <span class="sheet-mode-note" id="sheetModalNote">행을 비우면 해당 항목이 삭제됩니다.</span>
             </div>
@@ -1013,13 +1012,13 @@
                     <tr id="modalTh">
                         <th>항목(라벨)</th>
                         <th><span id="sheetName1">데이터 1</span></th>
-                        <th id="sheetRefTh1"><span id="sheetRefName1">참고 1</span></th>
+                        <th id="sheetRefTh1"><span id="sheetRefName1">추가 텍스트 1</span></th>
                         <th id="sheetTh2" style="display:none;"><span id="sheetName2">데이터 2</span></th>
-                        <th id="sheetRefTh2" style="display:none;"><span id="sheetRefName2">참고 2</span></th>
+                        <th id="sheetRefTh2" style="display:none;"><span id="sheetRefName2">추가 텍스트 2</span></th>
                         <th id="sheetTh3" style="display:none;"><span id="sheetName3">데이터 3</span></th>
-                        <th id="sheetRefTh3" style="display:none;"><span id="sheetRefName3">참고 3</span></th>
+                        <th id="sheetRefTh3" style="display:none;"><span id="sheetRefName3">추가 텍스트 3</span></th>
                         <th id="sheetTh4" style="display:none;"><span id="sheetName4">데이터 4</span></th>
-                        <th id="sheetRefTh4" style="display:none;"><span id="sheetRefName4">참고 4</span></th>
+                        <th id="sheetRefTh4" style="display:none;"><span id="sheetRefName4">추가 텍스트 4</span></th>
                     </tr>
                 </thead>
                 <tbody id="modalTbody">
@@ -1105,41 +1104,41 @@
             line: ['#111111', '#E61E2B', '#888888', '#bbbbbb'],
             pie: ['#E61E2B', '#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9']
         },
-        economyBlue: {
-            label: '경제 지표용', main: '#1F6FEB', accent: '#4FA3FF', gray1: '#6E879F', gray2: '#2F4154', light: '#A9CFFB', axis: '#3f5f7f',
-            bar: ['#1F6FEB', '#4FA3FF', '#8EC5FF', '#2F4154'],
-            line: ['#1F6FEB', '#0B3D91', '#4FA3FF', '#7B8794'],
-            pie: ['#1F6FEB', '#4FA3FF', '#8EC5FF', '#BFDFFF', '#6E879F', '#D6E9FF']
-        },
         riskRed: {
-            label: '경고·위험 강조', main: '#C1121F', accent: '#FF6B35', gray1: '#777777', gray2: '#333333', light: '#F7A072', axis: '#8a1c1c',
-            bar: ['#C1121F', '#E61E2B', '#FF6B35', '#7A0C12'],
-            line: ['#C1121F', '#111111', '#FF6B35', '#777777'],
-            pie: ['#C1121F', '#E61E2B', '#FF6B35', '#777777', '#AAAAAA', '#DDDDDD']
+            label: '붉은색 계열', main: '#C1121F', accent: '#E85D04', gray1: '#8B0000', gray2: '#5C1111', light: '#F48C06', axis: '#7A0C12',
+            bar: ['#8B0000', '#C1121F', '#E85D04', '#F48C06', '#9D0208', '#DC2F02', '#6A040F', '#FFBA08'],
+            line: ['#8B0000', '#E85D04', '#C1121F', '#F48C06', '#6A040F', '#DC2F02'],
+            pie: ['#8B0000', '#C1121F', '#E85D04', '#F48C06', '#9D0208', '#DC2F02', '#6A040F', '#FFBA08']
         },
-        compareGray: {
-            label: '비교 대조용', main: '#E61E2B', accent: '#555555', gray1: '#999999', gray2: '#222222', light: '#CFCFCF', axis: '#666666',
-            bar: ['#E61E2B', '#555555', '#AFAFAF', '#222222'],
-            line: ['#E61E2B', '#555555', '#999999', '#222222'],
-            pie: ['#E61E2B', '#555555', '#888888', '#BBBBBB', '#D6D6D6', '#EEEEEE']
+        cyan: {
+            label: '초록색 계열', main: '#15803D', accent: '#65A30D', gray1: '#064E3B', gray2: '#3F6212', light: '#A3E635', axis: '#14532D',
+            bar: ['#064E3B', '#15803D', '#65A30D', '#A3E635', '#166534', '#4D7C0F', '#22C55E', '#84CC16'],
+            line: ['#064E3B', '#65A30D', '#15803D', '#A3E635', '#166534', '#4D7C0F'],
+            pie: ['#064E3B', '#15803D', '#65A30D', '#A3E635', '#166534', '#4D7C0F', '#22C55E', '#84CC16']
+        },
+        purple: {
+            label: '보라색 계열', main: '#7E22CE', accent: '#C026D3', gray1: '#3B0764', gray2: '#581C87', light: '#F0ABFC', axis: '#4C1D95',
+            bar: ['#3B0764', '#7E22CE', '#C026D3', '#F0ABFC', '#581C87', '#9333EA', '#A21CAF', '#E879F9'],
+            line: ['#3B0764', '#C026D3', '#7E22CE', '#F0ABFC', '#581C87', '#A21CAF'],
+            pie: ['#3B0764', '#7E22CE', '#C026D3', '#F0ABFC', '#581C87', '#9333EA', '#A21CAF', '#E879F9']
         },
         rainbow: {
-            label: '무지개색 계열', main: '#E61E2B', accent: '#F48F1F', gray1: '#2F6BFF', gray2: '#2E8B57', light: '#8A2BE2', axis: '#555555',
-            bar: ['#E61E2B', '#F48F1F', '#FFD23F', '#2E8B57', '#2F6BFF', '#8A2BE2'],
-            line: ['#E61E2B', '#F48F1F', '#2E8B57', '#2F6BFF', '#8A2BE2', '#555555'],
-            pie: ['#E61E2B', '#F48F1F', '#FFD23F', '#2E8B57', '#2F6BFF', '#8A2BE2']
+            label: '무지개색 계열', main: '#D00000', accent: '#FF7B00', gray1: '#0057FF', gray2: '#2D9D41', light: '#FFD60A', axis: '#555555',
+            bar: ['#D00000', '#FF7B00', '#FFD60A', '#2D9D41', '#0057FF', '#7B2CBF', '#00B4D8', '#C9184A'],
+            line: ['#D00000', '#FF7B00', '#2D9D41', '#0057FF', '#7B2CBF', '#00B4D8'],
+            pie: ['#D00000', '#FF7B00', '#FFD60A', '#2D9D41', '#0057FF', '#7B2CBF', '#00B4D8', '#C9184A']
         },
         monotone: {
-            label: '모노톤 계열', main: '#111111', accent: '#555555', gray1: '#777777', gray2: '#333333', light: '#D9D9D9', axis: '#666666',
-            bar: ['#111111', '#333333', '#555555', '#777777', '#999999', '#BDBDBD'],
-            line: ['#111111', '#444444', '#777777', '#999999', '#BBBBBB', '#666666'],
-            pie: ['#111111', '#333333', '#555555', '#777777', '#999999', '#BDBDBD']
+            label: '모노톤 계열', main: '#111111', accent: '#555555', gray1: '#888888', gray2: '#333333', light: '#D9D9D9', axis: '#666666',
+            bar: ['#111111', '#333333', '#555555', '#777777', '#999999', '#C7C7C7', '#E0E0E0', '#000000'],
+            line: ['#111111', '#555555', '#888888', '#BBBBBB', '#333333', '#D9D9D9'],
+            pie: ['#111111', '#333333', '#555555', '#777777', '#999999', '#C7C7C7', '#E0E0E0', '#000000']
         },
         pastel: {
-            label: '파스텔 계열', main: '#FF9AA2', accent: '#FFB7B2', gray1: '#B5EAD7', gray2: '#C7CEEA', light: '#FFDAC1', axis: '#7A7A7A',
-            bar: ['#FF9AA2', '#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#D9B8FF', '#F6C6EA'],
-            line: ['#E85D75', '#F08A5D', '#57A773', '#4D96FF', '#9B5DE5', '#6C757D'],
-            pie: ['#FF9AA2', '#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#D9B8FF', '#F6C6EA']
+            label: '파스텔 계열', main: '#FF8FAB', accent: '#FFC857', gray1: '#8BD3DD', gray2: '#B8A1FF', light: '#C7F9CC', axis: '#7A7A7A',
+            bar: ['#FF8FAB', '#FFC857', '#8BD3DD', '#B8A1FF', '#C7F9CC', '#FFB4A2', '#A0C4FF', '#FFD6A5'],
+            line: ['#E85D75', '#F4A261', '#2A9D8F', '#6D5DF6', '#57A773', '#4D96FF'],
+            pie: ['#FF8FAB', '#FFC857', '#8BD3DD', '#B8A1FF', '#C7F9CC', '#FFB4A2', '#A0C4FF', '#FFD6A5']
         },
         deep: {
             label: '딥컬러 계열', main: '#0B3D91', accent: '#00876C', gray1: '#7B2CBF', gray2: '#C1121F', light: '#F4A261', axis: '#334155',
@@ -1148,16 +1147,16 @@
             pie: ['#0B3D91', '#00876C', '#7B2CBF', '#C1121F', '#F4A261', '#264653', '#2A9D8F', '#E76F51']
         },
         earth: {
-            label: '어스톤 계열', main: '#7F5539', accent: '#BC6C25', gray1: '#A68A64', gray2: '#588157', light: '#DDA15E', axis: '#5C5148',
-            bar: ['#7F5539', '#BC6C25', '#DDA15E', '#A68A64', '#588157', '#3A5A40', '#936639', '#656D4A'],
-            line: ['#7F5539', '#BC6C25', '#588157', '#3A5A40', '#936639', '#656D4A'],
-            pie: ['#7F5539', '#BC6C25', '#DDA15E', '#A68A64', '#588157', '#3A5A40', '#936639', '#656D4A']
+            label: '어스톤 계열', main: '#5E3023', accent: '#BC6C25', gray1: '#6A994E', gray2: '#386641', light: '#DDA15E', axis: '#5C5148',
+            bar: ['#5E3023', '#BC6C25', '#DDA15E', '#6A994E', '#386641', '#936639', '#A68A64', '#283618'],
+            line: ['#5E3023', '#BC6C25', '#6A994E', '#386641', '#936639', '#DDA15E'],
+            pie: ['#5E3023', '#BC6C25', '#DDA15E', '#6A994E', '#386641', '#936639', '#A68A64', '#283618']
         },
         cool: {
-            label: '쿨톤 계열', main: '#0077B6', accent: '#00B4D8', gray1: '#48CAE4', gray2: '#7209B7', light: '#90E0EF', axis: '#2B4C7E',
-            bar: ['#0077B6', '#00B4D8', '#48CAE4', '#90E0EF', '#7209B7', '#4361EE', '#3A0CA3', '#4CC9F0'],
-            line: ['#0077B6', '#4361EE', '#7209B7', '#00B4D8', '#3A0CA3', '#4CC9F0'],
-            pie: ['#0077B6', '#00B4D8', '#48CAE4', '#90E0EF', '#7209B7', '#4361EE', '#3A0CA3', '#4CC9F0']
+            label: '쿨톤 계열', main: '#003566', accent: '#00B4D8', gray1: '#0077B6', gray2: '#7209B7', light: '#90E0EF', axis: '#2B4C7E',
+            bar: ['#003566', '#0077B6', '#00B4D8', '#7209B7', '#4361EE', '#3A0CA3', '#4CC9F0', '#90E0EF'],
+            line: ['#003566', '#00B4D8', '#7209B7', '#0077B6', '#3A0CA3', '#4CC9F0'],
+            pie: ['#003566', '#0077B6', '#00B4D8', '#7209B7', '#4361EE', '#3A0CA3', '#4CC9F0', '#90E0EF']
         }
     };
     let activePaletteKey = 'asiae';
@@ -1560,15 +1559,11 @@
             '#openSheetBtn', '#chartInputs', '#tableInputs'
         ]);
         dataEditSection.body.appendChild(createPreviewEditGuideCard());
-
-        designSection.body.appendChild(createMenuSubhead('🎨 각 데이터 색상·글자 크기 조절', '데이터별 수치 글자 크기와 색상, 표/그래프 글자 크기, 팔레트 등을 조정합니다.'));
         appendExisting(designSection.body, [
             '#fontSizeSettingGroup', '#datasetLabelSizeGroup', '#datasetLabelColorGroup',
             '#labelSettingGroup', '#highlightSettingGroup', '#axisSettingGroup', '#columnWidthSettingGroup', '#tableColorSettingGroup',
             '#referenceLabelStyleGroup', '#palettePresetGroup', '#koreanNumberGroup'
         ]);
-
-        exportSection.body.appendChild(createMenuSubhead('💾 저장', '저장 배율을 고른 뒤 PNG 또는 SVG로 저장합니다.'));
         appendExisting(exportSection.body, [
             '#exportOptionGroup', '#downloadBtn', '#svgDownloadBtn', '#creatorFooter'
         ]);
@@ -3182,7 +3177,7 @@
         const input = document.getElementById('referenceFontWeight');
         if (input) input.value = normalizeReferenceFontWeight(weight);
         updateOutput();
-        recordHistoryCheckpoint(`참고 텍스트 굵기 ${getReferenceLabelFontWeight()}`);
+        recordHistoryCheckpoint(`추가 텍스트 굵기 ${getReferenceLabelFontWeight()}`);
     }
 
     function pickIndexedColor(colorValue, dataIndex) {
@@ -3308,7 +3303,7 @@
         input.value = String(size);
         updateReferenceFontDisplay();
         updateOutput();
-        recordHistoryCheckpoint(`참고 텍스트 크기 ${size}px`);
+        recordHistoryCheckpoint(`추가 텍스트 크기 ${size}px`);
     }
 
     function getReferenceInputIndexesForCurrentChart() {
@@ -3348,8 +3343,8 @@
             return total + parseReferenceSeries(input.value, expectedCount).filter(item => String(item || '').trim()).length;
         }, 0);
         summary.innerText = count
-            ? `현재 참고 텍스트 ${count}개가 입력돼 있습니다. 표로 열어 항목별로 수정할 수 있습니다.`
-            : '참고 텍스트가 없으면 숫자만 표시됩니다.';
+            ? `현재 추가 텍스트 ${count}개가 입력돼 있습니다. 표로 열어 항목별로 수정할 수 있습니다.`
+            : '추가 텍스트가 없으면 숫자만 표시됩니다.';
     }
 
     function openReferenceEditor() {
@@ -3371,7 +3366,7 @@
             return acc;
         }, {});
 
-        headRow.innerHTML = '<th class="ref-item-col">항목</th>' + indexes.map((index, i) => `<th>${escapeHtml(names[i])}<br><span style="font-size:11px; color:#777;">참고 텍스트</span></th>`).join('');
+        headRow.innerHTML = '<th class="ref-item-col">항목</th>' + indexes.map((index, i) => `<th>${escapeHtml(names[i])}<br><span style="font-size:11px; color:#777;">추가 텍스트</span></th>`).join('');
         tbody.innerHTML = '';
         for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
             const itemLabel = labels[rowIndex] || `항목 ${rowIndex + 1}`;
@@ -3414,7 +3409,7 @@
         closeReferenceEditor();
         syncReferenceEditorSummary();
         updateOutput();
-        recordHistoryCheckpoint('항목별 참고 텍스트 수정');
+        recordHistoryCheckpoint('항목별 추가 텍스트 수정');
     }
 
     function refreshReferenceStyleControls() {
@@ -3682,7 +3677,7 @@
             const datasetName = datasetNames[index - 1];
             if (datasetName && (!isPie || index === 1)) {
                 wrap.style.display = 'block';
-                label.innerHTML = `${datasetNameLabelHtml(datasetName)} 수치 표시 방식`;
+                label.innerHTML = `${datasetNameLabelHtml(datasetName)} 수치 표기 유무`;
             } else {
                 wrap.style.display = 'none';
             }
@@ -3784,7 +3779,7 @@
             const datasetName = datasetNames[index - 1];
             if (datasetName) {
                 wrap.style.display = 'block';
-                label.innerHTML = `${datasetNameLabelHtml(datasetName)} 수치 글자 크기`;
+                label.innerHTML = `${datasetNameLabelHtml(datasetName)}`;
             } else {
                 wrap.style.display = 'none';
             }
@@ -3820,7 +3815,7 @@
             const datasetName = datasetNames[index - 1];
             if (datasetName) {
                 wrap.style.display = 'block';
-                label.innerHTML = `${datasetNameLabelHtml(datasetName)} 수치 글자 색상`;
+                label.innerHTML = `${datasetNameLabelHtml(datasetName)}`;
             } else {
                 wrap.style.display = 'none';
             }
@@ -4191,9 +4186,10 @@ function isTextSheetType(type) {
         const dataColumns = Array.from({ length: activeCount }, () => []);
         const referenceColumns = Array.from({ length: activeCount }, () => []);
         const sheetNames = [];
+        const labelHeaderName = document.getElementById('labelHeaderNameInput')?.value || '항목(라벨)';
 
         document.querySelectorAll('#modalTh th[data-sheet-role="data"]').forEach(th => {
-            sheetNames.push(th.dataset.rawName || '');
+            sheetNames.push(getEditableSheetDatasetName(th));
         });
         while (sheetNames.length < activeCount) sheetNames.push('');
 
@@ -4205,7 +4201,26 @@ function isTextSheetType(type) {
             }
         });
 
-        return { labels, dataColumns, referenceColumns, sheetNames, activeCount };
+        return { labels, dataColumns, referenceColumns, sheetNames, labelHeaderName, activeCount };
+    }
+
+    function getEditableSheetDatasetName(th) {
+        if (!th) return '';
+        const index = Number(th.dataset.series || 0);
+        const input = th.querySelector('.sheet-dataset-name-input');
+        const value = (input ? input.value : th.dataset.rawName || '').trim();
+        const defaultName = index ? `데이터 ${index}` : '';
+        const hadRawName = (th.dataset.rawName || '').trim() !== '';
+        if (!hadRawName && value === defaultName) return '';
+        return value;
+    }
+
+    function syncChartSheetHeaderName(index, value) {
+        const th = document.querySelector(`#modalTh th[data-sheet-role="data"][data-series="${index}"]`);
+        const cleanValue = String(value || '').trim();
+        if (th) th.dataset.rawName = cleanValue;
+        const referenceLabel = document.getElementById(`sheetRefName${index}`);
+        if (referenceLabel) referenceLabel.textContent = `${cleanValue || `데이터 ${index}`} 추가 텍스트`;
     }
 
     function bindChartSheetCell(input) {
@@ -4217,6 +4232,9 @@ function isTextSheetType(type) {
 
     function bindAllChartSheetCells() {
         document.querySelectorAll('#modalTbody input').forEach(bindChartSheetCell);
+        document.querySelectorAll('#modalTh input').forEach(input => {
+            input.addEventListener('focus', () => { selectedSheetCell = null; });
+        });
         refreshChartSheetRowIndexes();
     }
 
@@ -4238,7 +4256,7 @@ function isTextSheetType(type) {
             const dataColumn = dataColumns[index - 1] || [];
             const referenceColumn = referenceColumns[index - 1] || [];
             rowHtml += `<td><input type="text" class="grid-d${index}" data-role="data" data-series="${index}" value="${dataColumn[rowIndex] !== undefined ? escapeHtml(dataColumn[rowIndex]) : ''}"></td>`;
-            rowHtml += `<td><input type="text" class="grid-r${index}" data-role="reference" data-series="${index}" placeholder="${index === 1 ? '예: (1085조원)' : '참고'}" value="${referenceColumn[rowIndex] !== undefined ? escapeHtml(referenceColumn[rowIndex]) : ''}"></td>`;
+            rowHtml += `<td><input type="text" class="grid-r${index}" data-role="reference" data-series="${index}" placeholder="${index === 1 ? '예: (1085조원)' : '추가내용'}" value="${referenceColumn[rowIndex] !== undefined ? escapeHtml(referenceColumn[rowIndex]) : ''}"></td>`;
         }
         return rowHtml;
     }
@@ -4249,12 +4267,13 @@ function isTextSheetType(type) {
         const modal = document.getElementById('sheetModal');
         if (modal) modal.dataset.activeDatasetCount = String(state.activeCount);
 
-        const headerCells = ['<th>항목(라벨)</th>'];
+        const labelHeaderName = state.labelHeaderName || document.getElementById('labelHeaderNameInput')?.value || '항목(라벨)';
+        const headerCells = [`<th>${escapeHtml(labelHeaderName)}</th>`];
         for (let index = 1; index <= state.activeCount; index++) {
             const rawName = state.sheetNames?.[index - 1] || '';
             const displayName = rawName || `데이터 ${index}`;
-            headerCells.push(`<th data-sheet-role="data" data-series="${index}" data-raw-name="${escapeHtml(rawName)}"><span id="sheetName${index}">${escapeHtml(displayName)}</span></th>`);
-            headerCells.push(`<th data-sheet-role="reference" data-series="${index}" data-raw-name="${escapeHtml(rawName)}"><span id="sheetRefName${index}">${escapeHtml(displayName)} 참고</span></th>`);
+            headerCells.push(`<th data-sheet-role="data" data-series="${index}" data-raw-name="${escapeHtml(rawName)}"><input type="text" class="sheet-header-input sheet-dataset-name-input" id="sheetName${index}" data-series="${index}" value="${escapeHtml(displayName)}" placeholder="데이터 ${index}" oninput="syncChartSheetHeaderName(${index}, this.value)"></th>`);
+            headerCells.push(`<th data-sheet-role="reference" data-series="${index}" data-raw-name="${escapeHtml(rawName)}"><span class="sheet-reference-header" id="sheetRefName${index}">${escapeHtml(displayName)} 추가 텍스트</span></th>`);
         }
         document.getElementById('modalTh').innerHTML = headerCells.join('');
 
@@ -4289,20 +4308,21 @@ function isTextSheetType(type) {
         const title = document.getElementById('sheetModalTitle');
         const note = document.getElementById('sheetModalNote');
         if (title) title.textContent = '📊 데이터 시트 편집';
-        if (note) note.textContent = '수치와 참고 텍스트를 한 번에 편집합니다. 빈 행은 저장 시 제거되고, 선택한 행/열은 삭제할 수 있습니다.';
+        if (note) note.textContent = '수치와 추가 텍스트를 한 번에 편집합니다. 맨 위 제목 셀에서 데이터명도 수정할 수 있습니다. 빈 행은 저장 시 제거되고, 선택한 행/열은 삭제할 수 있습니다.';
 
         const activeCount = getChartSheetActiveCount(type);
         const labels = parseLabelSeries(document.getElementById('labelsInput').value);
         const dataColumns = [];
         const referenceColumns = [];
         const sheetNames = [];
+        const labelHeaderName = document.getElementById('labelHeaderNameInput')?.value || '항목(라벨)';
         for (let index = 1; index <= activeCount; index++) {
             dataColumns.push(parseNumericSeries(document.getElementById(`dataInput${index}`)?.value || '', labels.length).map(String));
             referenceColumns.push(parseReferenceSeries(document.getElementById(`referenceInput${index}`)?.value || '', labels.length));
             sheetNames.push(document.getElementById(`dataName${index}`)?.value || '');
         }
 
-        renderChartDataSheetFromState({ labels, dataColumns, referenceColumns, sheetNames, activeCount }, type);
+        renderChartDataSheetFromState({ labels, dataColumns, referenceColumns, sheetNames, labelHeaderName, activeCount }, type);
         document.getElementById('sheetModal').style.display = 'flex';
     }
 
@@ -4461,8 +4481,11 @@ function isTextSheetType(type) {
         const dataColumns = Array.from({ length: activeCount }, () => []);
         const referenceColumns = Array.from({ length: activeCount }, () => []);
         const sheetNames = [];
+        const labelHeaderName = document.getElementById('labelHeaderNameInput')?.value || '항목(라벨)';
+        const labelHeaderStorage = document.getElementById('labelHeaderNameInput');
+        if (labelHeaderStorage) labelHeaderStorage.value = labelHeaderName;
         document.querySelectorAll('#modalTh th[data-sheet-role="data"]').forEach(th => {
-            sheetNames.push(th.dataset.rawName || '');
+            sheetNames.push(getEditableSheetDatasetName(th));
         });
         while (sheetNames.length < activeCount) sheetNames.push('');
 
@@ -4778,7 +4801,7 @@ function isTextSheetType(type) {
             if (type === 'table') openSheetBtn.textContent = '📋 데이터 시트 편집 (텍스트표)';
             else if (type === 'list') openSheetBtn.textContent = '📝 데이터 시트 편집 (리스트)';
             else if (type === 'timeline') openSheetBtn.textContent = '⏳ 데이터 시트 편집 (타임라인)';
-            else openSheetBtn.textContent = '📊 데이터 시트 편집 (수치·참고 텍스트)';
+            else openSheetBtn.textContent = '📊 데이터 시트 편집 (수치·추가 텍스트)';
         }
 
         refreshHighlightControls();
@@ -5345,7 +5368,7 @@ function isTextSheetType(type) {
             if (isHorizontal && !(isStacked && context.dataset.type === 'bar')) {
                 return Math.max(8, Math.round(refSize * 0.45));
             }
-            // 숫자는 바깥쪽, 참고 텍스트는 조금 안쪽에 배치해 두 줄의 위계를 만듭니다.
+            // 숫자는 바깥쪽, 추가 텍스트는 조금 안쪽에 배치해 두 줄의 위계를 만듭니다.
             return Math.max(0, baseOffset - 2);
         }
 
