@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 2.8</title>
+    <title>그래픽 보조 데스크 V 3.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -62,6 +62,11 @@
         .header-line { border-top: 3px solid #000; margin-bottom: 12px; }
         .chart-title { font-size: 32px; font-weight: 900; margin: 0 0 5px 0; letter-spacing: -1px; color: #111; display: inline-block; vertical-align: middle;}
         .chart-subtitle { font-size: 18px; font-weight: normal; margin-left: 8px; letter-spacing: -0.5px; color: #555; display: inline-block; vertical-align: baseline; line-height: 1.4; word-break: keep-all;}
+        #displayTitle.inline-placeholder, #displaySub.inline-placeholder { color: #8a8a8a; border: 1px dashed #d9d9d9; border-radius: 8px; background: #fafafa; cursor: text; }
+        #displayTitle.inline-placeholder { font-size: 22px; font-weight: 800; padding: 9px 12px; margin-bottom: 6px; }
+        #displaySub.inline-placeholder { font-size: 14px; font-weight: 700; padding: 6px 10px; margin-left: 0; }
+        #displayTitle.inline-placeholder:hover, #displaySub.inline-placeholder:hover { color: var(--ak-red); border-color: rgba(230,30,43,0.35); background: #fff8f8; }
+        #displayTitle.inline-placeholder[contenteditable="true"], #displaySub.inline-placeholder[contenteditable="true"] { color: #111; border-style: solid; background: #fff; }
         
         #chart-container { height: 420px; margin-top: 0px; flex-shrink: 0; transition: none; position: relative;}
         #pie-side-list { display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 210px; z-index: 5; }
@@ -76,6 +81,28 @@
         .pie-side-value { cursor: ns-resize; }
         .pie-side-label:hover { box-shadow: 0 0 0 2px rgba(17,17,17,0.14); background: rgba(255,255,255,0.88); }
         .pie-side-value:hover { box-shadow: 0 0 0 2px rgba(230,30,43,0.22); background: rgba(255,248,248,0.95); }
+
+        .pie-side-ref { color: #777; font-size: 0.78em; font-weight: 700; line-height: 1.22; margin-top: 2px; opacity: 1; }
+        .reference-advanced { margin-top: 9px; border: 1px dashed #d6d6d6; border-radius: 8px; background: #fff; overflow: hidden; }
+        .reference-advanced summary { cursor: pointer; padding: 8px 10px; font-size: 12px; font-weight: 900; color: #555; background: #fafafa; }
+        .reference-advanced-body { padding: 10px; }
+        .reference-editor-card { background: #fff8f8; border: 1px solid #ffd6d6; }
+        .btn-reference-editor { background: #111; color: white; margin-top: 8px; border: none; padding: 11px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 900; font-family: var(--main-font); }
+        .btn-reference-editor:hover { background: var(--ak-red); }
+        .reference-summary { margin-top: 8px; padding: 8px 10px; background: #fff; border: 1px solid #eee; border-radius: 7px; font-size: 12px; color: #666; line-height: 1.45; word-break: keep-all; }
+        .reference-style-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
+        .reference-style-row label { margin-top: 8px; }
+        .reference-style-color-note { font-size: 11px; color: #777; line-height: 1.35; margin-top: 4px; display: block; }
+        .reference-size-preset-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 7px 0 5px; }
+        .reference-size-preset-row button { border: 1px solid #ddd; background: #fff; color: #333; border-radius: 7px; padding: 7px 4px; cursor: pointer; font-family: var(--main-font); font-size: 11px; font-weight: 900; }
+        .reference-size-preset-row button:hover { border-color: var(--ak-red); color: var(--ak-red); background: #fff8f8; }
+        .reference-modal-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .reference-modal-table th, .reference-modal-table td { border: 1px solid #ddd; padding: 7px; text-align: center; vertical-align: middle; }
+        .reference-modal-table th { background: #f6f7fb; font-size: 12px; color: #333; font-weight: 900; }
+        .reference-modal-table .ref-item-col { width: 22%; background: #fffafa; color: #111; font-weight: 900; word-break: keep-all; }
+        .reference-modal-table input { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; padding: 8px 7px; text-align: center; font-family: var(--main-font); font-size: 13px; }
+        .reference-modal-table input:focus { border-color: var(--ak-red); outline: 2px solid rgba(230,30,43,0.15); background: #fff; }
+        .reference-modal-help { font-size: 12px; color: #666; line-height: 1.45; margin: 8px 0 14px; word-break: keep-all; }
         #table-container { display: none; margin-top: 5px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
         
         /* 일반 엑셀 표 */
@@ -104,15 +131,76 @@
         
         .help-text { font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px; display: block; line-height: 1.4;}
 
+
+        /* 데이터 입력은 데이터 시트 모달로만 처리: 하단 별도 기입란 숨김 */
+        #chartInputs, #tableInputs, .hidden-data-storage,
+        #textSettingGroup, #footnoteSettingGroup, #reporterSettingGroup { display: none !important; }
+        .preview-edit-guide-card {
+            margin: 12px 0 0;
+            padding: 13px 14px;
+            border-radius: 12px;
+            border: 1px solid #e1e4ea;
+            background: #f8f9fb;
+            color: #222;
+            font-size: 13px;
+            line-height: 1.55;
+            font-weight: 800;
+            word-break: keep-all;
+            letter-spacing: -0.02em;
+        }
+        .preview-edit-guide-card strong {
+            color: var(--ak-red);
+            font-weight: 900;
+        }
+        .preview-edit-guide-card .guide-sub {
+            display: block;
+            margin-top: 4px;
+            color: #666;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .sheet-tool-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 20px; }
+        .sheet-tool-row button { cursor: pointer; border: none; padding: 8px 12px; color: white; border-radius: 4px; font-size: 12px; font-weight: 900; font-family: var(--main-font); }
+        .sheet-tool-row .btn-add-row { background:#555; }
+        .sheet-tool-row .btn-add-col { background:#333; }
+        .sheet-tool-row .btn-merge { background:#0056b3; }
+        .sheet-tool-row .btn-unmerge { background:#777; }
+        .sheet-tool-row .btn-merge:hover { background:#004494; }
+        .modal-table td.active-cell input { outline: 3px solid rgba(230,30,43,0.28); border-color: var(--ak-red); background: #fffafa; }
+        .modal-table input.merge-token { color: transparent; text-shadow: 0 0 0 #999; background: repeating-linear-gradient(135deg, #fafafa, #fafafa 6px, #f0f0f0 6px, #f0f0f0 12px); }
+        .sheet-mode-note { font-size: 12px; color:#666; font-weight: normal; line-height: 1.35; display: block; margin-top: 4px; word-break: keep-all; }
+
         #displayFootnote { font-size: 14px; color: #111; margin-top: 5px; text-align: left; letter-spacing: -0.5px; display: none; font-family: var(--main-font); line-height: 1.4; font-weight: 500;}
+        #displayFootnote.footnote-placeholder {
+            display: block;
+            color: #8a8a8a;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 7px 9px;
+            border: 1px dashed #d9d9d9;
+            border-radius: 8px;
+            background: #fafafa;
+            cursor: text;
+        }
+        #displayFootnote.footnote-placeholder:hover {
+            color: var(--ak-red);
+            border-color: rgba(230,30,43,0.35);
+            background: #fff8f8;
+        }
+        #displayFootnote.footnote-placeholder[contenteditable="true"] {
+            color: #111;
+            font-size: 14px;
+            font-weight: 500;
+            background: #fff;
+        }
 
         .footer-watermark { display: flex; justify-content: flex-end; align-items: center; margin-top: 20px; font-size: 18px; font-weight: bold; color: #111; flex-shrink: 0; font-family: var(--main-font); border-top: 1px solid #eee; padding-top: 15px;}
         .as_logo_img { height: 32px; margin-left: 8px; width: auto; }
 
 
         /* 사용자 친화형 단계 메뉴 + 신규 기능 UI */
-        .quick-action-bar { display: grid; grid-template-columns: 0.82fr 0.86fr 1.18fr 0.9fr 0.82fr; gap: 6px; margin: -6px 0 10px; }
-        .quick-btn { border: 1px solid #ddd; background: #fff; color: #333; padding: 8px 4px; border-radius: 8px; cursor: pointer; font-weight: 800; font-family: var(--main-font); font-size: 11px; line-height: 1.1; min-height: 36px; word-break: keep-all; white-space: nowrap; text-align: center; letter-spacing: -0.01em; }
+        .quick-action-bar { display: grid; grid-template-columns: 0.76fr 0.86fr 1.05fr 0.78fr 0.76fr; gap: 5px; margin: -6px 0 10px; align-items: stretch; }
+        .quick-btn { border: 1px solid #ddd; background: #fff; color: #333; padding: 8px 3px; border-radius: 8px; cursor: pointer; font-weight: 800; font-family: var(--main-font); font-size: 10.5px; line-height: 1.1; min-height: 36px; word-break: keep-all; white-space: nowrap; text-align: center; letter-spacing: -0.04em; min-width: 0; }
         .quick-btn { position: relative; overflow: hidden; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease; }
         .quick-btn::before { content: ''; position: absolute; left: 8px; right: 8px; top: 4px; height: 3px; border-radius: 999px; background: currentColor; opacity: 0; transition: opacity 0.15s ease; }
         .quick-btn:hover { border-color: var(--ak-red); color: var(--ak-red); background: #fff8f8; }
@@ -133,10 +221,16 @@
         .always-apply-wrap { margin: 7px 0 0; }
         .always-apply-wrap .main-btn { margin-top: 0; padding: 10px 12px; box-shadow: 0 6px 14px rgba(230,30,43,0.20); }
         .always-apply-hint { display: block; margin-top: 5px; font-size: 11px; color: #777; line-height: 1.25; text-align: center; word-break: keep-all; }
+        .chart-type-tip { margin: 8px 0 4px; padding: 9px 10px; border-radius: 9px; background: #fff; border: 1px solid #e5e7ec; color: #555; font-size: 12px; line-height: 1.45; word-break: keep-all; }
+        .chart-type-tip .tip-pill { display: inline-block; margin-right: 5px; padding: 2px 7px; border-radius: 999px; background: #111; color: #fff; font-size: 10px; font-weight: 900; vertical-align: 1px; }
+        .compact-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .compact-action-grid button { margin-top: 0; }
+        .mode-helper-card { margin-top: 2px; padding: 9px 10px; border-radius: 9px; background: #f7f8fc; border: 1px solid #eceef5; font-size: 11px; line-height: 1.5; color: #666; }
+        .mode-helper-card strong { color: #111; }
         .panel-sticky-header { position: sticky; top: 0; z-index: 90; background: rgba(255,255,255,0.98); backdrop-filter: blur(8px); padding: 7px 0 8px; margin: -25px 0 12px; border-bottom: 1px solid #edf0f3; box-shadow: 0 6px 14px rgba(0,0,0,0.04); }
         .panel-sticky-header h2 { margin: 0 0 7px 0; padding-bottom: 6px; font-size: 18px; line-height: 1.25; }
         .panel-sticky-header .quick-action-bar { gap: 5px; margin: 0 0 6px; }
-        .panel-sticky-header .quick-btn { min-height: 31px; padding: 5px 3px; font-size: 10.5px; border-radius: 7px; }
+        .panel-sticky-header .quick-btn { min-height: 31px; padding: 5px 2px; font-size: 10px; border-radius: 7px; letter-spacing: -0.05em; }
         #undoBtn { letter-spacing: -0.03em; }
         .control-section { scroll-margin-top: var(--control-scroll-offset, 150px); }
         .panel-sticky-header .history-status { margin: 0; padding: 6px 8px; font-size: 11px; line-height: 1.25; }
@@ -145,27 +239,28 @@
         .control-section { border: 1px solid #e1e4ea; border-radius: 12px; background: #fff; margin: 12px 0; overflow: hidden; transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease; }
         .control-section:hover { border-color: #cfd6e0; }
         .control-section[open] { box-shadow: 0 3px 10px rgba(0,0,0,0.04); }
-        .control-section summary { list-style: none; cursor: pointer; padding: 13px 14px 13px 16px; font-weight: 900; color: #222; background: #f8f9fb; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-left: 6px solid transparent; transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease; }
-        .control-section summary::-webkit-details-marker { display: none; }
-        .control-section summary::after { content: '펼치기'; font-size: 11px; color: #777; font-weight: 800; padding: 4px 9px; border-radius: 999px; background: rgba(0,0,0,0.05); transition: background-color 0.18s ease, color 0.18s ease; }
-        .control-section[open] summary::after { content: '접기'; color: var(--ak-red); }
+        .control-section > summary { list-style: none; cursor: pointer; padding: 13px 14px 13px 16px; font-weight: 900; color: #222; background: #f8f9fb; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-left: 6px solid transparent; transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease; }
+        .control-section > summary::-webkit-details-marker { display: none; }
+        .control-section > summary::after { content: '열기'; font-size: 11px; color: #777; font-weight: 800; padding: 4px 9px; border-radius: 999px; background: rgba(0,0,0,0.05); transition: background-color 0.18s ease, color 0.18s ease; }
+        .control-section[open] > summary::after { content: '접기'; color: var(--ak-red); }
         .control-section[data-menu-key='input'] { --section-accent: #0056b3; --section-bg: #f0f6ff; --section-open-bg: #e2efff; --section-pill-bg: #dcebff; }
         .control-section[data-menu-key='dataedit'] { --section-accent: #111111; --section-bg: #f5f5f5; --section-open-bg: #ededed; --section-pill-bg: #e2e2e2; }
         .control-section[data-menu-key='design'] { --section-accent: var(--ak-red); --section-bg: #fff4f4; --section-open-bg: #ffeaea; --section-pill-bg: #ffdcdc; }
+        .control-section[data-menu-key='advanced'] { --section-accent: #6b7280; --section-bg: #f5f6f8; --section-open-bg: #eceef2; --section-pill-bg: #dfe3ea; }
         .control-section[data-menu-key='save'] { --section-accent: #2E7D32; --section-bg: #f1fbf2; --section-open-bg: #e4f7e7; --section-pill-bg: #d3efd8; }
-        .control-section[data-menu-key] summary { color: var(--section-accent); background: var(--section-bg); border-left-color: var(--section-accent); }
-        .control-section[data-menu-key] summary::after { color: var(--section-accent); background: var(--section-pill-bg); }
+        .control-section[data-menu-key] > summary { color: var(--section-accent); background: var(--section-bg); border-left-color: var(--section-accent); }
+        .control-section[data-menu-key] > summary::after { color: var(--section-accent); background: var(--section-pill-bg); }
         .control-section[data-menu-key][open] { border-color: var(--section-accent); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
-        .control-section[data-menu-key][open] summary { background: var(--section-open-bg); }
-        .control-section[data-menu-key='input'][open] summary::after,
-        .control-section[data-menu-key='dataedit'][open] summary::after,
-        .control-section[data-menu-key='design'][open] summary::after,
-        .control-section[data-menu-key='save'][open] summary::after { color: var(--section-accent); }
+        .control-section[data-menu-key][open] > summary { background: var(--section-open-bg); }
+        .control-section[data-menu-key='input'][open] > summary::after,
+        .control-section[data-menu-key='dataedit'][open] > summary::after,
+        .control-section[data-menu-key='design'][open] > summary::after,
+        .control-section[data-menu-key='save'][open] > summary::after { color: var(--section-accent); }
         .control-section-title { display: inline-flex; align-items: center; gap: 8px; min-width: 0; line-height: 1.2; }
         .control-section-icon { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; background: var(--section-accent, #777); font-size: 13px; box-shadow: 0 3px 8px rgba(0,0,0,0.14); }
         .control-section-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .control-section.section-attention { animation: sectionAttention 1.05s ease; }
-        .control-section.section-attention summary { animation: sectionSummaryAttention 1.05s ease; }
+        .control-section.section-attention > summary { animation: sectionSummaryAttention 1.05s ease; }
         @keyframes sectionAttention {
             0% { transform: translateY(0); box-shadow: 0 3px 10px rgba(0,0,0,0.04); }
             28% { transform: translateY(-2px); box-shadow: 0 0 0 4px var(--section-pill-bg), 0 10px 24px rgba(0,0,0,0.13); border-color: var(--section-accent); }
@@ -184,6 +279,72 @@
         .menu-subhead:not(:first-child) { margin-top: 16px; }
         .menu-subhead-title { font-size: 13px; font-weight: 900; color: #222; display: flex; align-items: center; gap: 6px; letter-spacing: -0.02em; }
         .menu-subhead-desc { margin-top: 3px; font-size: 11px; color: #777; line-height: 1.35; word-break: keep-all; }
+        /* 디자인 메뉴: 기능별 박스를 색상·라벨 톤으로 구분해 빠르게 찾을 수 있게 함 */
+        #sectionDesign .data-group {
+            --design-group-accent: var(--ak-red);
+            --design-group-bg: #fff8f8;
+            --design-group-chip-bg: #ffe5e7;
+            position: relative;
+            border: 1px solid color-mix(in srgb, var(--design-group-accent) 26%, #d8dde6);
+            border-left: 6px solid var(--design-group-accent);
+            background: linear-gradient(135deg, var(--design-group-bg) 0%, #fff 72%);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(16,24,40,0.05);
+        }
+        #sectionDesign .data-group + .data-group { margin-top: 12px; }
+        #sectionDesign .data-group > label:first-child {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 0 !important;
+            margin-bottom: 9px;
+            color: var(--design-group-accent) !important;
+            font-size: 14px !important;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+        }
+        #sectionDesign .data-group > label:first-child::after {
+            content: var(--design-group-tag, '설정');
+            margin-left: auto;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: var(--design-group-chip-bg);
+            color: var(--design-group-accent);
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            white-space: nowrap;
+        }
+        #sectionDesign .data-group select,
+        #sectionDesign .data-group input[type="text"],
+        #sectionDesign .data-group textarea {
+            border-color: color-mix(in srgb, var(--design-group-accent) 22%, #d4d8e0);
+            background-color: rgba(255,255,255,0.92);
+        }
+        #sectionDesign .data-group select:focus,
+        #sectionDesign .data-group input[type="text"]:focus,
+        #sectionDesign .data-group textarea:focus {
+            outline: 2px solid color-mix(in srgb, var(--design-group-accent) 18%, transparent);
+            border-color: var(--design-group-accent);
+        }
+        #sectionDesign .data-group .font-size-display { color: var(--design-group-accent); }
+        #sectionDesign .data-group input[type="range"] { accent-color: var(--design-group-accent); }
+        #sectionDesign #palettePresetGroup { --design-group-accent: #7c3aed; --design-group-bg: #f5f0ff; --design-group-chip-bg: #eadcff; --design-group-tag: '팔레트'; }
+        #sectionDesign #labelSettingGroup { --design-group-accent: #2563eb; --design-group-bg: #eff6ff; --design-group-chip-bg: #dbeafe; --design-group-tag: '표시'; }
+        #sectionDesign #koreanNumberGroup { --design-group-accent: #0f766e; --design-group-bg: #ecfdf5; --design-group-chip-bg: #ccfbf1; --design-group-tag: '단위'; }
+        #sectionDesign #highlightSettingGroup { --design-group-accent: #dc2626; --design-group-bg: #fff1f2; --design-group-chip-bg: #ffe4e6; --design-group-tag: '강조'; }
+        #sectionDesign #fontSizeSettingGroup { --design-group-accent: #b45309; --design-group-bg: #fffbeb; --design-group-chip-bg: #fef3c7; --design-group-tag: '전체 글자'; }
+        #sectionDesign #datasetLabelSizeGroup { --design-group-accent: #6d28d9; --design-group-bg: #f5f3ff; --design-group-chip-bg: #ede9fe; --design-group-tag: '수치 크기'; }
+        #sectionDesign #datasetLabelColorGroup { --design-group-accent: #0891b2; --design-group-bg: #ecfeff; --design-group-chip-bg: #cffafe; --design-group-tag: '수치 색상'; }
+        #sectionDesign #referenceLabelStyleGroup { --design-group-accent: #475569; --design-group-bg: #f8fafc; --design-group-chip-bg: #e2e8f0; --design-group-tag: '참고 텍스트'; }
+        #sectionDesign #axisSettingGroup { --design-group-accent: #4338ca; --design-group-bg: #eef2ff; --design-group-chip-bg: #e0e7ff; --design-group-tag: '축 범위'; }
+        #sectionDesign #columnWidthSettingGroup { --design-group-accent: #15803d; --design-group-bg: #f0fdf4; --design-group-chip-bg: #dcfce7; --design-group-tag: '열 너비'; }
+        #sectionDesign .palette-btn.active {
+            border-color: var(--design-group-accent);
+            color: var(--design-group-accent);
+            background: var(--design-group-chip-bg);
+        }
         .parse-summary { margin-top: 8px; padding: 9px 10px; border-radius: 7px; background: #ffffff; border: 1px dashed #8fb8f5; color: #245a9f; font-size: 12px; line-height: 1.45; }
         .parse-summary.ok { background: #f0fff5; border-color: #7ac794; color: #1d6b37; }
         .parse-summary.warn { background: #fff8e6; border-color: #f0bf58; color: #8a5b00; }
@@ -192,9 +353,6 @@
         .palette-btn { border: 1px solid #ddd; background: #fff; color: #333; border-radius: 8px; padding: 9px 8px; cursor: pointer; font-family: var(--main-font); font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 7px; justify-content: flex-start; }
         .palette-btn:hover, .palette-btn.active { border-color: var(--ak-red); background: #fff8f8; color: var(--ak-red); }
         .palette-swatch { display: inline-block; width: 13px; height: 13px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12); flex-shrink: 0; }
-        .favorite-btn-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 7px; }
-        .favorite-btn-row button { border: none; background: #444; color: #fff; border-radius: 7px; padding: 9px 5px; cursor: pointer; font-weight: 800; font-family: var(--main-font); }
-        .favorite-btn-row button:hover { background: #111; }
         .btn-download-svg { background: #555; }
         .btn-download-svg:hover { background: #222; }
         .inline-editable { cursor: text; border-radius: 4px; transition: box-shadow 0.15s ease, background-color 0.15s ease; }
@@ -219,39 +377,172 @@
 
         @media screen and (max-width: 768px) {
             body { flex-direction: column; padding: 10px; gap: 15px; }
-            .control-panel { width: 100%; padding: 20px; }
+            .control-panel { width: 100%; padding: 16px; border-radius: 12px; }
+            .panel-sticky-header { margin: -16px 0 10px; padding: 8px 0 9px; }
+            .panel-sticky-header h2 { font-size: 17px; }
+            .control-section { margin: 10px 0; border-radius: 14px; }
+            .control-section > summary { min-height: 46px; padding: 12px 12px; }
+            .control-section-body { padding: 11px; }
+            .menu-subhead { padding: 8px 9px; margin-bottom: 8px; }
+            .data-group { padding: 9px; }
+            .compact-action-grid { grid-template-columns: 1fr; }
             .preview-area { width: 100%; overflow-x: auto; padding-bottom: 10px; position: relative; top: auto; }
             #capture-area { min-width: 750px; }
         }
 
         @media screen and (max-width: 480px) {
-            .quick-action-bar { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
-            .quick-btn { font-size: 10px; padding: 8px 2px; min-height: 36px; }
-            .panel-sticky-header { margin: -20px 0 10px; padding: 7px 0 7px; }
-            .panel-sticky-header h2 { font-size: 17px; margin-bottom: 6px; }
-            .panel-sticky-header .quick-btn { min-height: 34px; padding: 6px 4px; }
+            body { padding: 8px; }
+            .control-panel { padding: 14px; }
+            .quick-action-bar { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 3px; scrollbar-width: thin; }
+            .quick-btn { flex: 0 0 auto; min-width: 68px; font-size: 10px; padding: 8px 7px; min-height: 34px; white-space: nowrap; }
+            .panel-sticky-header { margin: -14px 0 9px; padding: 7px 0 7px; }
+            .panel-sticky-header h2 { font-size: 16px; margin-bottom: 6px; }
+            .panel-sticky-header .quick-btn { min-height: 32px; padding: 6px 8px; }
             .panel-sticky-header .history-status { font-size: 10px; padding: 5px 7px; }
             .panel-sticky-header .always-apply-wrap { margin-top: 6px; }
-            .panel-sticky-header #applyBtn { font-size: 12px; min-height: 37px; padding: 9px 10px; }
-            .panel-sticky-header .always-apply-hint { font-size: 10px; margin-top: 4px; }
+            .panel-sticky-header #applyBtn { font-size: 12px; min-height: 36px; padding: 9px 10px; }
+            .panel-sticky-header .always-apply-hint { display: none; }
             .control-section[data-menu-key='input'] { --section-bg: #e3f0ff; --section-open-bg: #cfe3ff; --section-pill-bg: #bdd8ff; }
             .control-section[data-menu-key='dataedit'] { --section-bg: #eeeeee; --section-open-bg: #dcdcdc; --section-pill-bg: #d1d1d1; }
             .control-section[data-menu-key='design'] { --section-bg: #ffe9e9; --section-open-bg: #ffd2d2; --section-pill-bg: #ffc1c1; }
+            .control-section[data-menu-key='advanced'] { --section-bg: #f0f1f4; --section-open-bg: #e5e7ec; --section-pill-bg: #d8dce4; }
             .control-section[data-menu-key='save'] { --section-bg: #e5f7e7; --section-open-bg: #cdefd1; --section-pill-bg: #bde8c4; }
-            .control-section { margin: 10px 0; border-width: 2px; }
-            .control-section summary { padding: 13px 12px 13px 14px; font-size: 14px; border-left-width: 8px; }
-            .control-section[data-menu-key] summary { background: var(--section-bg); }
-            .control-section[open] summary { background: var(--section-open-bg); }
-            .control-section-icon { width: 28px; height: 28px; font-size: 15px; box-shadow: 0 3px 9px rgba(0,0,0,0.20); }
-            .control-section summary::after { font-size: 10.5px; padding: 5px 9px; background: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
-            .history-status { font-size: 11px; }
+            .control-section { margin: 9px 0; border-width: 2px; }
+            .control-section > summary { padding: 11px 10px 11px 12px; font-size: 13.5px; border-left-width: 7px; }
+            .control-section[data-menu-key] > summary { background: var(--section-bg); }
+            .control-section[open] > summary { background: var(--section-open-bg); }
+            .control-section-icon { width: 26px; height: 26px; font-size: 14px; box-shadow: 0 3px 9px rgba(0,0,0,0.20); }
+            .control-section > summary::after { font-size: 10px; padding: 5px 8px; background: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+            .history-status { font-size: 10.5px; }
+            .reference-style-row { grid-template-columns: 1fr; }
+            .reference-size-preset-row { grid-template-columns: 1fr; }
+            .chart-type-tip { font-size: 11px; padding: 8px 9px; }
         }
+
+
+        /* 참고 텍스트 고급 입력칸: 열기/접기 표시를 실제 열린 상태와 맞춤 */
+        .reference-advanced > summary {
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            list-style: none;
+            border-left: 0 !important;
+        }
+        .reference-advanced > summary::-webkit-details-marker { display: none; }
+        .reference-advanced > summary::after {
+            content: '열기' !important;
+            flex-shrink: 0;
+            font-size: 11px !important;
+            line-height: 1;
+            color: #555 !important;
+            font-weight: 900;
+            padding: 7px 13px !important;
+            border-radius: 999px;
+            background: #f0f0f0 !important;
+            box-shadow: none !important;
+        }
+        .reference-advanced[open] > summary::after {
+            content: '접기' !important;
+            color: #111 !important;
+            background: #e9e9e9 !important;
+        }
+
+        /* 도움말은 화면에 고정 노출하지 않고, 메뉴/카드에 마우스를 올리면 벌룬으로 표시 */
+        .help-text,
+        .menu-subhead-desc,
+        .chart-type-tip,
+        .parse-summary,
+        .always-apply-hint,
+        .history-status,
+        .export-size-hint,
+        .reference-style-color-note,
+        .mode-helper-card {
+            display: none !important;
+        }
+        .reference-visible-note {
+            display: block;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            color: #777;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.35;
+            word-break: keep-all;
+        }
+        .control-panel,
+        .control-section,
+        .control-section-body,
+        .data-group,
+        .ai-input-group,
+        .export-option-group,
+        .menu-subhead,
+        .always-apply-wrap {
+            overflow: visible;
+        }
+        .has-help-tooltip {
+            position: relative;
+        }
+        #globalHelpTooltip {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 10000;
+            display: none;
+            width: max-content;
+            max-width: min(330px, calc(100vw - 48px));
+            white-space: normal;
+            word-break: keep-all;
+            line-height: 1.45;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(17, 17, 17, 0.94);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.20);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(-3px);
+            transition: opacity 0.08s ease, transform 0.08s ease;
+        }
+        #globalHelpTooltip.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #globalHelpTooltip::after {
+            content: '';
+            position: absolute;
+            left: var(--tooltip-arrow-left, 24px);
+            bottom: -7px;
+            border-width: 8px 7px 0 7px;
+            border-style: solid;
+            border-color: rgba(17, 17, 17, 0.94) transparent transparent transparent;
+        }
+        #globalHelpTooltip.tooltip-below::after {
+            top: -7px;
+            bottom: auto;
+            border-width: 0 7px 8px 7px;
+            border-color: transparent transparent rgba(17, 17, 17, 0.94) transparent;
+        }
+        .standalone-save-block {
+            margin: 12px 0 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+        }
+        .standalone-save-block.section-attention {
+            animation: sectionAttention 1.05s ease;
+            border-radius: 12px;
+        }
+
+
     </style>
 </head>
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 2.8</h2>
+        <h2>🛠️ 그래픽 보조 데스크 V 3.0</h2>
 
         <div class="quick-action-bar" id="quickActionBar">
             <button type="button" class="quick-btn" id="undoBtn" onclick="undoLastChange()" title="Ctrl+Z / Command+Z">되돌리기</button>
@@ -267,7 +558,6 @@
             <span class="help-text" style="color: #0056b3; margin-bottom:5px;">제미나이가 생성한 텍스트를 통째로 붙여넣으세요.</span>
             <textarea id="geminiInput" placeholder="[종류] multi-line&#10;[제목] 서울 아파트 가격 추이&#10;..."></textarea>
             <button class="btn-ai" id="autoFillBtn" onclick="parseGeminiData()">🪄 AI 데이터 자동 완성하기</button>
-            <div id="parseSummary" class="parse-summary" aria-live="polite">붙여넣은 데이터가 어떻게 읽혔는지 여기에 표시됩니다.</div>
         </div>
         
         <div id="chartTypeHeaderRow" style="display: flex; justify-content: space-between; align-items: flex-end;">
@@ -294,7 +584,7 @@
             <option value="chart-table">📊+📋 혼합그래프 + 텍스트 표 동시 출력</option>
         </select>
 
-        <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (엑셀 방식)</button>
+        <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (수치·참고 텍스트)</button>
 
         <div class="data-group" id="palettePresetGroup">
             <label style="color:var(--ak-red); font-size:14px;">🎨 색상 팔레트 프리셋</label>
@@ -304,6 +594,8 @@
                 <button type="button" class="palette-btn" data-palette="economyBlue" onclick="applyPalettePreset('economyBlue')"><span class="palette-swatch" style="background:#1F6FEB"></span>경제 지표용</button>
                 <button type="button" class="palette-btn" data-palette="riskRed" onclick="applyPalettePreset('riskRed')"><span class="palette-swatch" style="background:#C1121F"></span>경고·위험 강조</button>
                 <button type="button" class="palette-btn" data-palette="compareGray" onclick="applyPalettePreset('compareGray')"><span class="palette-swatch" style="background:#555"></span>비교 대조용</button>
+                <button type="button" class="palette-btn" data-palette="rainbow" onclick="applyPalettePreset('rainbow')"><span class="palette-swatch" style="background:linear-gradient(135deg,#E61E2B,#F48F1F,#FFD23F,#2E8B57,#2F6BFF,#8A2BE2)"></span>무지개색 계열</button>
+                <button type="button" class="palette-btn" data-palette="monotone" onclick="applyPalettePreset('monotone')"><span class="palette-swatch" style="background:#555"></span>모노톤 계열</button>
             </div>
             <span class="help-text" style="margin-top:8px; margin-bottom:0;">그래프·표 강조색을 기사 성격에 맞게 한 번에 바꿉니다.</span>
         </div>
@@ -312,18 +604,16 @@
             <label style="color:var(--ak-red); font-size:14px;">📌 수치 표시 방식</label>
             <select id="labelDisplayType" onchange="updateOutput()">
                 <option value="all" selected>전체 기본값: 모든 데이터에 표시</option>
-                <option value="last">전체 기본값: 맨 끝 데이터만 표시 (강조)</option>
                 <option value="none">전체 기본값: 표시 안 함 (숫자 숨김)</option>
                 <option value="selected">전체 기본값: 선택한 데이터만 표시</option>
             </select>
-            <span class="help-text" style="margin-top:8px;">아래에서 데이터 묶음별로 따로 바꿀 수 있습니다. ‘전체 설정 따름’을 두면 위 기본값을 그대로 사용합니다.</span>
+            <span class="help-text" style="margin-top:8px;">아래에서 데이터 묶음별로 따로 바꿀 수 있습니다. ‘기본값 따름’을 두면 위 기본값을 그대로 사용합니다.</span>
 
             <div id="datasetLabelDisplayWrap1" style="margin-top:8px;">
                 <label id="datasetLabelDisplayLabel1" style="margin-top:0;">데이터 1 수치 표시 방식</label>
                 <select id="datasetLabelDisplayType1" onchange="updateOutput()">
-                    <option value="follow" selected>전체 설정 따름</option>
+                    <option value="follow" selected>기본값 따름</option>
                     <option value="all">모든 데이터에 표시</option>
-                    <option value="last">맨 끝 데이터만 표시 (강조)</option>
                     <option value="none">표시 안 함 (숫자 숨김)</option>
                     <option value="selected">선택한 데이터만 표시</option>
                 </select>
@@ -332,9 +622,8 @@
             <div id="datasetLabelDisplayWrap2" style="display:none; margin-top:8px;">
                 <label id="datasetLabelDisplayLabel2" style="margin-top:0;">데이터 2 수치 표시 방식</label>
                 <select id="datasetLabelDisplayType2" onchange="updateOutput()">
-                    <option value="follow" selected>전체 설정 따름</option>
+                    <option value="follow" selected>기본값 따름</option>
                     <option value="all">모든 데이터에 표시</option>
-                    <option value="last">맨 끝 데이터만 표시 (강조)</option>
                     <option value="none">표시 안 함 (숫자 숨김)</option>
                     <option value="selected">선택한 데이터만 표시</option>
                 </select>
@@ -343,9 +632,8 @@
             <div id="datasetLabelDisplayWrap3" style="display:none; margin-top:8px;">
                 <label id="datasetLabelDisplayLabel3" style="margin-top:0;">데이터 3 수치 표시 방식</label>
                 <select id="datasetLabelDisplayType3" onchange="updateOutput()">
-                    <option value="follow" selected>전체 설정 따름</option>
+                    <option value="follow" selected>기본값 따름</option>
                     <option value="all">모든 데이터에 표시</option>
-                    <option value="last">맨 끝 데이터만 표시 (강조)</option>
                     <option value="none">표시 안 함 (숫자 숨김)</option>
                     <option value="selected">선택한 데이터만 표시</option>
                 </select>
@@ -354,9 +642,8 @@
             <div id="datasetLabelDisplayWrap4" style="display:none; margin-top:8px;">
                 <label id="datasetLabelDisplayLabel4" style="margin-top:0;">데이터 4 수치 표시 방식</label>
                 <select id="datasetLabelDisplayType4" onchange="updateOutput()">
-                    <option value="follow" selected>전체 설정 따름</option>
+                    <option value="follow" selected>기본값 따름</option>
                     <option value="all">모든 데이터에 표시</option>
-                    <option value="last">맨 끝 데이터만 표시 (강조)</option>
                     <option value="none">표시 안 함 (숫자 숨김)</option>
                     <option value="selected">선택한 데이터만 표시</option>
                 </select>
@@ -368,7 +655,7 @@
                     <button type="button" onclick="selectAllLabelDisplayTargets(true)">전체 선택</button>
                     <button type="button" onclick="selectAllLabelDisplayTargets(false)">전체 해제</button>
                 </div>
-                <span class="help-text" style="margin-top:8px; margin-bottom:0;">‘선택한 데이터만 표시’를 고른 데이터 묶음에만 적용됩니다. 여러 항목 선택/해제는 Windows Ctrl, Mac Command를 누르고 클릭하세요.</span>
+                <span class="help-text" style="margin-top:8px; margin-bottom:0;">Ctrl 키를 누른 채 클릭하면 선택/선택취소할 수 있습니다. (Mac은 Command 키)</span>
             </div>
         </div>
 
@@ -399,7 +686,6 @@
                 <label style="margin-top:0; color:#2F6BFF;">파란색으로 강조할 데이터</label>
                 <select id="highlightTargetsBlue" multiple size="6" onchange="updateOutput()" style="height:auto;"></select>
             </div>
-            <span class="help-text" style="margin-top:8px; margin-bottom:0;">필요할 때만 특정 막대·점·조각을 강조합니다. 빨간색·주황색·파란색을 각각 따로 고를 수 있고, 여러 항목을 동시에 선택할 수 있습니다. 같은 데이터를 여러 색에서 동시에 고르면 아래쪽 색상 선택이 우선 적용됩니다. (복수 선택/취소 : Windows는 Ctrl, Mac은 Command)</span>
         </div>
 
         <div class="data-group" id="fontSizeSettingGroup">
@@ -505,9 +791,50 @@
             </div>
         </div>
 
+
+        <div class="data-group" id="referenceLabelStyleGroup">
+            <label style="color:var(--ak-red); font-size:14px;">📌 참고 텍스트 스타일</label>
+            <span class="reference-visible-note">(참고 텍스트 데이터가 있을 경우)</span>
+            <span class="help-text">숫자와 참고 문구가 헷갈리지 않도록 참고 텍스트 크기와 색상을 따로 조절합니다.</span>
+            <label style="margin-top:8px;">참고 텍스트 글씨 크기</label>
+            <div class="slider-group">
+                <input type="range" id="referenceFontSize" min="8" max="30" value="14" oninput="updateReferenceFontDisplay(); updateOutput();">
+                <span id="referenceFontDisplay" class="font-size-display">14px</span>
+            </div>
+            <div class="reference-size-preset-row">
+                <button type="button" onclick="setReferenceFontSize(12)">작게 12px</button>
+                <button type="button" onclick="setReferenceFontSize(14)">기본 14px</button>
+                <button type="button" onclick="setReferenceFontSize(18)">크게 18px</button>
+            </div>
+            <div class="reference-style-row">
+                <div>
+                    <label style="margin-top:8px;">참고 텍스트 색상</label>
+                    <select id="referenceFontColor" onchange="updateOutput()">
+                        <option value="autoContrast" selected>자동: 배경 대비</option>
+                        <option value="auto">자동: 분리되는 회색</option>
+                        <option value="#111111">검정</option>
+                        <option value="#666666">회색</option>
+                        <option value="#999999">밝은 회색</option>
+                        <option value="#ffffff">흰색</option>
+                        <option value="#E61E2B">빨강</option>
+                        <option value="#F48F1F">주황</option>
+                        <option value="#2F6BFF">파랑</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="margin-top:8px;">참고 텍스트 굵기</label>
+                    <select id="referenceFontWeight" onchange="updateOutput()">
+                        <option value="700" selected>보통 강조</option>
+                        <option value="500">얇게</option>
+                        <option value="900">굵게</option>
+                    </select>
+                </div>
+            </div>
+            <span class="reference-style-color-note">‘자동: 배경 대비’를 쓰면 막대·원그래프 조각 안에서는 배경색에 맞춰 검정/흰색이 자동 선택되고, 바깥 영역에서는 읽기 쉬운 회색으로 표시됩니다.</span>
+        </div>
+
         <div class="data-group" id="textSettingGroup">
             <label style="margin-top:0; color:var(--ak-red); font-size:14px;">✍️ 제목·부제목</label>
-            <span class="help-text" style="margin-bottom:8px;">미리보기의 제목이나 부제목을 더블클릭해도 바로 수정할 수 있습니다.</span>
             <label>제목</label>
             <input type="text" id="titleInput" value="">
             
@@ -548,7 +875,7 @@
                 <label id="ds4DataLabel">데이터 4 (수치 - 비워두면 숨김)</label>
                 <textarea id="dataInput4" rows="2"></textarea>
             </div>
-            
+
             <div class="data-group" id="axisSettingGroup" style="display: none;">
                 <label>수치 축(가로/세로) 범위 수동 설정</label>
                 <div class="axis-inputs">
@@ -560,6 +887,14 @@
                     <input type="text" id="y1Max" placeholder="우측축 최대값">
                 </div>
             </div>
+        </div>
+
+
+        <div class="hidden-data-storage" aria-hidden="true">
+            <textarea id="referenceInput1"></textarea>
+            <textarea id="referenceInput2"></textarea>
+            <textarea id="referenceInput3"></textarea>
+            <textarea id="referenceInput4"></textarea>
         </div>
 
         <div id="tableInputs" style="display: none;">
@@ -597,18 +932,6 @@
         
         <button class="main-btn" id="applyBtn" onclick="handleApplyClick()">🔄 수동 적용하기</button>
 
-        <div class="data-group" id="favoriteSettingGroup">
-            <label style="margin-top:0; color:var(--ak-red); font-size:14px;">⭐ 자주 쓰는 설정</label>
-            <input type="text" id="favoriteName" placeholder="예: 증시 선그래프 기본값">
-            <select id="favoriteSelect" style="margin-top:6px;"></select>
-            <div class="favorite-btn-row">
-                <button type="button" onclick="saveFavoriteSettings()">저장</button>
-                <button type="button" onclick="loadFavoriteSettings()">불러오기</button>
-                <button type="button" onclick="deleteFavoriteSettings()">삭제</button>
-            </div>
-            <span class="help-text" style="margin-top:8px; margin-bottom:0;">현재 그래프 종류, 글자 크기, 색상, 입력값을 이 브라우저에 저장합니다.</span>
-        </div>
-
         <div class="export-option-group" id="exportOptionGroup">
             <label style="margin-top:0; color:var(--ak-red); font-size:14px;">📸 저장 배율 선택</label>
             <div class="export-option-row">
@@ -630,24 +953,34 @@
 
     <div class="modal-overlay" id="sheetModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 style="margin:0;">📊 데이터 시트 편집</h3>
-                <span style="font-size:12px; color:#666; font-weight:normal;">* 행을 비우면 해당 항목이 삭제됩니다.</span>
+            <div class="modal-header has-help-tooltip" id="sheetModalHeader" data-help-tooltip="수치와 참고 텍스트를 한 번에 편집합니다. 표 모드에서는 셀을 클릭한 뒤 위/왼쪽 병합을 사용할 수 있습니다.">
+                <h3 style="margin:0;" id="sheetModalTitle">📊 데이터 시트 편집</h3>
+                <span class="sheet-mode-note" id="sheetModalNote">행을 비우면 해당 항목이 삭제됩니다.</span>
             </div>
             <table class="modal-table" id="modalTable">
                 <thead>
                     <tr id="modalTh">
                         <th>항목(라벨)</th>
                         <th><span id="sheetName1">데이터 1</span></th>
+                        <th id="sheetRefTh1"><span id="sheetRefName1">참고 1</span></th>
                         <th id="sheetTh2" style="display:none;"><span id="sheetName2">데이터 2</span></th>
+                        <th id="sheetRefTh2" style="display:none;"><span id="sheetRefName2">참고 2</span></th>
                         <th id="sheetTh3" style="display:none;"><span id="sheetName3">데이터 3</span></th>
+                        <th id="sheetRefTh3" style="display:none;"><span id="sheetRefName3">참고 3</span></th>
                         <th id="sheetTh4" style="display:none;"><span id="sheetName4">데이터 4</span></th>
+                        <th id="sheetRefTh4" style="display:none;"><span id="sheetRefName4">참고 4</span></th>
                     </tr>
                 </thead>
                 <tbody id="modalTbody">
                 </tbody>
             </table>
-            <button onclick="addRow()" style="margin-bottom:20px; cursor:pointer; background:#555; border:none; padding:8px 12px; color:white; border-radius:4px; font-size:12px;">+ 행 추가하기</button>
+            <div class="sheet-tool-row" id="sheetToolRow">
+                <button type="button" class="btn-add-row" onclick="addRow()">+ 행 추가하기</button>
+                <button type="button" class="btn-add-col" id="addColumnBtn" onclick="addColumn()">+ 열 추가하기</button>
+                <button type="button" class="btn-merge" id="mergeUpBtn" onclick="mergeSelectedSheetCell('up')">선택 셀 위와 병합</button>
+                <button type="button" class="btn-merge" id="mergeLeftBtn" onclick="mergeSelectedSheetCell('left')">선택 셀 왼쪽과 병합</button>
+                <button type="button" class="btn-unmerge" id="unmergeBtn" onclick="mergeSelectedSheetCell('clear')">병합 해제</button>
+            </div>
             <div class="modal-btns">
                 <button class="btn-close" onclick="closeDataSheet()" style="background:#888; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">취소</button>
                 <button class="btn-save" onclick="saveDataSheet()" style="background:var(--ak-red); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">✅ 적용 및 닫기</button>
@@ -659,9 +992,9 @@
         <div id="capture-area">
             <div class="header-line" id="topLine"></div>
             
-            <h1 class="chart-title inline-editable" id="displayTitle" title="더블클릭해서 데이터 수정(제목 수정)">제목입력</h1>
+            <h1 class="chart-title inline-editable" id="displayTitle" title="더블클릭해서 제목 수정">제목입력</h1>
             <br>
-            <span class="chart-subtitle inline-editable" id="displaySub" title="더블클릭해서 데이터 수정(부제목 수정)">(단위 및 출처 입력)</span>
+            <span class="chart-subtitle inline-editable" id="displaySub" title="더블클릭해서 부제목 수정">(단위 및 출처 입력)</span>
             
             <div id="chart-container">
                 <canvas id="myChart"></canvas>
@@ -691,10 +1024,10 @@
             </div>
             <div id="previewHoverHint" class="edit-hover-hint" data-html2canvas-ignore="true">더블클릭해서 데이터 수정</div>
             
-            <div id="displayFootnote" class="inline-editable" title="더블클릭해서 데이터 수정(주석 수정)"></div>
+            <div id="displayFootnote" class="inline-editable" title="더블클릭해서 주석 수정"></div>
             
             <div class="footer-watermark">
-                그래픽&nbsp;&nbsp;<span id="displayName" class="inline-editable" title="더블클릭해서 데이터 수정(기자 이름 수정)">박조비 기자</span>
+                그래픽&nbsp;&nbsp;<span id="displayName" class="inline-editable" title="더블클릭해서 기자 이름 수정">박조비 기자</span>
                 <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
             </div>
         </div>
@@ -736,11 +1069,21 @@
             bar: ['#E61E2B', '#555555', '#AFAFAF', '#222222'],
             line: ['#E61E2B', '#555555', '#999999', '#222222'],
             pie: ['#E61E2B', '#555555', '#888888', '#BBBBBB', '#D6D6D6', '#EEEEEE']
+        },
+        rainbow: {
+            label: '무지개색 계열', main: '#E61E2B', accent: '#F48F1F', gray1: '#2F6BFF', gray2: '#2E8B57', light: '#8A2BE2', axis: '#555555',
+            bar: ['#E61E2B', '#F48F1F', '#FFD23F', '#2E8B57', '#2F6BFF', '#8A2BE2'],
+            line: ['#E61E2B', '#F48F1F', '#2E8B57', '#2F6BFF', '#8A2BE2', '#555555'],
+            pie: ['#E61E2B', '#F48F1F', '#FFD23F', '#2E8B57', '#2F6BFF', '#8A2BE2']
+        },
+        monotone: {
+            label: '모노톤 계열', main: '#111111', accent: '#555555', gray1: '#777777', gray2: '#333333', light: '#D9D9D9', axis: '#666666',
+            bar: ['#111111', '#333333', '#555555', '#777777', '#999999', '#BDBDBD'],
+            line: ['#111111', '#444444', '#777777', '#999999', '#BBBBBB', '#666666'],
+            pie: ['#111111', '#333333', '#555555', '#777777', '#999999', '#BDBDBD']
         }
     };
     let activePaletteKey = 'asiae';
-
-    const FAVORITE_STORAGE_KEY = 'akGraphicDeskFavoritesV14';
     const HISTORY_LIMIT = 50;
     let undoStack = [];
     let isRestoringState = false;
@@ -864,6 +1207,20 @@
         const config = QUICK_MENU_CONFIG[menuKey];
         if (!config) return;
         closeOtherQuickMenus(menuKey);
+
+        if (config.directTargetId) {
+            const target = document.getElementById(config.directTargetId);
+            syncQuickMenuButtons(menuKey);
+            if (target && options.scroll !== false) {
+                requestAnimationFrame(() => scrollControlSectionBelowApply(target, 'smooth'));
+            }
+            if (target && options.highlight !== false) {
+                highlightControlSection(target, options.scroll === false ? 0 : 220);
+            }
+            window.setTimeout(() => syncQuickMenuButtons(''), 900);
+            return;
+        }
+
         let firstSection = null;
         config.sectionIds.forEach(sectionId => {
             const section = document.getElementById(sectionId);
@@ -915,6 +1272,7 @@
         input: '✍️',
         dataedit: '📊',
         design: '🎨',
+        advanced: '⚙️',
         save: '💾'
     };
 
@@ -967,20 +1325,25 @@
     function createMenuSubhead(title, description) {
         const wrap = document.createElement('div');
         wrap.className = 'menu-subhead';
+        if (description) {
+            wrap.classList.add('has-help-tooltip');
+            wrap.dataset.helpTooltip = description;
+        }
 
         const titleEl = document.createElement('div');
         titleEl.className = 'menu-subhead-title';
         titleEl.textContent = title;
         wrap.appendChild(titleEl);
 
-        if (description) {
-            const descEl = document.createElement('div');
-            descEl.className = 'menu-subhead-desc';
-            descEl.textContent = description;
-            wrap.appendChild(descEl);
-        }
-
         return wrap;
+    }
+
+    function createPreviewEditGuideCard() {
+        const card = document.createElement('div');
+        card.id = 'previewEditGuideCard';
+        card.className = 'preview-edit-guide-card';
+        card.innerHTML = '그래프/표 위에서 <strong>고칠 데이터에 마우스 커서를 올리고 더블클릭</strong>하면 바로 수정할 수 있습니다.<span class="guide-sub">제목, 부제목, 출처, 주석, 항목명, 수치도 미리보기에서 직접 고쳐주세요.</span>';
+        return card;
     }
 
     function bindExclusiveMenuBehavior(detailsEl) {
@@ -1024,13 +1387,70 @@
         wrap.className = 'always-apply-wrap';
         wrap.id = 'alwaysApplyWrap';
 
-        const hint = document.createElement('span');
-        hint.className = 'always-apply-hint';
-        hint.textContent = '데이터를 조금씩 고친 뒤 바로 눌러 반영하세요.';
-
         wrap.appendChild(applyBtn);
-        wrap.appendChild(hint);
         stickyHeader.appendChild(wrap);
+    }
+
+
+    let settingsViewMode = 'full';
+
+    function getChartUiProfile(typeOverride) {
+        const type = typeOverride || (document.getElementById('chartType') ? document.getElementById('chartType').value : '');
+        const isTextOnly = ['table', 'list', 'timeline'].includes(type);
+        const isPie = type === 'pie';
+        const isCombo = type.includes('combo') || type === 'chart-table';
+        const isStacked = type.includes('stacked');
+        const isHorizontal = type.startsWith('h-');
+        const isMulti = type.includes('multi-') || isStacked || isCombo || type === 'chart-table';
+        const isLineOnly = type === 'line' || type === 'multi-line';
+        const isBarLike = type.includes('bar') || isCombo || type === 'chart-table';
+        return { type, isTextOnly, isChart: !isTextOnly, isPie, isCombo, isStacked, isHorizontal, isMulti, isLineOnly, isBarLike };
+    }
+
+    function setDisplayById(id, shouldShow, displayValue = 'block') {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.display = shouldShow ? displayValue : 'none';
+    }
+    function updateChartTypeTip(profile) {
+        // 그래프 종류별 도움말은 화면에 고정 표시하지 않습니다.
+    }
+
+    function refreshChartAwareVisibility() {
+        const profile = getChartUiProfile();
+        updateChartTypeTip(profile);
+
+        setDisplayById('referenceLabelStyleGroup', profile.isChart, 'block');
+        setDisplayById('koreanNumberGroup', profile.isChart, 'block');
+        setDisplayById('highlightSettingGroup', profile.isChart && !profile.isLineOnly, 'block');
+        setDisplayById('labelSettingGroup', profile.isChart, 'block');
+        setDisplayById('datasetLabelSizeGroup', profile.isChart, 'block');
+        setDisplayById('datasetLabelColorGroup', profile.isChart, 'block');
+
+        setDisplayById('openSheetBtn', true, 'block');
+
+        if (settingsViewMode === 'simple') {
+            setDisplayById('chartInputs', false);
+            if (profile.isTextOnly) setDisplayById('tableInputs', true, 'block');
+        }
+
+        updateControlScrollOffset();
+    }
+
+    function applyResponsiveMenuState() {
+        const isNarrow = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        const panel = document.querySelector('.control-panel');
+        if (!panel || panel.dataset.responsiveMenuReady === 'true') return;
+        if (isNarrow) {
+            ['sectionDataEdit', 'sectionDesign', 'sectionExport'].forEach(id => {
+                const section = document.getElementById(id);
+                if (section) section.open = false;
+            });
+            const inputSection = document.getElementById('sectionGemini');
+            if (inputSection) inputSection.open = true;
+            syncQuickMenuButtons('input');
+            panel.dataset.responsiveMenuReady = 'true';
+        }
     }
 
     function buildFriendlyControlMenu() {
@@ -1039,9 +1459,10 @@
         if (!panel || panel.dataset.menuBuilt === 'true' || !quickBar) return;
         const stickyHeader = setupStickyControlHeader(panel, quickBar);
 
-                setupAlwaysVisibleApplyButton(stickyHeader);
-const geminiSection = createControlSection('sectionGemini', '1) 입력', true, 'input');
-        const dataEditSection = createControlSection('sectionDataEdit', '2) 데이터수정', true, 'dataedit');
+        setupAlwaysVisibleApplyButton(stickyHeader);
+
+        const geminiSection = createControlSection('sectionGemini', '1) 입력', true, 'input');
+        const dataEditSection = createControlSection('sectionDataEdit', '2) 데이터 수정', false, 'dataedit');
         const designSection = createControlSection('sectionDesign', '3) 디자인', false, 'design');
         const exportSection = createControlSection('sectionExport', '4) 저장', false, 'save');
 
@@ -1054,20 +1475,25 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
         appendExisting(geminiSection.body, [
             '.ai-input-group'
         ]);
-        dataEditSection.body.appendChild(createMenuSubhead('📊 그래프 데이터', '그래프 종류, X축 항목, 수치 데이터, 표 데이터를 수정합니다.'));
+
         appendExisting(dataEditSection.body, [
-            '#chartTypeHeaderRow', '#chartType', '#openSheetBtn', '#chartInputs', '#tableInputs'
+            '#chartTypeHeaderRow', '#chartType'
         ]);
-        dataEditSection.body.appendChild(createMenuSubhead('✍️ 텍스트 수정', '제목, 단위·출처, 하단 주석, 기자명을 수정합니다.'));
         appendExisting(dataEditSection.body, [
-            '#textSettingGroup', '#footnoteSettingGroup', '#reporterSettingGroup'
+            '#openSheetBtn', '#chartInputs', '#tableInputs'
         ]);
+        dataEditSection.body.appendChild(createPreviewEditGuideCard());
+
+        designSection.body.appendChild(createMenuSubhead('🎨 각 데이터 색상·글자 크기 조절', '데이터별 수치 글자 크기와 색상, 표/그래프 글자 크기, 팔레트 등을 조정합니다.'));
         appendExisting(designSection.body, [
-            '#palettePresetGroup', '#labelSettingGroup', '#koreanNumberGroup', '#highlightSettingGroup',
-            '#fontSizeSettingGroup', '#datasetLabelSizeGroup', '#datasetLabelColorGroup', '#columnWidthSettingGroup'
+            '#fontSizeSettingGroup', '#datasetLabelSizeGroup', '#datasetLabelColorGroup',
+            '#labelSettingGroup', '#highlightSettingGroup', '#axisSettingGroup', '#columnWidthSettingGroup',
+            '#referenceLabelStyleGroup', '#palettePresetGroup', '#koreanNumberGroup'
         ]);
+
+        exportSection.body.appendChild(createMenuSubhead('💾 저장', '저장 배율을 고른 뒤 PNG 또는 SVG로 저장합니다.'));
         appendExisting(exportSection.body, [
-            '#favoriteSettingGroup', '#exportOptionGroup', '#downloadBtn', '#svgDownloadBtn', '#creatorFooter'
+            '#exportOptionGroup', '#downloadBtn', '#svgDownloadBtn', '#creatorFooter'
         ]);
 
         [geminiSection.details, dataEditSection.details, designSection.details, exportSection.details].forEach(bindExclusiveMenuBehavior);
@@ -1076,6 +1502,8 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
         window.addEventListener('resize', updateControlScrollOffset);
 
         panel.dataset.menuBuilt = 'true';
+        applyResponsiveMenuState();
+        window.addEventListener('resize', applyResponsiveMenuState);
     }
 
     function getActivePalette() {
@@ -1106,6 +1534,38 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
         if (!text) return [];
         const delimiter = text.includes('\t') ? /\t+/ : (text.includes('\n') && !text.includes(',') ? /\r?\n+/ : /,/);
         return text.split(delimiter).map(item => item.trim()).filter(item => item !== '');
+    }
+
+    function splitReferenceCommaText(text) {
+        const parts = [];
+        let current = '';
+        let bracketDepth = 0;
+        for (const char of String(text || '')) {
+            if (char === '(' || char === '[' || char === '{') bracketDepth += 1;
+            if (char === ')' || char === ']' || char === '}') bracketDepth = Math.max(0, bracketDepth - 1);
+            if (char === ',' && bracketDepth === 0) {
+                parts.push(current.trim());
+                current = '';
+                continue;
+            }
+            current += char;
+        }
+        parts.push(current.trim());
+        return parts;
+    }
+
+    function parseReferenceSeries(raw, expectedCount = null) {
+        const text = String(raw || '');
+        if (!text.trim()) return [];
+        if (text.includes('\t')) return text.split('\t').map(item => item.trim());
+        if (/\r?\n/.test(text)) return text.split(/\r?\n/).map(item => item.trim());
+
+        // 새 기본 방식은 “한 줄에 한 항목”입니다.
+        // 다만 예전처럼 쉼표로 입력해 둔 값은 항목 수와 정확히 맞을 때만 자동 분리합니다.
+        const commaParts = splitReferenceCommaText(text);
+        const expected = Number.isInteger(Number(expectedCount)) ? Number(expectedCount) : null;
+        if (expected && expected > 1 && commaParts.length === expected) return commaParts;
+        return [text.trim()];
     }
 
     function parseNumericSeries(raw, expectedCount = null) {
@@ -1233,7 +1693,6 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
         isRestoringState = false;
         toggleInputs();
         updateOutput();
-        updateFavoriteSelect();
         updateHistoryStatus();
     }
 
@@ -1270,8 +1729,154 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
         const status = document.getElementById('historyStatus');
         const undoBtn = document.getElementById('undoBtn');
         const count = Math.max(0, undoStack.length - 1);
-        if (undoBtn) undoBtn.disabled = count === 0;
-        if (status) status.textContent = message || `되돌리기 가능 단계: ${count}개 · Ctrl+Z / Command+Z 사용 가능`;
+        if (undoBtn) {
+            undoBtn.disabled = count === 0;
+            undoBtn.title = count ? '이전 상태로 되돌리기' : '되돌릴 작업이 없습니다.';
+        }
+        if (status) status.textContent = '';
+    }
+
+
+    const CONTROL_SECTION_HELP = {
+        input: '제미나이 텍스트를 붙여넣으면 데이터와 제목을 자동으로 채웁니다.',
+        dataedit: '그래프 종류를 고르고, 데이터는 데이터 시트 버튼에서 일괄 편집합니다. 미리보기 위 텍스트와 수치는 커서를 올린 뒤 더블클릭해서 바로 수정합니다.',
+        design: '글자 크기, 색상, 수치 표시, 강조 데이터, 축 범위 같은 디자인 옵션을 조정합니다.',
+        save: 'PNG/SVG 저장 옵션을 열어 저장 배율과 저장 버튼을 확인합니다.'
+    };
+
+    function cleanHelpText(text) {
+        return String(text || '')
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    let activeHelpTooltipTarget = null;
+    let helpTooltipHideTimer = null;
+
+    function getGlobalHelpTooltip() {
+        let tooltip = document.getElementById('globalHelpTooltip');
+        if (tooltip) return tooltip;
+        tooltip = document.createElement('div');
+        tooltip.id = 'globalHelpTooltip';
+        tooltip.setAttribute('role', 'tooltip');
+        tooltip.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(tooltip);
+        return tooltip;
+    }
+
+    function positionGlobalHelpTooltip(target, tooltip) {
+        if (!target || !tooltip) return;
+        const rect = target.getBoundingClientRect();
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+        const gap = 10;
+        const edgePadding = 12;
+
+        tooltip.style.left = '0px';
+        tooltip.style.top = '0px';
+        tooltip.classList.remove('tooltip-below');
+
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const tooltipWidth = tooltipRect.width || 260;
+        const tooltipHeight = tooltipRect.height || 44;
+        const targetCenterX = rect.left + rect.width / 2;
+        const maxLeft = Math.max(edgePadding, viewportWidth - tooltipWidth - edgePadding);
+        let left = targetCenterX - tooltipWidth / 2;
+        left = Math.min(Math.max(edgePadding, left), maxLeft);
+
+        let top = rect.top - tooltipHeight - gap;
+        const shouldShowBelow = top < edgePadding && rect.bottom + tooltipHeight + gap <= viewportHeight - edgePadding;
+        if (shouldShowBelow) {
+            top = rect.bottom + gap;
+            tooltip.classList.add('tooltip-below');
+        } else {
+            top = Math.max(edgePadding, top);
+        }
+
+        const arrowLeft = Math.min(Math.max(14, targetCenterX - left), tooltipWidth - 14);
+        tooltip.style.setProperty('--tooltip-arrow-left', arrowLeft + 'px');
+        tooltip.style.left = Math.round(left) + 'px';
+        tooltip.style.top = Math.round(top) + 'px';
+    }
+
+    function showGlobalHelpTooltip(target) {
+        const message = target && target.dataset ? target.dataset.helpTooltip : '';
+        if (!message) return;
+        if (target.offsetParent === null && getComputedStyle(target).position !== 'fixed') return;
+        clearTimeout(helpTooltipHideTimer);
+        activeHelpTooltipTarget = target;
+        const tooltip = getGlobalHelpTooltip();
+        tooltip.textContent = message;
+        tooltip.style.display = 'block';
+        tooltip.setAttribute('aria-hidden', 'false');
+        positionGlobalHelpTooltip(target, tooltip);
+        requestAnimationFrame(() => {
+            if (activeHelpTooltipTarget === target) tooltip.classList.add('is-visible');
+        });
+    }
+
+    function hideGlobalHelpTooltip(target = null, delay = 60) {
+        if (target && activeHelpTooltipTarget !== target) return;
+        clearTimeout(helpTooltipHideTimer);
+        helpTooltipHideTimer = setTimeout(() => {
+            const tooltip = document.getElementById('globalHelpTooltip');
+            if (!tooltip) return;
+            tooltip.classList.remove('is-visible');
+            tooltip.setAttribute('aria-hidden', 'true');
+            tooltip.style.display = 'none';
+            activeHelpTooltipTarget = null;
+        }, delay);
+    }
+
+    function bindHelpTooltipTarget(target) {
+        if (!target || target.dataset.helpTooltipBound === 'true') return;
+        target.addEventListener('mouseenter', () => showGlobalHelpTooltip(target));
+        target.addEventListener('mouseleave', () => hideGlobalHelpTooltip(target));
+        target.dataset.helpTooltipBound = 'true';
+    }
+
+    function addHelpTooltip(target, text) {
+        const message = cleanHelpText(text);
+        if (!target || !message) return;
+        const current = target.dataset.helpTooltip || '';
+        if (current.includes(message)) {
+            bindHelpTooltipTarget(target);
+            return;
+        }
+        target.dataset.helpTooltip = current ? `${current}\n${message}` : message;
+        target.classList.add('has-help-tooltip');
+        bindHelpTooltipTarget(target);
+    }
+
+    function setupHoverHelpBalloons() {
+        document.querySelectorAll('.control-section[data-menu-key] > summary').forEach(summary => {
+            const section = summary.closest('.control-section');
+            const menuKey = section ? section.dataset.menuKey : '';
+            addHelpTooltip(summary, CONTROL_SECTION_HELP[menuKey] || '메뉴를 열어 세부 항목을 조정합니다.');
+        });
+
+        const helpSelectors = '.help-text, .menu-subhead-desc, .export-size-hint, .reference-style-color-note, .mode-helper-card';
+        document.querySelectorAll(helpSelectors).forEach(helpEl => {
+            if (helpEl.id === 'tableHelpText') {
+                helpEl.setAttribute('aria-hidden', 'true');
+                return;
+            }
+            const target = helpEl.closest('.data-group, .ai-input-group, .export-option-group, .menu-subhead, .always-apply-wrap') || helpEl.parentElement;
+            addHelpTooltip(target, helpEl.innerText || helpEl.textContent || '');
+            helpEl.setAttribute('aria-hidden', 'true');
+        });
+
+        const tableHelpText = document.getElementById('tableHelpText');
+        const tableHelpTarget = document.getElementById('tableInputs');
+        if (tableHelpText && tableHelpTarget) {
+            addHelpTooltip(tableHelpTarget, tableHelpText.innerText || tableHelpText.textContent || '');
+            tableHelpText.setAttribute('aria-hidden', 'true');
+        }
+
+        document.querySelectorAll('.has-help-tooltip[data-help-tooltip]').forEach(bindHelpTooltipTarget);
+        window.addEventListener('scroll', () => hideGlobalHelpTooltip(null, 0), { passive: true });
+        window.addEventListener('resize', () => hideGlobalHelpTooltip(null, 0));
     }
 
     function initHistoryControls() {
@@ -1292,78 +1897,41 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
             undoLastChange();
         });
     }
+    const TITLE_PLACEHOLDER_TEXT = '제목이 필요하면 더블클릭해 입력하세요';
+    const SUB_PLACEHOLDER_TEXT = '부제목이 필요하면 더블클릭해 입력하세요';
+    const FOOTNOTE_PLACEHOLDER_TEXT = '하단 주석이 필요하면 더블클릭해 입력하세요';
 
-    function getFavorites() {
-        try {
-            return JSON.parse(localStorage.getItem(FAVORITE_STORAGE_KEY) || '{}') || {};
-        } catch (error) {
-            return {};
-        }
+    function isFootnotePlaceholder(el) {
+        return !!(el && el.id === 'displayFootnote' && el.classList.contains('footnote-placeholder'));
     }
 
-    function setFavorites(favorites) {
-        localStorage.setItem(FAVORITE_STORAGE_KEY, JSON.stringify(favorites || {}));
+    function isInlinePlaceholder(el) {
+        return !!(el && (el.classList.contains('inline-placeholder') || isFootnotePlaceholder(el)));
     }
 
-    function updateFavoriteSelect() {
-        const select = document.getElementById('favoriteSelect');
-        if (!select) return;
-        const current = select.value;
-        const favorites = getFavorites();
-        const names = Object.keys(favorites).sort((a, b) => a.localeCompare(b, 'ko'));
-        select.innerHTML = names.length
-            ? names.map(name => `<option value="${name.replace(/"/g, '&quot;')}">${name}</option>`).join('')
-            : '<option value="">저장된 설정 없음</option>';
-        if (names.includes(current)) select.value = current;
-    }
-
-    function saveFavoriteSettings() {
-        const nameInput = document.getElementById('favoriteName');
-        const name = (nameInput && nameInput.value.trim()) || `내 설정 ${new Date().toLocaleDateString('ko-KR')}`;
-        const favorites = getFavorites();
-        favorites[name] = serializeControlState();
-        setFavorites(favorites);
-        updateFavoriteSelect();
-        const select = document.getElementById('favoriteSelect');
-        if (select) select.value = name;
-        updateHistoryStatus(`즐겨찾기 저장: ${name}`);
-    }
-
-    function loadFavoriteSettings() {
-        const select = document.getElementById('favoriteSelect');
-        const name = select ? select.value : '';
-        const favorites = getFavorites();
-        if (!name || !favorites[name]) {
-            alert('불러올 설정이 없습니다. 먼저 저장해 주세요.');
-            return;
-        }
-        restoreControlState(favorites[name]);
-        recordHistoryCheckpoint(`즐겨찾기 불러오기: ${name}`);
-    }
-
-    function deleteFavoriteSettings() {
-        const select = document.getElementById('favoriteSelect');
-        const name = select ? select.value : '';
-        const favorites = getFavorites();
-        if (!name || !favorites[name]) {
-            alert('삭제할 설정이 없습니다.');
-            return;
-        }
-        delete favorites[name];
-        setFavorites(favorites);
-        updateFavoriteSelect();
-        updateHistoryStatus(`즐겨찾기 삭제: ${name}`);
+    function hideFootnotePlaceholderForExport() {
+        const targets = ['displayTitle', 'displaySub', 'displayFootnote']
+            .map(id => document.getElementById(id))
+            .filter(el => isInlinePlaceholder(el));
+        if (!targets.length) return () => {};
+        const previousStates = targets.map(el => ({ el, display: el.style.display }));
+        targets.forEach(({ style }) => { style.display = 'none'; });
+        return () => {
+            previousStates.forEach(({ el, display }) => {
+                el.style.display = display || (el.id === 'displaySub' ? 'inline-block' : 'block');
+            });
+        };
     }
 
     function setupInlineEditing() {
         const editableMap = [
-            { displayId: 'displayTitle', inputId: 'titleInput', emptyText: '제목입력' },
-            { displayId: 'displaySub', inputId: 'subInput', emptyText: '' },
-            { displayId: 'displayFootnote', inputId: 'footnoteInput', emptyText: '' },
+            { displayId: 'displayTitle', inputId: 'titleInput', emptyText: '', placeholderText: TITLE_PLACEHOLDER_TEXT },
+            { displayId: 'displaySub', inputId: 'subInput', emptyText: '', placeholderText: SUB_PLACEHOLDER_TEXT },
+            { displayId: 'displayFootnote', inputId: 'footnoteInput', emptyText: '', placeholderText: FOOTNOTE_PLACEHOLDER_TEXT },
             { displayId: 'displayName', inputId: 'nameInput', emptyText: '기자 이름' }
         ];
 
-        editableMap.forEach(({ displayId, inputId, emptyText }) => {
+        editableMap.forEach(({ displayId, inputId, emptyText, placeholderText = '' }) => {
             const displayEl = document.getElementById(displayId);
             const inputEl = document.getElementById(inputId);
             if (!displayEl || !inputEl) return;
@@ -1371,13 +1939,21 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
             const finish = () => {
                 if (displayEl.getAttribute('contenteditable') !== 'true') return;
                 displayEl.removeAttribute('contenteditable');
-                inputEl.value = displayEl.innerText.trim() || emptyText;
+                const editedText = displayEl.innerText.trim();
+                if (placeholderText && (!editedText || editedText === placeholderText)) {
+                    inputEl.value = '';
+                } else {
+                    inputEl.value = editedText || emptyText;
+                }
                 updateOutput();
                 recordHistoryCheckpoint('미리보기 직접 편집');
             };
 
             displayEl.addEventListener('dblclick', () => {
                 if (displayEl.style.display === 'none') return;
+                if (placeholderText && isInlinePlaceholder(displayEl)) {
+                    displayEl.innerText = '';
+                }
                 displayEl.setAttribute('contenteditable', 'true');
                 displayEl.focus();
                 const range = document.createRange();
@@ -1917,8 +2493,10 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
         const isKoreanNumber = document.getElementById('koreanNumberType') && document.getElementById('koreanNumberType').value === 'apply';
         const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
         const displayValue = String(isKoreanNumber ? formatKoreanNumber(rawValue, subText) : rawValue);
+        const referenceText = getReferenceTextForDataLabel(hit.datasetIndex, hit.index, myChart.data.datasets);
         const labelLines = label ? wrapPieInsideLabel(label, 11, 4).split('\n').filter(Boolean) : [];
         const lines = labelLines.concat([displayValue]);
+        if (referenceText) lines.push(referenceText);
         if (!lines.length) return null;
 
         const datasetFontSize = getDatasetLabelFontSize(hit.datasetIndex);
@@ -2417,11 +2995,13 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
             <div class="pie-side-list-inner">
                 ${items.map(item => {
                     const displayValue = isKoreanNumber ? formatKoreanNumber(item.rawValue, subText) : item.rawValue;
+                    const refText = getReferenceTextForDataLabel(0, item.index);
+                    const refHtml = refText ? `<span class="pie-side-ref" style="${getReferenceSideListStyle()}">${escapeHtml(refText)}</span>` : '';
                     return `
                         <div class="pie-side-item preview-editable-target" data-pie-edit-index="${item.index}" title="${PIE_SPLIT_HOVER_MESSAGE}" aria-label="${PIE_SPLIT_HOVER_MESSAGE}">
                             <span class="pie-side-dot" style="background:${item.color};"></span>
                             <div class="pie-side-text" style="font-size:${itemFontSize}px;">
-                                ${item.label ? `<span class="pie-side-label" title="${ITEM_EDIT_HOVER_MESSAGE}" aria-label="${ITEM_EDIT_HOVER_MESSAGE}">${escapeHtml(item.label)}</span> <strong class="pie-side-value" title="${VALUE_EDIT_HOVER_MESSAGE}" aria-label="${VALUE_EDIT_HOVER_MESSAGE}">${escapeHtml(displayValue)}</strong>` : `<strong class="pie-side-value" title="${VALUE_EDIT_HOVER_MESSAGE}" aria-label="${VALUE_EDIT_HOVER_MESSAGE}">${escapeHtml(displayValue)}</strong>`}
+                                ${item.label ? `<span class="pie-side-label" title="${ITEM_EDIT_HOVER_MESSAGE}" aria-label="${ITEM_EDIT_HOVER_MESSAGE}">${escapeHtml(item.label)}</span> <strong class="pie-side-value" title="${VALUE_EDIT_HOVER_MESSAGE}" aria-label="${VALUE_EDIT_HOVER_MESSAGE}">${escapeHtml(displayValue)}</strong>${refHtml}` : `<strong class="pie-side-value" title="${VALUE_EDIT_HOVER_MESSAGE}" aria-label="${VALUE_EDIT_HOVER_MESSAGE}">${escapeHtml(displayValue)}</strong>${refHtml}`}
                             </div>
                         </div>
                     `;
@@ -2455,6 +3035,286 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
         }
 
         return names;
+    }
+
+    function getDatasetSourceInputIndex(datasetIndex, datasets) {
+        const sourceDatasets = Array.isArray(datasets)
+            ? datasets
+            : (myChart && myChart.data && Array.isArray(myChart.data.datasets) ? myChart.data.datasets : []);
+        const dataset = sourceDatasets[datasetIndex] || {};
+        return dataset._sourceInputIndex || (datasetIndex + 1);
+    }
+
+    function getReferenceTextForDataLabel(datasetIndex, dataIndex, datasets) {
+        const sourceInputIndex = getDatasetSourceInputIndex(datasetIndex, datasets);
+        const input = document.getElementById(`referenceInput${sourceInputIndex}`);
+        if (!input) return '';
+        const labels = getCurrentLabels();
+        const refs = parseReferenceSeries(input.value, labels.length);
+        return (refs[dataIndex] || '').trim();
+    }
+
+    function hasAnyReferenceText(datasets) {
+        const sourceIndexes = new Set((Array.isArray(datasets) ? datasets : [])
+            .map((_, datasetIndex) => getDatasetSourceInputIndex(datasetIndex, datasets)));
+        if (!sourceIndexes.size) [1, 2, 3, 4].forEach(index => sourceIndexes.add(index));
+        const expectedCount = getCurrentLabels().length;
+        return Array.from(sourceIndexes).some(index => {
+            const input = document.getElementById(`referenceInput${index}`);
+            return !!(input && parseReferenceSeries(input.value, expectedCount).some(item => String(item || '').trim()));
+        });
+    }
+
+    function getReferenceLabelFontSize() {
+        const input = document.getElementById('referenceFontSize');
+        const value = input ? parseInt(input.value, 10) : 14;
+        return Number.isFinite(value) ? value : 14;
+    }
+
+    function getReferenceLabelFontWeight() {
+        const input = document.getElementById('referenceFontWeight');
+        return input && input.value ? input.value : '700';
+    }
+
+    function pickIndexedColor(colorValue, dataIndex) {
+        if (Array.isArray(colorValue)) {
+            if (!colorValue.length) return '';
+            const safeIndex = Number.isFinite(Number(dataIndex)) ? Number(dataIndex) : 0;
+            return colorValue[safeIndex % colorValue.length] || colorValue[0] || '';
+        }
+        return colorValue || '';
+    }
+
+    function parseCssColorToRgb(colorValue) {
+        const color = String(colorValue || '').trim();
+        if (!color || color === 'transparent') return null;
+
+        const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+        if (hexMatch) {
+            let hex = hexMatch[1];
+            if (hex.length === 3) hex = hex.split('').map(ch => ch + ch).join('');
+            return {
+                r: parseInt(hex.slice(0, 2), 16),
+                g: parseInt(hex.slice(2, 4), 16),
+                b: parseInt(hex.slice(4, 6), 16)
+            };
+        }
+
+        const rgbMatch = color.match(/^rgba?\(([^)]+)\)$/i);
+        if (rgbMatch) {
+            const parts = rgbMatch[1].split(',').map(part => part.trim());
+            if (parts.length >= 3) {
+                const alpha = parts.length >= 4 ? Number(parts[3]) : 1;
+                if (Number.isFinite(alpha) && alpha <= 0.05) return null;
+                const parseChannel = (value) => {
+                    if (String(value).includes('%')) return Math.round(Number(String(value).replace('%', '')) * 2.55);
+                    return Number(value);
+                };
+                const r = parseChannel(parts[0]);
+                const g = parseChannel(parts[1]);
+                const b = parseChannel(parts[2]);
+                if ([r, g, b].every(Number.isFinite)) return { r, g, b };
+            }
+        }
+
+        return null;
+    }
+
+    function getRelativeLuminance(rgb) {
+        if (!rgb) return 1;
+        const convert = (channel) => {
+            const value = Math.max(0, Math.min(255, channel)) / 255;
+            return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+        };
+        return (0.2126 * convert(rgb.r)) + (0.7152 * convert(rgb.g)) + (0.0722 * convert(rgb.b));
+    }
+
+    function getReadableTextColorForBackground(colorValue) {
+        const rgb = parseCssColorToRgb(colorValue);
+        if (!rgb) return '#555555';
+        return getRelativeLuminance(rgb) > 0.45 ? '#111111' : '#ffffff';
+    }
+
+    function getReferenceBackgroundColorForContext(context) {
+        if (!context || !context.dataset) return '';
+        return pickIndexedColor(context.dataset.backgroundColor, context.dataIndex)
+            || pickIndexedColor(context.dataset.borderColor, context.dataIndex)
+            || pickIndexedColor(context.dataset.pointBackgroundColor, context.dataIndex)
+            || '';
+    }
+
+    function isReferenceOnColoredBackground(normType, context) {
+        if (!context || !context.dataset) return false;
+        if (normType === 'pie') return true;
+        const currentType = document.getElementById('chartType') ? document.getElementById('chartType').value : normType;
+        const datasetType = context.dataset.type || (String(currentType).includes('line') ? 'line' : 'bar');
+        return datasetType === 'bar' && String(currentType).includes('stacked');
+    }
+
+    function getReferenceLabelColor(normType, context) {
+        const input = document.getElementById('referenceFontColor');
+        const value = input ? input.value : 'autoContrast';
+        if (value && value !== 'auto' && value !== 'autoContrast') return value;
+
+        if (value === 'autoContrast') {
+            if (isReferenceOnColoredBackground(normType, context)) {
+                return getReadableTextColorForBackground(getReferenceBackgroundColorForContext(context));
+            }
+            return '#555555';
+        }
+
+        return normType === 'pie' ? 'rgba(255,255,255,0.82)' : '#666666';
+    }
+
+    function getReferenceLabelStrokeColor(normType, context) {
+        const input = document.getElementById('referenceFontColor');
+        const value = input ? input.value : 'autoContrast';
+        if (value !== 'autoContrast') return 'rgba(0,0,0,0)';
+        if (!isReferenceOnColoredBackground(normType, context)) return 'rgba(0,0,0,0)';
+        const textColor = String(getReferenceLabelColor(normType, context)).toLowerCase();
+        return textColor === '#ffffff' || textColor.includes('255,255,255') ? 'rgba(0,0,0,0.24)' : 'rgba(255,255,255,0.72)';
+    }
+
+    function getReferenceLabelStrokeWidth(normType, context) {
+        const input = document.getElementById('referenceFontColor');
+        const value = input ? input.value : 'autoContrast';
+        return value === 'autoContrast' && isReferenceOnColoredBackground(normType, context) ? 2 : 0;
+    }
+
+    function getReferenceSideListStyle() {
+        const color = getReferenceLabelColor('pie-side', null);
+        const size = getReferenceLabelFontSize();
+        const weight = getReferenceLabelFontWeight();
+        return `font-size:${size}px; color:${color}; font-weight:${weight};`;
+    }
+
+    function updateReferenceFontDisplay() {
+        const display = document.getElementById('referenceFontDisplay');
+        if (display) display.innerText = `${getReferenceLabelFontSize()}px`;
+    }
+
+    function setReferenceFontSize(size) {
+        const input = document.getElementById('referenceFontSize');
+        if (!input) return;
+        input.value = String(size);
+        updateReferenceFontDisplay();
+        updateOutput();
+        recordHistoryCheckpoint(`참고 텍스트 크기 ${size}px`);
+    }
+
+    function getReferenceInputIndexesForCurrentChart() {
+        const type = document.getElementById('chartType') ? document.getElementById('chartType').value : '';
+        const indexes = [1];
+        if (chartUsesMultipleDatasets(type)) {
+            [2, 3, 4].forEach(index => {
+                const input = document.getElementById(`dataInput${index}`);
+                const refInput = document.getElementById(`referenceInput${index}`);
+                if ((input && input.value.trim()) || (refInput && refInput.value.trim())) indexes.push(index);
+            });
+        }
+        return indexes;
+    }
+
+    function getReferenceEditorRowCount(labels) {
+        const expectedCount = labels.length;
+        let maxCount = expectedCount;
+        [1, 2, 3, 4].forEach(index => {
+            const dataInput = document.getElementById(`dataInput${index}`);
+            const refInput = document.getElementById(`referenceInput${index}`);
+            const dataCount = dataInput ? parseNumericSeries(dataInput.value, expectedCount).length : 0;
+            const refCount = refInput ? parseReferenceSeries(refInput.value, expectedCount).length : 0;
+            maxCount = Math.max(maxCount, dataCount, refCount);
+        });
+        return Math.max(maxCount, 1);
+    }
+
+    function syncReferenceEditorSummary() {
+        const summary = document.getElementById('referenceEditorSummary');
+        if (!summary) return;
+        const labels = getCurrentLabels();
+        const expectedCount = labels.length;
+        const count = [1, 2, 3, 4].reduce((total, index) => {
+            const input = document.getElementById(`referenceInput${index}`);
+            if (!input) return total;
+            return total + parseReferenceSeries(input.value, expectedCount).filter(item => String(item || '').trim()).length;
+        }, 0);
+        summary.innerText = count
+            ? `현재 참고 텍스트 ${count}개가 입력돼 있습니다. 표로 열어 항목별로 수정할 수 있습니다.`
+            : '참고 텍스트가 없으면 숫자만 표시됩니다.';
+    }
+
+    function openReferenceEditor() {
+        const modal = document.getElementById('referenceModal');
+        const headRow = document.getElementById('referenceModalTh');
+        const tbody = document.getElementById('referenceModalTbody');
+        if (!modal || !headRow || !tbody) return;
+
+        const labels = getCurrentLabels();
+        const rowCount = getReferenceEditorRowCount(labels);
+        const indexes = getReferenceInputIndexesForCurrentChart();
+        const names = indexes.map(index => {
+            const input = document.getElementById(`dataName${index}`);
+            return (input && input.value.trim()) || `데이터 ${index}`;
+        });
+        const refsByIndex = indexes.reduce((acc, index) => {
+            const input = document.getElementById(`referenceInput${index}`);
+            acc[index] = input ? parseReferenceSeries(input.value, labels.length) : [];
+            return acc;
+        }, {});
+
+        headRow.innerHTML = '<th class="ref-item-col">항목</th>' + indexes.map((index, i) => `<th>${escapeHtml(names[i])}<br><span style="font-size:11px; color:#777;">참고 텍스트</span></th>`).join('');
+        tbody.innerHTML = '';
+        for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+            const itemLabel = labels[rowIndex] || `항목 ${rowIndex + 1}`;
+            const row = document.createElement('tr');
+            row.innerHTML = `<td class="ref-item-col">${escapeHtml(itemLabel)}</td>` + indexes.map(index => {
+                const value = refsByIndex[index] && refsByIndex[index][rowIndex] ? refsByIndex[index][rowIndex] : '';
+                return `<td><input type="text" class="reference-grid-input" data-reference-index="${index}" data-reference-row="${rowIndex}" placeholder="예: (1085조원)" value="${escapeHtml(value)}"></td>`;
+            }).join('');
+            tbody.appendChild(row);
+        }
+        modal.style.display = 'flex';
+        const firstInput = modal.querySelector('.reference-grid-input');
+        if (firstInput) setTimeout(() => firstInput.focus(), 0);
+    }
+
+    function closeReferenceEditor() {
+        const modal = document.getElementById('referenceModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function saveReferenceEditor() {
+        const modal = document.getElementById('referenceModal');
+        if (!modal) return;
+        const grouped = {};
+        modal.querySelectorAll('.reference-grid-input').forEach(input => {
+            const index = input.dataset.referenceIndex;
+            const row = parseInt(input.dataset.referenceRow, 10);
+            if (!index || !Number.isFinite(row)) return;
+            if (!grouped[index]) grouped[index] = [];
+            grouped[index][row] = String(input.value || '').trim();
+        });
+
+        Object.entries(grouped).forEach(([index, values]) => {
+            const input = document.getElementById(`referenceInput${index}`);
+            if (!input) return;
+            let last = values.length - 1;
+            while (last >= 0 && !String(values[last] || '').trim()) last -= 1;
+            input.value = values.slice(0, last + 1).map(value => String(value || '').trim()).join('\n');
+        });
+        closeReferenceEditor();
+        syncReferenceEditorSummary();
+        updateOutput();
+        recordHistoryCheckpoint('항목별 참고 텍스트 수정');
+    }
+
+    function refreshReferenceStyleControls() {
+        updateReferenceFontDisplay();
+        syncReferenceEditorSummary();
+        const type = document.getElementById('chartType') ? document.getElementById('chartType').value : '';
+        const group = document.getElementById('referenceLabelStyleGroup');
+        const shouldShow = !(type === 'table' || type === 'list' || type === 'timeline');
+        if (group) group.style.display = shouldShow ? 'block' : 'none';
     }
 
     function chartUsesMultipleDatasets(typeOverride) {
@@ -2620,17 +3480,20 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
         refreshLabelDisplayTargetOptions(type, datasetNames);
     }
 
+    function normalizeLabelDisplayType(value) {
+        return value === 'last' ? 'all' : (value || 'all');
+    }
+
     function getDatasetLabelDisplayType(datasetIndex) {
         const globalSelect = document.getElementById('labelDisplayType');
-        const globalValue = globalSelect && globalSelect.value ? globalSelect.value : 'all';
+        const globalValue = normalizeLabelDisplayType(globalSelect && globalSelect.value ? globalSelect.value : 'all');
         const select = document.getElementById(`datasetLabelDisplayType${datasetIndex + 1}`);
         if (!select || !select.value || select.value === 'follow') return globalValue;
-        return select.value;
+        return normalizeLabelDisplayType(select.value);
     }
 
     function anyDatasetUsesLastDisplay(datasets) {
-        if (!Array.isArray(datasets) || !datasets.length) return false;
-        return datasets.some((_, index) => getDatasetLabelDisplayType(index) === 'last');
+        return false;
     }
 
     function getLabelDisplayTargetValue(datasetIndex, labelIndex) {
@@ -2901,10 +3764,12 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
     }
 
     function getMutedColor(index, type = 'bar') {
-        const palette = getActivePalette();
-        const barPalette = palette.bar || ['#BDBDBD', '#8F8F8F', '#D6D6D6', '#6F6F6F'];
-        const linePalette = palette.line || ['#4F4F4F', '#7B7B7B', '#A0A0A0', '#C0C0C0'];
-        const source = type === 'line' ? linePalette : barPalette;
+        // 강조 모드에서 선택하지 않은 데이터는 팔레트의 대표색을 그대로 쓰지 않고
+        // 중립 회색으로 낮춰야 선택한 한 항목만 강조되어 보입니다.
+        // 기존 팔레트 첫 색이 빨강인 경우 전체 막대/선이 빨갛게 보이는 문제를 막습니다.
+        const barMuted = ['#CFCFCF', '#D9D9D9', '#BDBDBD', '#E3E3E3'];
+        const lineMuted = ['#777777', '#999999', '#BBBBBB', '#666666'];
+        const source = type === 'line' ? lineMuted : barMuted;
         return source[index % source.length];
     }
 
@@ -2945,91 +3810,318 @@ const geminiSection = createControlSection('sectionGemini', '1) 입력', true, '
         return datasets;
     }
 
-function openDataSheet() {
+function isTextSheetType(type) {
+        return type === 'table' || type === 'list' || type === 'timeline';
+    }
+
+    function isMultiDatasetType(type) {
+        return (type === 'multi-line' || type === 'multi-bar' || type === 'h-multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo' || type === 'stacked-bar' || type === 'h-stacked-bar' || type === 'chart-table');
+    }
+
+    function setSheetModalMode(mode) {
+        const modal = document.getElementById('sheetModal');
+        if (modal) modal.dataset.sheetMode = mode;
+        const addColumnBtn = document.getElementById('addColumnBtn');
+        const mergeUpBtn = document.getElementById('mergeUpBtn');
+        const mergeLeftBtn = document.getElementById('mergeLeftBtn');
+        const unmergeBtn = document.getElementById('unmergeBtn');
+        const isText = mode === 'text';
+        [addColumnBtn, mergeUpBtn, mergeLeftBtn, unmergeBtn].forEach(btn => {
+            if (btn) btn.style.display = isText ? 'inline-block' : 'none';
+        });
+    }
+
+    let selectedSheetCell = null;
+
+    function setSelectedSheetCell(input) {
+        const previous = document.querySelector('#modalTbody td.active-cell');
+        if (previous) previous.classList.remove('active-cell');
+        selectedSheetCell = input || null;
+        if (selectedSheetCell && selectedSheetCell.closest('td')) selectedSheetCell.closest('td').classList.add('active-cell');
+    }
+
+    function bindTextSheetCell(input) {
+        if (!input || input.dataset.textSheetBound === 'true') return;
+        const syncTokenClass = () => {
+            input.classList.toggle('merge-token', input.value.trim() === '^' || input.value.trim() === '<');
+        };
+        input.addEventListener('focus', () => setSelectedSheetCell(input));
+        input.addEventListener('click', () => setSelectedSheetCell(input));
+        input.addEventListener('input', syncTokenClass);
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Tab') {
+                event.preventDefault();
+                moveTextSheetFocus(input, event.shiftKey ? -1 : 1);
+            }
+        });
+        input.dataset.textSheetBound = 'true';
+        syncTokenClass();
+    }
+
+    function moveTextSheetFocus(input, direction) {
+        const inputs = Array.from(document.querySelectorAll('#modalTbody input.table-grid-cell'));
+        const currentIndex = inputs.indexOf(input);
+        if (currentIndex < 0) return;
+        const next = inputs[currentIndex + direction];
+        if (next) {
+            next.focus();
+            next.select();
+        }
+    }
+
+    function getTextSheetColumnCount() {
+        return Math.max(1, document.querySelectorAll('#modalTh th').length || 1);
+    }
+
+    function refreshTextSheetHeaders(colCount, type) {
+        const header = document.getElementById('modalTh');
+        if (!header) return;
+        const names = type === 'timeline'
+            ? ['왼쪽 열', '오른쪽 열']
+            : (type === 'list' ? ['구분', '내용'] : []);
+        header.innerHTML = '';
+        for (let c = 0; c < colCount; c++) {
+            const th = document.createElement('th');
+            th.textContent = names[c] || `${c + 1}열`;
+            header.appendChild(th);
+        }
+    }
+
+    function parseTextSheetRows() {
+        const raw = document.getElementById('tableDataInput') ? document.getElementById('tableDataInput').value : '';
+        if (!raw.trim()) return [];
+        return raw.split(/\r?\n/).map(row => row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',')).map(cols => cols.map(col => col.trim()));
+    }
+
+    function createTextSheetRow(values = [], colCount = null) {
+        const tbody = document.getElementById('modalTbody');
+        if (!tbody) return null;
+        const count = colCount || getTextSheetColumnCount();
+        const tr = document.createElement('tr');
+        for (let c = 0; c < count; c++) {
+            const td = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'table-grid-cell';
+            input.value = values[c] !== undefined ? values[c] : '';
+            input.dataset.col = String(c);
+            td.appendChild(input);
+            tr.appendChild(td);
+            bindTextSheetCell(input);
+        }
+        tbody.appendChild(tr);
+        refreshTextSheetRowIndexes();
+        return tr;
+    }
+
+    function refreshTextSheetRowIndexes() {
+        document.querySelectorAll('#modalTbody tr').forEach((row, rIdx) => {
+            row.querySelectorAll('input.table-grid-cell').forEach((input, cIdx) => {
+                input.dataset.row = String(rIdx);
+                input.dataset.col = String(cIdx);
+            });
+        });
+    }
+
+    function openTextDataSheet(type) {
+        setSheetModalMode('text');
+        selectedSheetCell = null;
+        const title = document.getElementById('sheetModalTitle');
+        const note = document.getElementById('sheetModalNote');
+        if (title) title.textContent = type === 'timeline' ? '⏳ 타임라인 데이터 시트 편집' : (type === 'list' ? '📝 리스트 데이터 시트 편집' : '📋 텍스트표 데이터 시트 편집');
+        if (note) note.textContent = type === 'table'
+            ? '셀을 클릭한 뒤 “위와 병합” 또는 “왼쪽과 병합”을 누르면 간이 엑셀처럼 병합됩니다. 빈 행은 저장 시 제거됩니다.'
+            : '셀을 직접 편집합니다. 빈 행은 저장 시 제거됩니다.';
+
+        const rows = parseTextSheetRows();
+        const minCols = type === 'table' ? 4 : 2;
+        const colCount = Math.max(minCols, rows.reduce((max, row) => Math.max(max, row.length), 0));
+        refreshTextSheetHeaders(colCount, type);
+        const tbody = document.getElementById('modalTbody');
+        if (tbody) tbody.innerHTML = '';
+        const rowCount = Math.max(rows.length, type === 'table' ? 6 : 5);
+        for (let r = 0; r < rowCount; r++) createTextSheetRow(rows[r] || [], colCount);
+        const modal = document.getElementById('sheetModal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function openDataSheet() {
         const type = document.getElementById('chartType').value;
-        if (type === 'table' || type === 'list' || type === 'chart-table' || type === 'timeline') {
-            alert("텍스트 표 또는 리스트 뷰가 포함된 모드에서는 좌측 입력창을 이용해 주세요.");
+        if (isTextSheetType(type)) {
+            openTextDataSheet(type);
             return;
         }
-        document.getElementById('sheetName1').innerText = document.getElementById('dataName1').value || '데이터 1';
-        document.getElementById('sheetName2').innerText = document.getElementById('dataName2').value || '데이터 2';
-        document.getElementById('sheetName3').innerText = document.getElementById('dataName3').value || '데이터 3';
-        document.getElementById('sheetName4').innerText = document.getElementById('dataName4').value || '데이터 4';
+        setSheetModalMode('chart');
+        selectedSheetCell = null;
+        const title = document.getElementById('sheetModalTitle');
+        const note = document.getElementById('sheetModalNote');
+        if (title) title.textContent = '📊 데이터 시트 편집';
+        if (note) note.textContent = '수치와 참고 텍스트를 한 번에 편집합니다. 행을 비우면 해당 항목이 삭제됩니다.';
 
-        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'h-multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo' || type === 'stacked-bar' || type === 'h-stacked-bar');
+        const sheetNames = [1, 2, 3, 4].map(index => document.getElementById(`dataName${index}`).value || `데이터 ${index}`);
+
+        const useD2 = isMultiDatasetType(type);
         const useD3 = useD2; const useD4 = useD2;
 
-        document.getElementById('sheetTh2').style.display = useD2 ? 'table-cell' : 'none';
-        document.getElementById('sheetTh3').style.display = useD3 ? 'table-cell' : 'none';
-        document.getElementById('sheetTh4').style.display = useD4 ? 'table-cell' : 'none';
+        document.getElementById('modalTh').innerHTML = `
+            <th>항목(라벨)</th>
+            <th><span id="sheetName1">${escapeHtml(sheetNames[0])}</span></th>
+            <th id="sheetRefTh1"><span id="sheetRefName1">${escapeHtml(sheetNames[0])} 참고</span></th>
+            <th id="sheetTh2" style="display:${useD2 ? 'table-cell' : 'none'};"><span id="sheetName2">${escapeHtml(sheetNames[1])}</span></th>
+            <th id="sheetRefTh2" style="display:${useD2 ? 'table-cell' : 'none'};"><span id="sheetRefName2">${escapeHtml(sheetNames[1])} 참고</span></th>
+            <th id="sheetTh3" style="display:${useD3 ? 'table-cell' : 'none'};"><span id="sheetName3">${escapeHtml(sheetNames[2])}</span></th>
+            <th id="sheetRefTh3" style="display:${useD3 ? 'table-cell' : 'none'};"><span id="sheetRefName3">${escapeHtml(sheetNames[2])} 참고</span></th>
+            <th id="sheetTh4" style="display:${useD4 ? 'table-cell' : 'none'};"><span id="sheetName4">${escapeHtml(sheetNames[3])}</span></th>
+            <th id="sheetRefTh4" style="display:${useD4 ? 'table-cell' : 'none'};"><span id="sheetRefName4">${escapeHtml(sheetNames[3])} 참고</span></th>`;
 
         const labels = parseLabelSeries(document.getElementById('labelsInput').value);
         const d1 = parseNumericSeries(document.getElementById('dataInput1').value, labels.length).map(String);
         const d2 = parseNumericSeries(document.getElementById('dataInput2').value, labels.length).map(String);
         const d3 = parseNumericSeries(document.getElementById('dataInput3').value, labels.length).map(String);
         const d4 = parseNumericSeries(document.getElementById('dataInput4').value, labels.length).map(String);
+        const r1 = parseReferenceSeries(document.getElementById('referenceInput1')?.value || '', labels.length);
+        const r2 = parseReferenceSeries(document.getElementById('referenceInput2')?.value || '', labels.length);
+        const r3 = parseReferenceSeries(document.getElementById('referenceInput3')?.value || '', labels.length);
+        const r4 = parseReferenceSeries(document.getElementById('referenceInput4')?.value || '', labels.length);
 
         const tbody = document.getElementById('modalTbody'); tbody.innerHTML = '';
-        let maxLen = Math.max(labels.length, d1.length, (useD2 ? d2.length : 0), (useD3 ? d3.length : 0), (useD4 ? d4.length : 0));
+        let maxLen = Math.max(labels.length, d1.length, r1.length, (useD2 ? Math.max(d2.length, r2.length) : 0), (useD3 ? Math.max(d3.length, r3.length) : 0), (useD4 ? Math.max(d4.length, r4.length) : 0));
         if (maxLen === 0 || (maxLen === 1 && labels[0] === "")) maxLen = 5;
 
         for (let i = 0; i < maxLen; i++) {
             const tr = document.createElement('tr');
-            let rowHtml = `<td><input type="text" class="grid-label" value="${labels[i] !== undefined ? labels[i] : ''}"></td>`;
-            rowHtml += `<td><input type="text" class="grid-d1" value="${d1[i] !== undefined ? d1[i] : ''}"></td>`;
-            rowHtml += `<td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2" value="${d2[i] !== undefined ? d2[i] : ''}"></td>`;
-            rowHtml += `<td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3" value="${d3[i] !== undefined ? d3[i] : ''}"></td>`;
-            rowHtml += `<td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4" value="${d4[i] !== undefined ? d4[i] : ''}"></td>`;
+            let rowHtml = `<td><input type="text" class="grid-label" value="${labels[i] !== undefined ? escapeHtml(labels[i]) : ''}"></td>`;
+            rowHtml += `<td><input type="text" class="grid-d1" value="${d1[i] !== undefined ? escapeHtml(d1[i]) : ''}"></td>`;
+            rowHtml += `<td><input type="text" class="grid-r1" placeholder="예: (1085조원)" value="${r1[i] !== undefined ? escapeHtml(r1[i]) : ''}"></td>`;
+            rowHtml += `<td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2" value="${d2[i] !== undefined ? escapeHtml(d2[i]) : ''}"></td>`;
+            rowHtml += `<td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-r2" placeholder="참고" value="${r2[i] !== undefined ? escapeHtml(r2[i]) : ''}"></td>`;
+            rowHtml += `<td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3" value="${d3[i] !== undefined ? escapeHtml(d3[i]) : ''}"></td>`;
+            rowHtml += `<td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-r3" placeholder="참고" value="${r3[i] !== undefined ? escapeHtml(r3[i]) : ''}"></td>`;
+            rowHtml += `<td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4" value="${d4[i] !== undefined ? escapeHtml(d4[i]) : ''}"></td>`;
+            rowHtml += `<td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-r4" placeholder="참고" value="${r4[i] !== undefined ? escapeHtml(r4[i]) : ''}"></td>`;
             tr.innerHTML = rowHtml; tbody.appendChild(tr);
         }
         document.getElementById('sheetModal').style.display = 'flex';
     }
 
-    function addRow() {
+    function addTextSheetRow() {
+        createTextSheetRow([], getTextSheetColumnCount());
+    }
+
+    function addColumn() {
+        const modal = document.getElementById('sheetModal');
+        if (!modal || modal.dataset.sheetMode !== 'text') return;
         const type = document.getElementById('chartType').value;
-        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'h-multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo' || type === 'stacked-bar' || type === 'h-stacked-bar');
+        const colCount = getTextSheetColumnCount() + 1;
+        refreshTextSheetHeaders(colCount, type);
+        document.querySelectorAll('#modalTbody tr').forEach(row => {
+            const td = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'table-grid-cell';
+            td.appendChild(input);
+            row.appendChild(td);
+            bindTextSheetCell(input);
+        });
+        refreshTextSheetRowIndexes();
+    }
+
+    function mergeSelectedSheetCell(direction) {
+        const modal = document.getElementById('sheetModal');
+        if (!modal || modal.dataset.sheetMode !== 'text' || !selectedSheetCell) return;
+        if (direction === 'up') selectedSheetCell.value = '^';
+        else if (direction === 'left') selectedSheetCell.value = '<';
+        else if (direction === 'clear' && (selectedSheetCell.value.trim() === '^' || selectedSheetCell.value.trim() === '<')) selectedSheetCell.value = '';
+        selectedSheetCell.classList.toggle('merge-token', selectedSheetCell.value.trim() === '^' || selectedSheetCell.value.trim() === '<');
+        selectedSheetCell.focus();
+    }
+
+    function addRow() {
+        const modal = document.getElementById('sheetModal');
+        if (modal && modal.dataset.sheetMode === 'text') {
+            addTextSheetRow();
+            return;
+        }
+        const type = document.getElementById('chartType').value;
+        const useD2 = isMultiDatasetType(type);
+        const useD3 = useD2;
+        const useD4 = useD2;
         const tbody = document.getElementById('modalTbody');
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><input type="text" class="grid-label"></td>
             <td><input type="text" class="grid-d1"></td>
+            <td><input type="text" class="grid-r1" placeholder="예: (1085조원)"></td>
             <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2"></td>
-            <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3"></td>
-            <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4"></td>
+            <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-r2" placeholder="참고"></td>
+            <td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3"></td>
+            <td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-r3" placeholder="참고"></td>
+            <td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4"></td>
+            <td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-r4" placeholder="참고"></td>
         `;
         tbody.appendChild(tr);
     }
 
     function closeDataSheet() { document.getElementById('sheetModal').style.display = 'none'; }
 
+    function saveTextDataSheet() {
+        const lines = [];
+        document.querySelectorAll('#modalTbody tr').forEach(row => {
+            const values = Array.from(row.querySelectorAll('input.table-grid-cell')).map(input => input.value.trim());
+            while (values.length && values[values.length - 1] === '') values.pop();
+            if (values.some(value => value !== '')) lines.push(values.join('\t'));
+        });
+        document.getElementById('tableDataInput').value = lines.join('\n');
+        closeDataSheet();
+        updateOutput();
+        recordHistoryCheckpoint('텍스트표 데이터 시트 편집');
+    }
+
     function saveDataSheet() {
+        const modal = document.getElementById('sheetModal');
+        if (modal && modal.dataset.sheetMode === 'text') {
+            saveTextDataSheet();
+            return;
+        }
         const type = document.getElementById('chartType').value;
-        const useD2 = (type === 'multi-line' || type === 'multi-bar' || type === 'h-multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo' || type === 'stacked-bar' || type === 'h-stacked-bar');
-        const labels = [], d1 = [], d2 = [], d3 = [], d4 = [];
+        const useD2 = isMultiDatasetType(type);
+        const labels = [], d1 = [], d2 = [], d3 = [], d4 = [], r1 = [], r2 = [], r3 = [], r4 = [];
 
         document.querySelectorAll('#modalTbody tr').forEach(row => {
             const l = row.querySelector('.grid-label').value.trim();
             const v1 = row.querySelector('.grid-d1').value.trim();
+            const rv1 = row.querySelector('.grid-r1') ? row.querySelector('.grid-r1').value.trim() : '';
             const v2 = useD2 ? row.querySelector('.grid-d2').value.trim() : '';
+            const rv2 = useD2 && row.querySelector('.grid-r2') ? row.querySelector('.grid-r2').value.trim() : '';
             const v3 = useD2 ? row.querySelector('.grid-d3').value.trim() : '';
+            const rv3 = useD2 && row.querySelector('.grid-r3') ? row.querySelector('.grid-r3').value.trim() : '';
             const v4 = useD2 ? row.querySelector('.grid-d4').value.trim() : '';
-            if (l !== '' || v1 !== '' || v2 !== '' || v3 !== '' || v4 !== '') {
-                labels.push(l); d1.push(v1); if (useD2) { d2.push(v2); d3.push(v3); d4.push(v4); }
+            const rv4 = useD2 && row.querySelector('.grid-r4') ? row.querySelector('.grid-r4').value.trim() : '';
+            if (l !== '' || v1 !== '' || rv1 !== '' || v2 !== '' || rv2 !== '' || v3 !== '' || rv3 !== '' || v4 !== '' || rv4 !== '') {
+                labels.push(l); d1.push(v1); r1.push(rv1); if (useD2) { d2.push(v2); r2.push(rv2); d3.push(v3); r3.push(rv3); d4.push(v4); r4.push(rv4); }
             }
         });
 
         document.getElementById('labelsInput').value = labels.join(', ');
         document.getElementById('dataInput1').value = d1.join(', ');
+        document.getElementById('referenceInput1').value = r1.join('\n');
         if (useD2) {
             document.getElementById('dataInput2').value = d2.join(', ');
+            document.getElementById('referenceInput2').value = r2.join('\n');
             document.getElementById('dataInput3').value = d3.join(', ');
+            document.getElementById('referenceInput3').value = r3.join('\n');
             document.getElementById('dataInput4').value = d4.join(', ');
+            document.getElementById('referenceInput4').value = r4.join('\n');
         }
-        closeDataSheet(); updateOutput(); recordHistoryCheckpoint('데이터 시트 편집');
+        syncReferenceEditorSummary(); closeDataSheet(); updateOutput(); recordHistoryCheckpoint('데이터 시트 편집');
     }
 
     function loadExampleData() {
         const type = document.getElementById('chartType').value;
+        [1, 2, 3, 4].forEach(index => {
+            const refInput = document.getElementById(`referenceInput${index}`);
+            if (refInput) refInput.value = '';
+        });
         document.getElementById('dataName2').value = ''; document.getElementById('dataInput2').value = '';
         document.getElementById('dataName3').value = ''; document.getElementById('dataInput3').value = '';
         document.getElementById('dataName4').value = ''; document.getElementById('dataInput4').value = '';
@@ -3081,7 +4173,7 @@ function openDataSheet() {
             document.getElementById('dataName1').value = '주담대'; document.getElementById('dataInput1').value = '3000, -15000, 6000, -5776';
             document.getElementById('dataName2').value = '총가계대출'; document.getElementById('dataInput2').value = '-5000, -20000, 0, 8068';
             document.getElementById('dataName3').value = '신용대출'; document.getElementById('dataInput3').value = '-6000, -2000, -4000, 14008';
-            document.getElementById('labelDisplayType').value = 'last';
+            document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'combo') {
             document.getElementById('titleInput').value = '계절조정 실업자 및 실업률 추이';
             document.getElementById('subInput').value = '(단위: 천명, %, 자료: 통계청)';
@@ -3156,8 +4248,8 @@ function openDataSheet() {
         let currentTag = '';
         const allowedTags = new Set([
             '[종류]', '[제목]', '[부제목]', '[X축]',
-            '[데이터1이름]', '[데이터1수치]', '[데이터2이름]', '[데이터2수치]',
-            '[데이터3이름]', '[데이터3수치]', '[데이터4이름]', '[데이터4수치]',
+            '[데이터1이름]', '[데이터1수치]', '[데이터1참고]', '[데이터2이름]', '[데이터2수치]', '[데이터2참고]',
+            '[데이터3이름]', '[데이터3수치]', '[데이터3참고]', '[데이터4이름]', '[데이터4수치]', '[데이터4참고]',
             '[Y좌측최소]', '[Y좌측최대]', '[Y우측최소]', '[Y우측최대]', '[하단주석]', '[표데이터]'
         ]);
 
@@ -3217,10 +4309,10 @@ function openDataSheet() {
         const parsedLabels = parseLabelSeries(extract('[X축]'));
         const expectedDataCount = parsedLabels.length;
         document.getElementById('labelsInput').value = parsedLabels.join(', ');
-        document.getElementById('dataName1').value = extract('[데이터1이름]'); document.getElementById('dataInput1').value = normalizeNumberInput(extract('[데이터1수치]'), expectedDataCount);
-        document.getElementById('dataName2').value = extract('[데이터2이름]'); document.getElementById('dataInput2').value = normalizeNumberInput(extract('[데이터2수치]'), expectedDataCount);
-        document.getElementById('dataName3').value = extract('[데이터3이름]'); document.getElementById('dataInput3').value = normalizeNumberInput(extract('[데이터3수치]'), expectedDataCount);
-        document.getElementById('dataName4').value = extract('[데이터4이름]'); document.getElementById('dataInput4').value = normalizeNumberInput(extract('[데이터4수치]'), expectedDataCount);
+        document.getElementById('dataName1').value = extract('[데이터1이름]'); document.getElementById('dataInput1').value = normalizeNumberInput(extract('[데이터1수치]'), expectedDataCount); document.getElementById('referenceInput1').value = parseReferenceSeries(extract('[데이터1참고]'), expectedDataCount).join('\n');
+        document.getElementById('dataName2').value = extract('[데이터2이름]'); document.getElementById('dataInput2').value = normalizeNumberInput(extract('[데이터2수치]'), expectedDataCount); document.getElementById('referenceInput2').value = parseReferenceSeries(extract('[데이터2참고]'), expectedDataCount).join('\n');
+        document.getElementById('dataName3').value = extract('[데이터3이름]'); document.getElementById('dataInput3').value = normalizeNumberInput(extract('[데이터3수치]'), expectedDataCount); document.getElementById('referenceInput3').value = parseReferenceSeries(extract('[데이터3참고]'), expectedDataCount).join('\n');
+        document.getElementById('dataName4').value = extract('[데이터4이름]'); document.getElementById('dataInput4').value = normalizeNumberInput(extract('[데이터4수치]'), expectedDataCount); document.getElementById('referenceInput4').value = parseReferenceSeries(extract('[데이터4참고]'), expectedDataCount).join('\n');
         document.getElementById('yMin').value = normalizeNumberInput(extract('[Y좌측최소]'));
         document.getElementById('yMax').value = normalizeNumberInput(extract('[Y좌측최대]'));
         document.getElementById('y1Min').value = normalizeNumberInput(extract('[Y우측최소]'));
@@ -3286,11 +4378,25 @@ function openDataSheet() {
             if (type === 'pie') axisSettingGroup.style.display = 'none';
             else axisSettingGroup.style.display = 'block';
         }
+        const chartInputsPanel = document.getElementById('chartInputs');
+        const tableInputsPanel = document.getElementById('tableInputs');
+        if (chartInputsPanel) chartInputsPanel.style.display = 'none';
+        if (tableInputsPanel) tableInputsPanel.style.display = 'none';
+        if (openSheetBtn) {
+            openSheetBtn.style.display = 'block';
+            if (type === 'table') openSheetBtn.textContent = '📋 데이터 시트 편집 (텍스트표)';
+            else if (type === 'list') openSheetBtn.textContent = '📝 데이터 시트 편집 (리스트)';
+            else if (type === 'timeline') openSheetBtn.textContent = '⏳ 데이터 시트 편집 (타임라인)';
+            else openSheetBtn.textContent = '📊 데이터 시트 편집 (수치·참고 텍스트)';
+        }
+
         refreshHighlightControls();
         refreshDatasetLabelDisplayControls();
         refreshDatasetFontControls();
         refreshDatasetColorControls();
         refreshColumnWidthControls();
+        refreshReferenceStyleControls();
+        refreshChartAwareVisibility();
         updateOutput();
     }
 
@@ -3333,14 +4439,38 @@ function openDataSheet() {
         refreshDatasetFontControls();
         refreshDatasetColorControls();
         refreshColumnWidthControls();
-        if(document.getElementById('displayTitle')) document.getElementById('displayTitle').innerText = document.getElementById('titleInput').value;
+        refreshReferenceStyleControls();
+
+        const titleText = document.getElementById('titleInput').value;
+        const displayTitle = document.getElementById('displayTitle');
+        if(displayTitle) {
+            if (titleText.trim() === '') {
+                displayTitle.innerText = TITLE_PLACEHOLDER_TEXT;
+                displayTitle.classList.add('inline-placeholder');
+                displayTitle.title = '더블클릭해서 제목 입력';
+            } else {
+                displayTitle.innerText = titleText;
+                displayTitle.classList.remove('inline-placeholder');
+                displayTitle.title = '더블클릭해서 제목 수정';
+            }
+            displayTitle.style.display = 'inline-block';
+        }
         if(document.getElementById('displayName')) document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
 
         const subText = document.getElementById('subInput').value;
         const displaySub = document.getElementById('displaySub');
         if(displaySub) {
-            if (subText.trim() === '') displaySub.style.display = 'none';
-            else { displaySub.innerText = subText; displaySub.style.display = 'inline-block'; }
+            if (subText.trim() === '') {
+                displaySub.innerText = SUB_PLACEHOLDER_TEXT;
+                displaySub.classList.add('inline-placeholder');
+                displaySub.title = '더블클릭해서 부제목 입력';
+                displaySub.style.display = 'inline-block';
+            } else {
+                displaySub.innerText = subText;
+                displaySub.classList.remove('inline-placeholder');
+                displaySub.title = '더블클릭해서 부제목 수정';
+                displaySub.style.display = 'inline-block';
+            }
         }
 
         let detectedFootnote = document.getElementById('footnoteInput').value;
@@ -3375,8 +4505,18 @@ function openDataSheet() {
 
         const displayFootnote = document.getElementById('displayFootnote');
         if(displayFootnote) {
-            if (detectedFootnote.trim() === '') displayFootnote.style.display = 'none';
-            else { displayFootnote.innerText = detectedFootnote; displayFootnote.style.display = 'block'; }
+            const footnoteText = String(detectedFootnote || '').trim();
+            if (footnoteText === '') {
+                displayFootnote.innerText = FOOTNOTE_PLACEHOLDER_TEXT;
+                displayFootnote.classList.add('footnote-placeholder');
+                displayFootnote.title = '더블클릭해서 하단 주석 입력';
+                displayFootnote.style.display = 'block';
+            } else {
+                displayFootnote.innerText = footnoteText;
+                displayFootnote.classList.remove('footnote-placeholder');
+                displayFootnote.title = '더블클릭해서 주석 수정';
+                displayFootnote.style.display = 'block';
+            }
         }
 
         updateExportSizeHint();
@@ -3484,18 +4624,46 @@ function openDataSheet() {
             sourceRow: item.rowIndex,
             cols: (item.row.indexOf('\t') !== -1 ? item.row.split('\t') : item.row.split(',')).map(c => c.trim())
         }));
-        const cells = matrix.map(rowObj => rowObj.cols.map((col, cIdx) => ({ text: col, rowspan: 1, hide: false, sourceRow: rowObj.sourceRow, sourceCol: cIdx })));
+        const numCols = matrix.reduce((max, rowObj) => Math.max(max, rowObj.cols.length), 0);
+        const cells = matrix.map(rowObj => {
+            const rowCells = [];
+            for (let cIdx = 0; cIdx < numCols; cIdx++) {
+                rowCells.push({ text: rowObj.cols[cIdx] || '', rowspan: 1, colspan: 1, hide: false, sourceRow: rowObj.sourceRow, sourceCol: cIdx });
+            }
+            return rowCells;
+        });
 
         if (cells.length > 0) {
-            const numCols = cells.reduce((max, r) => Math.max(max, r.length), 0);
-            for (let c = 0; c < numCols; c++) {
-                let mergeStartRow = 0;
-                for (let r = 1; r < cells.length; r++) {
-                    if (cells[r][c] && cells[r][c].text === '^') { 
-                        if (cells[mergeStartRow] && cells[mergeStartRow][0] && !cells[mergeStartRow][0].text.startsWith('##')) {
-                            cells[mergeStartRow][c].rowspan++; cells[r][c].hide = true; 
+            // 왼쪽 병합: '<'가 들어간 칸은 바로 왼쪽의 보이는 셀에 colspan으로 합칩니다.
+            cells.forEach(row => {
+                for (let c = 1; c < row.length; c++) {
+                    if (row[c] && row[c].text === '<') {
+                        let mergeTarget = null;
+                        for (let pc = c - 1; pc >= 0; pc--) {
+                            if (row[pc] && !row[pc].hide) { mergeTarget = row[pc]; break; }
                         }
-                    } else { mergeStartRow = r; }
+                        if (mergeTarget) {
+                            mergeTarget.colspan++;
+                            row[c].hide = true;
+                        }
+                    }
+                }
+            });
+
+            // 위쪽 병합: '^'가 들어간 칸은 위쪽의 같은 열 셀에 rowspan으로 합칩니다.
+            for (let c = 0; c < numCols; c++) {
+                let mergeTarget = null;
+                for (let r = 0; r < cells.length; r++) {
+                    if (!cells[r][c] || cells[r][c].hide) continue;
+                    const isBlockHeader = cells[r][0] && cells[r][0].text.startsWith('##');
+                    if (cells[r][c].text === '^') {
+                        if (mergeTarget && !isBlockHeader) {
+                            mergeTarget.rowspan++;
+                            cells[r][c].hide = true;
+                        }
+                    } else {
+                        mergeTarget = isBlockHeader ? null : cells[r][c];
+                    }
                 }
             }
         }
@@ -3521,7 +4689,7 @@ function openDataSheet() {
                         html += '</colgroup>';
                     }
                     html += '<thead><tr>';
-                    row.forEach((cell, cIdx) => { if (!cell.hide) html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="preview-editable-target col-${cIdx}" ${makePreviewEditAttrs('table-cell', cell.sourceRow, cell.sourceCol, cell.text)}>${escapeHtml(cell.text)}</th>`; });
+                    row.forEach((cell, cIdx) => { if (!cell.hide) html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ''} class="preview-editable-target col-${cIdx}" ${makePreviewEditAttrs('table-cell', cell.sourceRow, cell.sourceCol, cell.text)}>${escapeHtml(cell.text)}</th>`; });
                     html += '</tr></thead><tbody>';
                     inTable = true;
                 } else {
@@ -3530,7 +4698,7 @@ function openDataSheet() {
                         if (!cell.hide) {
                             let cellText = cell.text; let cleanText = cellText.replace(/,/g, '');
                             if (isKoreanNumber && cellText !== '' && !isNaN(cleanText)) cellText = formatKoreanNumber(Number(cleanText), subText);
-                            html += `<td${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''} class="preview-editable-target col-${cIdx}" ${makePreviewEditAttrs('table-cell', cell.sourceRow, cell.sourceCol, cell.text)}>${escapeHtml(cellText)}</td>`;
+                            html += `<td${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ''} class="preview-editable-target col-${cIdx}" ${makePreviewEditAttrs('table-cell', cell.sourceRow, cell.sourceCol, cell.text)}>${escapeHtml(cellText)}</td>`;
                         }
                     });
                     html += '</tr>';
@@ -3647,13 +4815,17 @@ function openDataSheet() {
         let y1Min = document.getElementById('y1Min').value;
         let y1Max = document.getElementById('y1Max').value;
         const labelDisplayTypeElem = document.getElementById('labelDisplayType');
-        const labelDisplayType = labelDisplayTypeElem ? labelDisplayTypeElem.value : 'all';
+        const labelDisplayType = normalizeLabelDisplayType(labelDisplayTypeElem ? labelDisplayTypeElem.value : 'all');
         const datasetLabelDisplayTypes = datasets.map((_, index) => getDatasetLabelDisplayType(index));
         const selectedLabelDisplayTargets = getSelectedLabelDisplayTargets();
         const hasLastDisplay = anyDatasetUsesLastDisplay(datasets);
         const isKoreanNumberElem = document.getElementById('koreanNumberType');
         const isKoreanNumber = isKoreanNumberElem ? isKoreanNumberElem.value === 'apply' : false;
         const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
+        const hasReferenceLabels = hasAnyReferenceText(datasets);
+        const labelTopPadding = hasReferenceLabels ? 58 : 40;
+        const labelRightPadding = hasReferenceLabels ? (hasLastDisplay ? 125 : 80) : (hasLastDisplay ? 100 : 50);
+        const labelBottomPadding = hasReferenceLabels ? 28 : 20;
 
         const fontSizeElem = document.getElementById('globalFontSize');
         const baseSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
@@ -3668,6 +4840,122 @@ function openDataSheet() {
         const y1TickColor = !isHorizontal
             ? getAxisTickColorForDataset(secondaryAxisDatasetIndex, datasets, '#E61E2B')
             : '#333333';
+
+        const dataLabelHelpers = {
+            display: function(context) {
+                const datasetDisplayType = datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType;
+                if (datasetDisplayType === 'none') return false;
+                if (datasetDisplayType === 'selected') {
+                    if (!selectedLabelDisplayTargets.has(getLabelDisplayTargetValue(context.datasetIndex, context.dataIndex))) return false;
+                }
+                if (normType === 'pie') {
+                    return !getPieIsOutside(context) && getPieRatio(context) > 0;
+                }
+                return true;
+            },
+            align: function(context) {
+                if (normType === 'pie') return 'center';
+                if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 'center'; return 'right'; }
+                if (isStacked && context.dataset.type === 'bar') return 'center';
+                if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'start';
+                if (normType === 'multi-line' || ((normType.includes('combo')) && context.dataset.type === 'line')) {
+                    const { rank, totalLines } = getLineRank(context);
+                    if (rank === 0) return 'top'; if (rank === 1) return 'bottom'; return 'bottom';
+                }
+                if (normType === 'bar' || normType === 'multi-bar') return 'end';
+                return 'top';
+            },
+            anchor: function(context) {
+                if (normType === 'pie') return 'center';
+                if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 'center'; return 'end'; }
+                if (isStacked && context.dataset.type === 'bar') return 'center';
+                if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'end';
+                if (normType === 'bar' || normType === 'multi-bar') return 'end';
+                return 'center';
+            },
+            offset: function(context) {
+                if (normType === 'pie') return 0;
+                if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 0; return 6; }
+                if (isStacked && context.dataset.type === 'bar') return 0;
+                if (normType === 'multi-bar') return 4;
+                if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 6;
+                if (normType === 'multi-line' || ((normType.includes('combo')) && context.dataset.type === 'line')) {
+                    const { rank, totalLines } = getLineRank(context);
+                    if (rank === 2) return 25; return 8;
+                }
+                if (normType === 'bar') return 6; return 10;
+            },
+            color: function(context) {
+                const highlightColor = getHighlightColorForTarget(highlightConfig, context.datasetIndex, context.dataIndex);
+                const isHighlightedPoint = !!highlightColor;
+                const datasetLabelColor = getDatasetLabelColor(context.datasetIndex);
+                if (normType === 'pie') return datasetLabelColor || '#ffffff';
+                if (highlightConfig.enabled) {
+                    if (isHighlightedPoint) {
+                        if (isStacked && context.dataset.type === 'bar') return '#ffffff';
+                        return highlightColor;
+                    }
+                    if (isStacked && context.dataset.type === 'bar') return '#ffffff';
+                    return '#666666';
+                }
+                if (datasetLabelColor) return datasetLabelColor;
+                if (isStacked && context.dataset.type === 'bar') return '#ffffff';
+                if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return '#333';
+                if (normType === 'bar' || normType === 'multi-bar') return '#111';
+                if (isHorizontal) return '#111';
+                return context.dataset.borderColor;
+            },
+            font: function(context) {
+                const isHighlightedPoint = !!getHighlightColorForTarget(highlightConfig, context.datasetIndex, context.dataIndex);
+                const datasetFontSize = getDatasetLabelFontSize(context.datasetIndex);
+                const emphasizedFontSize = Math.min(datasetFontSize + 4, 36);
+                if (normType === 'pie') {
+                    return getPieFont(context, datasetFontSize / 18);
+                }
+                if (isHighlightedPoint) return { size: emphasizedFontSize, weight: '900' };
+                return { size: datasetFontSize, weight: 'bold' };
+            },
+            textStrokeColor: function(context) {
+                if (normType === 'pie') return 'rgba(0,0,0,0)';
+                if (isStacked && context.dataset.type === 'bar') return 'rgba(0,0,0,0)';
+                if (isHorizontal) return 'rgba(0,0,0,0)';
+                return '#ffffff';
+            },
+            textStrokeWidth: function(context) {
+                if (normType === 'pie') return 0;
+                if (isStacked && context.dataset.type === 'bar') return 0;
+                if (isHorizontal) return 0;
+                return 6;
+            },
+            formatter: (value, ctx) => {
+                let displayVal = String(isKoreanNumber ? formatKoreanNumber(value, subText) : value);
+                if (normType === 'pie') {
+                    let label = ctx.chart.data.labels[ctx.dataIndex];
+                    label = label ? label.trim() : '';
+                    if (label === '') return displayVal;
+                    return wrapPieInsideLabel(label, 11, 4) + '\n' + displayVal;
+                }
+                return displayVal;
+            }
+        };
+
+        function hasReferenceForContext(context) {
+            return !!getReferenceTextForDataLabel(context.datasetIndex, context.dataIndex, context.chart.data.datasets);
+        }
+
+        function getReferenceLabelOffset(context) {
+            const baseOffset = Number(dataLabelHelpers.offset(context)) || 0;
+            const refSize = getReferenceLabelFontSize();
+            if (normType === 'pie') return Math.max(14, Math.round(refSize * 0.95));
+            // 숫자는 바깥쪽, 참고 텍스트는 조금 안쪽에 배치해 두 줄의 위계를 만듭니다.
+            return Math.max(0, baseOffset - 2);
+        }
+
+        function getValueLabelOffset(context) {
+            const baseOffset = Number(dataLabelHelpers.offset(context)) || 0;
+            if (!hasReferenceForContext(context) || normType === 'pie') return baseOffset;
+            return baseOffset + Math.max(13, getReferenceLabelFontSize() + 2);
+        }
 
         const ctx = document.getElementById('myChart').getContext('2d');
         let baseChartType = (normType === 'line' || normType === 'pie') ? normType : 'bar';
@@ -3686,7 +4974,7 @@ function openDataSheet() {
                 layout: {
                     padding: normType === 'pie'
                         ? { top: 24, right: 230, bottom: 24, left: 24 }
-                        : (hasLastDisplay ? { right: 100, top: 40, bottom: 20, left: 10 } : { right: 50, top: 40, bottom: 20, left: 10 })
+                        : { right: labelRightPadding, top: labelTopPadding, bottom: labelBottomPadding, left: 10 }
                 },
                 plugins: {
                     title: { display: false },
@@ -3699,116 +4987,45 @@ function openDataSheet() {
                     },
                     tooltip: { enabled: false },
                     datalabels: {
-                        display: function(context) {
-                            const datasetDisplayType = datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType;
-                            if (datasetDisplayType === 'none') return false;
-                            if (datasetDisplayType === 'selected') {
-                                if (!selectedLabelDisplayTargets.has(getLabelDisplayTargetValue(context.datasetIndex, context.dataIndex))) return false;
+                        labels: {
+                            value: {
+                                display: dataLabelHelpers.display,
+                                align: dataLabelHelpers.align,
+                                anchor: dataLabelHelpers.anchor,
+                                offset: getValueLabelOffset,
+                                color: dataLabelHelpers.color,
+                                font: dataLabelHelpers.font,
+                                textStrokeColor: dataLabelHelpers.textStrokeColor,
+                                textStrokeWidth: dataLabelHelpers.textStrokeWidth,
+                                formatter: dataLabelHelpers.formatter,
+                                textAlign: 'center',
+                                clamp: true,
+                                clip: false
+                            },
+                            reference: {
+                                display: function(context) {
+                                    return dataLabelHelpers.display(context) && hasReferenceForContext(context);
+                                },
+                                align: function(context) {
+                                    if (normType === 'pie') return 'bottom';
+                                    return dataLabelHelpers.align(context);
+                                },
+                                anchor: dataLabelHelpers.anchor,
+                                offset: getReferenceLabelOffset,
+                                color: function(context) { return getReferenceLabelColor(normType, context); },
+                                font: function() {
+                                    return { size: getReferenceLabelFontSize(), weight: getReferenceLabelFontWeight(), lineHeight: 1.15 };
+                                },
+                                textStrokeColor: function(context) { return getReferenceLabelStrokeColor(normType, context); },
+                                textStrokeWidth: function(context) { return getReferenceLabelStrokeWidth(normType, context); },
+                                formatter: function(value, ctx) {
+                                    return getReferenceTextForDataLabel(ctx.datasetIndex, ctx.dataIndex, ctx.chart.data.datasets);
+                                },
+                                textAlign: 'center',
+                                clamp: true,
+                                clip: false
                             }
-                            if (normType === 'pie') {
-                                return !getPieIsOutside(context) && getPieRatio(context) > 0;
-                            }
-                            if (datasetDisplayType === 'last' && normType !== 'pie') {
-                                return context.dataIndex === context.dataset.data.length - 1;
-                            }
-                            return true; 
-                        },
-                        align: function(context) {
-                            if (normType === 'pie') return 'center'; // 5% 이상인 큰 조각은 가운데 정렬
-                            if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 'center'; return 'right'; }
-                            if (isStacked && context.dataset.type === 'bar') return 'center';
-                            if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'start';
-                            if (normType === 'multi-line' || ((normType.includes('combo')) && context.dataset.type === 'line')) {
-                                const { rank, totalLines } = getLineRank(context);
-                                if ((datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType) === 'last' && context.dataIndex === context.dataset.data.length - 1) {
-                                    if (totalLines === 2) return rank === 0 ? 'top' : 'bottom';
-                                    if (totalLines >= 3) { if (rank === 0) return 'top'; if (rank === 1) return 'right'; return 'bottom'; }
-                                }
-                                if (rank === 0) return 'top'; if (rank === 1) return 'bottom'; return 'bottom';
-                            }
-                            if (normType === 'bar' || normType === 'multi-bar') return 'end';
-                            return 'top';
-                        },
-                        anchor: function(context) {
-                            if (normType === 'pie') return 'center'; // 5% 이상 큰 조각은 중앙 앵커
-                            if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 'center'; return 'end'; }
-                            if (isStacked && context.dataset.type === 'bar') return 'center';
-                            if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 'end';
-                            if (normType === 'bar' || normType === 'multi-bar') return 'end';
-                            return 'center';
-                        },
-                        offset: function(context) {
-                            if (normType === 'pie') return 0; // 큰 조각은 가운데 딱 맞춤
-                            if (isHorizontal) { if (isStacked && context.dataset.type === 'bar') return 0; return 6; }
-                            if (isStacked && context.dataset.type === 'bar') return 0;
-                            if (normType === 'multi-bar') return 4;
-                            if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return 6;
-                            if (normType === 'multi-line' || ((normType.includes('combo')) && context.dataset.type === 'line')) {
-                                const { rank, totalLines } = getLineRank(context);
-                                if ((datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType) === 'last' && context.dataIndex === context.dataset.data.length - 1) {
-                                    if (totalLines >= 3 && rank === 1) return 12; return 10;
-                                }
-                                if (rank === 2) return 25; return 8;
-                            }
-                            if (normType === 'bar') return 6; return 10;
-                        },
-                        color: function(context) {
-                            const highlightColor = getHighlightColorForTarget(highlightConfig, context.datasetIndex, context.dataIndex);
-                            const isHighlightedPoint = !!highlightColor;
-                            const datasetLabelColor = getDatasetLabelColor(context.datasetIndex);
-                            if (normType === 'pie') return datasetLabelColor || '#ffffff';
-                            if (highlightConfig.enabled) {
-                                if (isHighlightedPoint) {
-                                    if (isStacked && context.dataset.type === 'bar') return '#ffffff';
-                                    return highlightColor;
-                                }
-                                if (isStacked && context.dataset.type === 'bar') return '#ffffff';
-                                return '#666666';
-                            }
-                            if (datasetLabelColor) return datasetLabelColor;
-                            if (isStacked && context.dataset.type === 'bar') return '#ffffff';
-                            if ((normType === 'combo' || normType === 'multi-combo') && context.dataset.type === 'bar') return '#333';
-                            if (normType === 'bar' || normType === 'multi-bar') return '#111';
-                            if (isHorizontal) return '#111';
-                            return context.dataset.borderColor;
-                        },
-                        font: function(context) {
-                            const isHighlightedPoint = !!getHighlightColorForTarget(highlightConfig, context.datasetIndex, context.dataIndex);
-                            const datasetFontSize = getDatasetLabelFontSize(context.datasetIndex);
-                            const emphasizedFontSize = Math.min(datasetFontSize + 4, 36);
-                            if (normType === 'pie') {
-                                return getPieFont(context, datasetFontSize / 18);
-                            }
-                            if (isHighlightedPoint) return { size: emphasizedFontSize, weight: '900' };
-                            if ((datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType) === 'last' && context.dataIndex === context.dataset.data.length - 1) return { size: emphasizedFontSize, weight: '900' };
-                            return { size: datasetFontSize, weight: 'bold' };
-                        },
-                        textStrokeColor: function(context) {
-                            if (normType === 'pie') return 'rgba(0,0,0,0)'; 
-                            if (isStacked && context.dataset.type === 'bar') return 'rgba(0,0,0,0)';
-                            if (isHorizontal) return 'rgba(0,0,0,0)';
-                            return '#ffffff';
-                        },
-                        textStrokeWidth: function(context) {
-                            if (normType === 'pie') return 0;
-                            if (isStacked && context.dataset.type === 'bar') return 0;
-                            if (isHorizontal) return 0;
-                            return 6;
-                        },
-                        formatter: (value, ctx) => {
-                            let displayVal = isKoreanNumber ? formatKoreanNumber(value, subText) : value;
-                            if (normType === 'pie') {
-                                let label = ctx.chart.data.labels[ctx.dataIndex];
-                                label = label ? label.trim() : '';
-                                if (label === '') return displayVal;
-                                return wrapPieInsideLabel(label, 11, 4) + '\n' + displayVal;
-                            }
-                            return displayVal;
-                        },
-                        textAlign: function(context) {
-                            return 'center';
-                        },
-                        clamp: true, clip: false
+                        }
                     }
                 },
                 scales: {
@@ -3883,6 +5100,7 @@ function openDataSheet() {
         hidePreviewQuickEditor(true);
         if (!validateReporterName()) return;
 
+        const restoreFootnotePlaceholder = hideFootnotePlaceholderForExport();
         const captureDiv = document.getElementById('capture-area');
         const btn = document.getElementById('downloadBtn');
         const originalText = btn.innerText;
@@ -3937,6 +5155,7 @@ function openDataSheet() {
             alert('저장 오류가 발생했습니다.');
         } finally {
             await setChartPixelRatio(NORMAL_CHART_DPR);
+            restoreFootnotePlaceholder();
             updateExportSizeHint();
             btn.innerText = originalText;
             btn.style.backgroundColor = '#333';
@@ -3986,6 +5205,7 @@ function openDataSheet() {
         hideChartQuickEditor(true);
         hidePreviewQuickEditor(true);
         if (!validateReporterName()) return;
+        const restoreFootnotePlaceholder = hideFootnotePlaceholderForExport();
         const captureDiv = document.getElementById('capture-area');
         const btn = document.getElementById('svgDownloadBtn');
         const originalText = btn ? btn.innerText : '';
@@ -4053,6 +5273,7 @@ function openDataSheet() {
             alert('SVG \uC800\uC7A5 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4. PNG \uC800\uC7A5\uC744 \uC774\uC6A9\uD574 \uC8FC\uC138\uC694.');
         } finally {
             await setChartPixelRatio(NORMAL_CHART_DPR);
+            restoreFootnotePlaceholder();
             updateExportSizeHint();
             if (btn) {
                 btn.innerText = originalText;
@@ -4064,19 +5285,17 @@ function openDataSheet() {
 
     window.onload = function() { 
         buildFriendlyControlMenu();
+        setupHoverHelpBalloons();
         initHistoryControls();
         setupInlineEditing();
         setupChartQuickEditing();
         setupPreviewQuickEditing();
         setupPieSideListQuickEditing();
-        updateFavoriteSelect();
         applyPalettePreset('asiae', { skipUpdate: true, skipHistory: true });
         const initialType = document.getElementById('chartType').value;
         initializedChartTypes.add(initialType);
         loadExampleData();
         updateExportSizeHint();
-        setParseSummary('제미나이 텍스트를 붙여넣으면 파싱 요약이 표시됩니다.', 'ok');
-
         const exportScaleEl = document.getElementById('exportScale');
         if (exportScaleEl) {
             exportScaleEl.addEventListener('change', updateExportSizeHint);
