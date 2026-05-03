@@ -163,6 +163,8 @@
         .sheet-tool-row button { cursor: pointer; border: none; padding: 8px 12px; color: white; border-radius: 4px; font-size: 12px; font-weight: 900; font-family: var(--main-font); }
         .sheet-tool-row .btn-add-row { background:#555; }
         .sheet-tool-row .btn-add-col { background:#333; }
+        .sheet-tool-row .btn-delete-row { background:#777; }
+        .sheet-tool-row .btn-delete-col { background:#b42318; }
         .sheet-tool-row .btn-merge { background:#0056b3; }
         .sheet-tool-row .btn-unmerge { background:#777; }
         .sheet-tool-row .btn-merge:hover { background:#004494; }
@@ -977,6 +979,8 @@
             <div class="sheet-tool-row" id="sheetToolRow">
                 <button type="button" class="btn-add-row" onclick="addRow()">+ 행 추가하기</button>
                 <button type="button" class="btn-add-col" id="addColumnBtn" onclick="addColumn()">+ 열 추가하기</button>
+                <button type="button" class="btn-delete-row" id="deleteRowBtn" onclick="deleteSelectedSheetRow()">− 선택 행 삭제</button>
+                <button type="button" class="btn-delete-col" id="deleteColumnBtn" onclick="deleteSelectedSheetColumn()">− 선택 열 삭제</button>
                 <button type="button" class="btn-merge" id="mergeUpBtn" onclick="mergeSelectedSheetCell('up')">선택 셀 위와 병합</button>
                 <button type="button" class="btn-merge" id="mergeLeftBtn" onclick="mergeSelectedSheetCell('left')">선택 셀 왼쪽과 병합</button>
                 <button type="button" class="btn-unmerge" id="unmergeBtn" onclick="mergeSelectedSheetCell('clear')">병합 해제</button>
@@ -3844,11 +3848,17 @@ function isTextSheetType(type) {
         const modal = document.getElementById('sheetModal');
         if (modal) modal.dataset.sheetMode = mode;
         const addColumnBtn = document.getElementById('addColumnBtn');
+        const deleteRowBtn = document.getElementById('deleteRowBtn');
+        const deleteColumnBtn = document.getElementById('deleteColumnBtn');
         const mergeUpBtn = document.getElementById('mergeUpBtn');
         const mergeLeftBtn = document.getElementById('mergeLeftBtn');
         const unmergeBtn = document.getElementById('unmergeBtn');
         const isText = mode === 'text';
-        [addColumnBtn, mergeUpBtn, mergeLeftBtn, unmergeBtn].forEach(btn => {
+        const isChart = mode === 'chart';
+        [addColumnBtn, deleteRowBtn, deleteColumnBtn].forEach(btn => {
+            if (btn) btn.style.display = (isText || isChart) ? 'inline-block' : 'none';
+        });
+        [mergeUpBtn, mergeLeftBtn, unmergeBtn].forEach(btn => {
             if (btn) btn.style.display = isText ? 'inline-block' : 'none';
         });
     }
@@ -3967,6 +3977,122 @@ function isTextSheetType(type) {
         if (modal) modal.style.display = 'flex';
     }
 
+    function getChartSheetMaxDatasetCount(type) {
+        return isMultiDatasetType(type) ? 4 : 1;
+    }
+
+    function getChartSheetActiveCount(type) {
+        const maxCount = getChartSheetMaxDatasetCount(type);
+        let activeCount = 1;
+        for (let index = 2; index <= maxCount; index++) {
+            const nameValue = (document.getElementById(`dataName${index}`)?.value || '').trim();
+            const dataValue = (document.getElementById(`dataInput${index}`)?.value || '').trim();
+            const refValue = (document.getElementById(`referenceInput${index}`)?.value || '').trim();
+            const hasNumericData = parseNumericSeries(dataValue).length > 0;
+            if (nameValue !== '' || hasNumericData || refValue !== '') activeCount = index;
+        }
+        return activeCount;
+    }
+
+    function getModalActiveDatasetCount() {
+        const modal = document.getElementById('sheetModal');
+        const count = Number(modal?.dataset.activeDatasetCount || 1);
+        return Number.isFinite(count) ? Math.min(Math.max(1, count), 4) : 1;
+    }
+
+    function getCurrentChartSheetState() {
+        const activeCount = getModalActiveDatasetCount();
+        const labels = [];
+        const dataColumns = Array.from({ length: activeCount }, () => []);
+        const referenceColumns = Array.from({ length: activeCount }, () => []);
+        const sheetNames = [];
+
+        document.querySelectorAll('#modalTh th[data-sheet-role="data"]').forEach(th => {
+            sheetNames.push(th.dataset.rawName || '');
+        });
+        while (sheetNames.length < activeCount) sheetNames.push('');
+
+        document.querySelectorAll('#modalTbody tr').forEach(row => {
+            labels.push(row.querySelector('.grid-label')?.value || '');
+            for (let index = 1; index <= activeCount; index++) {
+                dataColumns[index - 1].push(row.querySelector(`.grid-d${index}`)?.value || '');
+                referenceColumns[index - 1].push(row.querySelector(`.grid-r${index}`)?.value || '');
+            }
+        });
+
+        return { labels, dataColumns, referenceColumns, sheetNames, activeCount };
+    }
+
+    function bindChartSheetCell(input) {
+        if (!input || input.dataset.chartSheetBound === 'true') return;
+        input.addEventListener('focus', () => setSelectedSheetCell(input));
+        input.addEventListener('click', () => setSelectedSheetCell(input));
+        input.dataset.chartSheetBound = 'true';
+    }
+
+    function bindAllChartSheetCells() {
+        document.querySelectorAll('#modalTbody input').forEach(bindChartSheetCell);
+        refreshChartSheetRowIndexes();
+    }
+
+    function refreshChartSheetRowIndexes() {
+        document.querySelectorAll('#modalTbody tr').forEach((row, rowIndex) => {
+            row.querySelectorAll('input').forEach(input => {
+                input.dataset.row = String(rowIndex);
+            });
+        });
+    }
+
+    function buildChartSheetRowHtml(rowIndex, state) {
+        const labels = state.labels || [];
+        const dataColumns = state.dataColumns || [];
+        const referenceColumns = state.referenceColumns || [];
+        const activeCount = state.activeCount || 1;
+        let rowHtml = `<td><input type="text" class="grid-label" data-role="label" value="${labels[rowIndex] !== undefined ? escapeHtml(labels[rowIndex]) : ''}"></td>`;
+        for (let index = 1; index <= activeCount; index++) {
+            const dataColumn = dataColumns[index - 1] || [];
+            const referenceColumn = referenceColumns[index - 1] || [];
+            rowHtml += `<td><input type="text" class="grid-d${index}" data-role="data" data-series="${index}" value="${dataColumn[rowIndex] !== undefined ? escapeHtml(dataColumn[rowIndex]) : ''}"></td>`;
+            rowHtml += `<td><input type="text" class="grid-r${index}" data-role="reference" data-series="${index}" placeholder="${index === 1 ? '예: (1085조원)' : '참고'}" value="${referenceColumn[rowIndex] !== undefined ? escapeHtml(referenceColumn[rowIndex]) : ''}"></td>`;
+        }
+        return rowHtml;
+    }
+
+    function renderChartDataSheetFromState(state, type) {
+        const maxCount = getChartSheetMaxDatasetCount(type);
+        state.activeCount = Math.min(Math.max(1, state.activeCount || 1), maxCount);
+        const modal = document.getElementById('sheetModal');
+        if (modal) modal.dataset.activeDatasetCount = String(state.activeCount);
+
+        const headerCells = ['<th>항목(라벨)</th>'];
+        for (let index = 1; index <= state.activeCount; index++) {
+            const rawName = state.sheetNames?.[index - 1] || '';
+            const displayName = rawName || `데이터 ${index}`;
+            headerCells.push(`<th data-sheet-role="data" data-series="${index}" data-raw-name="${escapeHtml(rawName)}"><span id="sheetName${index}">${escapeHtml(displayName)}</span></th>`);
+            headerCells.push(`<th data-sheet-role="reference" data-series="${index}" data-raw-name="${escapeHtml(rawName)}"><span id="sheetRefName${index}">${escapeHtml(displayName)} 참고</span></th>`);
+        }
+        document.getElementById('modalTh').innerHTML = headerCells.join('');
+
+        const tbody = document.getElementById('modalTbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const arrays = [state.labels || []];
+        for (let index = 0; index < state.activeCount; index++) {
+            arrays.push(state.dataColumns?.[index] || []);
+            arrays.push(state.referenceColumns?.[index] || []);
+        }
+        let maxLen = arrays.reduce((max, arr) => Math.max(max, arr.length), 0);
+        if (maxLen === 0 || (maxLen === 1 && (state.labels || [])[0] === '')) maxLen = 5;
+
+        for (let rowIndex = 0; rowIndex < maxLen; rowIndex++) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = buildChartSheetRowHtml(rowIndex, state);
+            tbody.appendChild(tr);
+        }
+        bindAllChartSheetCells();
+    }
+
     function openDataSheet() {
         const type = document.getElementById('chartType').value;
         if (isTextSheetType(type)) {
@@ -3978,51 +4104,20 @@ function isTextSheetType(type) {
         const title = document.getElementById('sheetModalTitle');
         const note = document.getElementById('sheetModalNote');
         if (title) title.textContent = '📊 데이터 시트 편집';
-        if (note) note.textContent = '수치와 참고 텍스트를 한 번에 편집합니다. 행을 비우면 해당 항목이 삭제됩니다.';
+        if (note) note.textContent = '수치와 참고 텍스트를 한 번에 편집합니다. 빈 행은 저장 시 제거되고, 선택한 행/열은 삭제할 수 있습니다.';
 
-        const sheetNames = [1, 2, 3, 4].map(index => document.getElementById(`dataName${index}`).value || `데이터 ${index}`);
-
-        const useD2 = isMultiDatasetType(type);
-        const useD3 = useD2; const useD4 = useD2;
-
-        document.getElementById('modalTh').innerHTML = `
-            <th>항목(라벨)</th>
-            <th><span id="sheetName1">${escapeHtml(sheetNames[0])}</span></th>
-            <th id="sheetRefTh1"><span id="sheetRefName1">${escapeHtml(sheetNames[0])} 참고</span></th>
-            <th id="sheetTh2" style="display:${useD2 ? 'table-cell' : 'none'};"><span id="sheetName2">${escapeHtml(sheetNames[1])}</span></th>
-            <th id="sheetRefTh2" style="display:${useD2 ? 'table-cell' : 'none'};"><span id="sheetRefName2">${escapeHtml(sheetNames[1])} 참고</span></th>
-            <th id="sheetTh3" style="display:${useD3 ? 'table-cell' : 'none'};"><span id="sheetName3">${escapeHtml(sheetNames[2])}</span></th>
-            <th id="sheetRefTh3" style="display:${useD3 ? 'table-cell' : 'none'};"><span id="sheetRefName3">${escapeHtml(sheetNames[2])} 참고</span></th>
-            <th id="sheetTh4" style="display:${useD4 ? 'table-cell' : 'none'};"><span id="sheetName4">${escapeHtml(sheetNames[3])}</span></th>
-            <th id="sheetRefTh4" style="display:${useD4 ? 'table-cell' : 'none'};"><span id="sheetRefName4">${escapeHtml(sheetNames[3])} 참고</span></th>`;
-
+        const activeCount = getChartSheetActiveCount(type);
         const labels = parseLabelSeries(document.getElementById('labelsInput').value);
-        const d1 = parseNumericSeries(document.getElementById('dataInput1').value, labels.length).map(String);
-        const d2 = parseNumericSeries(document.getElementById('dataInput2').value, labels.length).map(String);
-        const d3 = parseNumericSeries(document.getElementById('dataInput3').value, labels.length).map(String);
-        const d4 = parseNumericSeries(document.getElementById('dataInput4').value, labels.length).map(String);
-        const r1 = parseReferenceSeries(document.getElementById('referenceInput1')?.value || '', labels.length);
-        const r2 = parseReferenceSeries(document.getElementById('referenceInput2')?.value || '', labels.length);
-        const r3 = parseReferenceSeries(document.getElementById('referenceInput3')?.value || '', labels.length);
-        const r4 = parseReferenceSeries(document.getElementById('referenceInput4')?.value || '', labels.length);
-
-        const tbody = document.getElementById('modalTbody'); tbody.innerHTML = '';
-        let maxLen = Math.max(labels.length, d1.length, r1.length, (useD2 ? Math.max(d2.length, r2.length) : 0), (useD3 ? Math.max(d3.length, r3.length) : 0), (useD4 ? Math.max(d4.length, r4.length) : 0));
-        if (maxLen === 0 || (maxLen === 1 && labels[0] === "")) maxLen = 5;
-
-        for (let i = 0; i < maxLen; i++) {
-            const tr = document.createElement('tr');
-            let rowHtml = `<td><input type="text" class="grid-label" value="${labels[i] !== undefined ? escapeHtml(labels[i]) : ''}"></td>`;
-            rowHtml += `<td><input type="text" class="grid-d1" value="${d1[i] !== undefined ? escapeHtml(d1[i]) : ''}"></td>`;
-            rowHtml += `<td><input type="text" class="grid-r1" placeholder="예: (1085조원)" value="${r1[i] !== undefined ? escapeHtml(r1[i]) : ''}"></td>`;
-            rowHtml += `<td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2" value="${d2[i] !== undefined ? escapeHtml(d2[i]) : ''}"></td>`;
-            rowHtml += `<td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-r2" placeholder="참고" value="${r2[i] !== undefined ? escapeHtml(r2[i]) : ''}"></td>`;
-            rowHtml += `<td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3" value="${d3[i] !== undefined ? escapeHtml(d3[i]) : ''}"></td>`;
-            rowHtml += `<td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-r3" placeholder="참고" value="${r3[i] !== undefined ? escapeHtml(r3[i]) : ''}"></td>`;
-            rowHtml += `<td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4" value="${d4[i] !== undefined ? escapeHtml(d4[i]) : ''}"></td>`;
-            rowHtml += `<td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-r4" placeholder="참고" value="${r4[i] !== undefined ? escapeHtml(r4[i]) : ''}"></td>`;
-            tr.innerHTML = rowHtml; tbody.appendChild(tr);
+        const dataColumns = [];
+        const referenceColumns = [];
+        const sheetNames = [];
+        for (let index = 1; index <= activeCount; index++) {
+            dataColumns.push(parseNumericSeries(document.getElementById(`dataInput${index}`)?.value || '', labels.length).map(String));
+            referenceColumns.push(parseReferenceSeries(document.getElementById(`referenceInput${index}`)?.value || '', labels.length));
+            sheetNames.push(document.getElementById(`dataName${index}`)?.value || '');
         }
+
+        renderChartDataSheetFromState({ labels, dataColumns, referenceColumns, sheetNames, activeCount }, type);
         document.getElementById('sheetModal').style.display = 'flex';
     }
 
@@ -4032,8 +4127,28 @@ function isTextSheetType(type) {
 
     function addColumn() {
         const modal = document.getElementById('sheetModal');
-        if (!modal || modal.dataset.sheetMode !== 'text') return;
+        if (!modal) return;
         const type = document.getElementById('chartType').value;
+
+        if (modal.dataset.sheetMode === 'chart') {
+            if (!isMultiDatasetType(type)) {
+                alert('이 그래프 유형은 데이터 열을 1개만 사용합니다.');
+                return;
+            }
+            const state = getCurrentChartSheetState();
+            if (state.activeCount >= getChartSheetMaxDatasetCount(type)) {
+                alert('데이터 열은 최대 4개까지 추가할 수 있습니다.');
+                return;
+            }
+            state.activeCount += 1;
+            state.dataColumns.push([]);
+            state.referenceColumns.push([]);
+            state.sheetNames.push('');
+            renderChartDataSheetFromState(state, type);
+            return;
+        }
+
+        if (modal.dataset.sheetMode !== 'text') return;
         const colCount = getTextSheetColumnCount() + 1;
         refreshTextSheetHeaders(colCount, type);
         document.querySelectorAll('#modalTbody tr').forEach(row => {
@@ -4064,24 +4179,75 @@ function isTextSheetType(type) {
             addTextSheetRow();
             return;
         }
-        const type = document.getElementById('chartType').value;
-        const useD2 = isMultiDatasetType(type);
-        const useD3 = useD2;
-        const useD4 = useD2;
-        const tbody = document.getElementById('modalTbody');
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="text" class="grid-label"></td>
-            <td><input type="text" class="grid-d1"></td>
-            <td><input type="text" class="grid-r1" placeholder="예: (1085조원)"></td>
-            <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-d2"></td>
-            <td style="display:${useD2 ? 'table-cell' : 'none'};"><input type="text" class="grid-r2" placeholder="참고"></td>
-            <td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-d3"></td>
-            <td style="display:${useD3 ? 'table-cell' : 'none'};"><input type="text" class="grid-r3" placeholder="참고"></td>
-            <td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-d4"></td>
-            <td style="display:${useD4 ? 'table-cell' : 'none'};"><input type="text" class="grid-r4" placeholder="참고"></td>
-        `;
-        tbody.appendChild(tr);
+        if (modal && modal.dataset.sheetMode === 'chart') {
+            const type = document.getElementById('chartType').value;
+            const state = getCurrentChartSheetState();
+            state.labels.push('');
+            for (let index = 0; index < state.activeCount; index++) {
+                state.dataColumns[index].push('');
+                state.referenceColumns[index].push('');
+            }
+            renderChartDataSheetFromState(state, type);
+            const rows = document.querySelectorAll('#modalTbody tr');
+            const lastInput = rows[rows.length - 1]?.querySelector('input');
+            if (lastInput) lastInput.focus();
+            return;
+        }
+    }
+
+    function deleteSelectedSheetRow() {
+        const modal = document.getElementById('sheetModal');
+        if (!modal) return;
+        const rows = Array.from(document.querySelectorAll('#modalTbody tr'));
+        if (!rows.length) return;
+        const targetRow = selectedSheetCell?.closest('tr') || rows[rows.length - 1];
+        if (!targetRow) return;
+        targetRow.remove();
+        selectedSheetCell = null;
+        if (modal.dataset.sheetMode === 'text') refreshTextSheetRowIndexes();
+        if (modal.dataset.sheetMode === 'chart') refreshChartSheetRowIndexes();
+    }
+
+    function deleteSelectedSheetColumn() {
+        const modal = document.getElementById('sheetModal');
+        if (!modal) return;
+
+        if (modal.dataset.sheetMode === 'text') {
+            const rows = Array.from(document.querySelectorAll('#modalTbody tr'));
+            const currentInput = selectedSheetCell && selectedSheetCell.classList.contains('table-grid-cell') ? selectedSheetCell : null;
+            const colIndex = currentInput ? Number(currentInput.dataset.col || 0) : Math.max(0, getTextSheetColumnCount() - 1);
+            if (getTextSheetColumnCount() <= 1) {
+                alert('열은 최소 1개가 필요합니다.');
+                return;
+            }
+            rows.forEach(row => {
+                const cell = row.children[colIndex];
+                if (cell) cell.remove();
+            });
+            const type = document.getElementById('chartType').value;
+            refreshTextSheetHeaders(getTextSheetColumnCount() - 1, type);
+            selectedSheetCell = null;
+            refreshTextSheetRowIndexes();
+            return;
+        }
+
+        if (modal.dataset.sheetMode === 'chart') {
+            const type = document.getElementById('chartType').value;
+            const state = getCurrentChartSheetState();
+            if (state.activeCount <= 1) {
+                alert('데이터 열은 최소 1개가 필요합니다.');
+                return;
+            }
+            let seriesIndex = Number(selectedSheetCell?.dataset.series || state.activeCount);
+            if (!seriesIndex || seriesIndex < 1 || seriesIndex > state.activeCount) seriesIndex = state.activeCount;
+            const removeIndex = seriesIndex - 1;
+            state.dataColumns.splice(removeIndex, 1);
+            state.referenceColumns.splice(removeIndex, 1);
+            state.sheetNames.splice(removeIndex, 1);
+            state.activeCount -= 1;
+            selectedSheetCell = null;
+            renderChartDataSheetFromState(state, type);
+        }
     }
 
     function closeDataSheet() { document.getElementById('sheetModal').style.display = 'none'; }
@@ -4105,35 +4271,53 @@ function isTextSheetType(type) {
             saveTextDataSheet();
             return;
         }
-        const type = document.getElementById('chartType').value;
-        const useD2 = isMultiDatasetType(type);
-        const labels = [], d1 = [], d2 = [], d3 = [], d4 = [], r1 = [], r2 = [], r3 = [], r4 = [];
+        const activeCount = getModalActiveDatasetCount();
+        const labels = [];
+        const dataColumns = Array.from({ length: activeCount }, () => []);
+        const referenceColumns = Array.from({ length: activeCount }, () => []);
+        const sheetNames = [];
+        document.querySelectorAll('#modalTh th[data-sheet-role="data"]').forEach(th => {
+            sheetNames.push(th.dataset.rawName || '');
+        });
+        while (sheetNames.length < activeCount) sheetNames.push('');
 
         document.querySelectorAll('#modalTbody tr').forEach(row => {
-            const l = row.querySelector('.grid-label').value.trim();
-            const v1 = row.querySelector('.grid-d1').value.trim();
-            const rv1 = row.querySelector('.grid-r1') ? row.querySelector('.grid-r1').value.trim() : '';
-            const v2 = useD2 ? row.querySelector('.grid-d2').value.trim() : '';
-            const rv2 = useD2 && row.querySelector('.grid-r2') ? row.querySelector('.grid-r2').value.trim() : '';
-            const v3 = useD2 ? row.querySelector('.grid-d3').value.trim() : '';
-            const rv3 = useD2 && row.querySelector('.grid-r3') ? row.querySelector('.grid-r3').value.trim() : '';
-            const v4 = useD2 ? row.querySelector('.grid-d4').value.trim() : '';
-            const rv4 = useD2 && row.querySelector('.grid-r4') ? row.querySelector('.grid-r4').value.trim() : '';
-            if (l !== '' || v1 !== '' || rv1 !== '' || v2 !== '' || rv2 !== '' || v3 !== '' || rv3 !== '' || v4 !== '' || rv4 !== '') {
-                labels.push(l); d1.push(v1); r1.push(rv1); if (useD2) { d2.push(v2); r2.push(rv2); d3.push(v3); r3.push(rv3); d4.push(v4); r4.push(rv4); }
+            const labelValue = row.querySelector('.grid-label')?.value.trim() || '';
+            const rowData = [];
+            const rowReferences = [];
+            let hasContent = labelValue !== '';
+            for (let index = 1; index <= activeCount; index++) {
+                const dataValue = row.querySelector(`.grid-d${index}`)?.value.trim() || '';
+                const referenceValue = row.querySelector(`.grid-r${index}`)?.value.trim() || '';
+                rowData.push(dataValue);
+                rowReferences.push(referenceValue);
+                if (dataValue !== '' || referenceValue !== '') hasContent = true;
+            }
+            if (hasContent) {
+                labels.push(labelValue);
+                for (let index = 0; index < activeCount; index++) {
+                    dataColumns[index].push(rowData[index]);
+                    referenceColumns[index].push(rowReferences[index]);
+                }
             }
         });
 
         document.getElementById('labelsInput').value = labels.join(', ');
-        document.getElementById('dataInput1').value = d1.join(', ');
-        document.getElementById('referenceInput1').value = r1.join('\n');
-        if (useD2) {
-            document.getElementById('dataInput2').value = d2.join(', ');
-            document.getElementById('referenceInput2').value = r2.join('\n');
-            document.getElementById('dataInput3').value = d3.join(', ');
-            document.getElementById('referenceInput3').value = r3.join('\n');
-            document.getElementById('dataInput4').value = d4.join(', ');
-            document.getElementById('referenceInput4').value = r4.join('\n');
+        for (let index = 1; index <= 4; index++) {
+            const nameInput = document.getElementById(`dataName${index}`);
+            const dataInput = document.getElementById(`dataInput${index}`);
+            const referenceInput = document.getElementById(`referenceInput${index}`);
+            if (index <= activeCount) {
+                const dataValues = dataColumns[index - 1] || [];
+                const referenceValues = referenceColumns[index - 1] || [];
+                if (nameInput) nameInput.value = sheetNames[index - 1] || '';
+                if (dataInput) dataInput.value = dataValues.some(value => String(value).trim() !== '') ? dataValues.join(', ') : '';
+                if (referenceInput) referenceInput.value = referenceValues.some(value => String(value).trim() !== '') ? referenceValues.join('\n') : '';
+            } else {
+                if (nameInput) nameInput.value = '';
+                if (dataInput) dataInput.value = '';
+                if (referenceInput) referenceInput.value = '';
+            }
         }
         syncReferenceEditorSummary(); closeDataSheet(); updateOutput(); recordHistoryCheckpoint('데이터 시트 편집');
     }
@@ -4761,6 +4945,8 @@ function isTextSheetType(type) {
         const dataVals4 = document.getElementById('dataInput4') && document.getElementById('dataInput4').value ? parseNumericSeries(document.getElementById('dataInput4').value, labels.length) : null;
         const name4 = document.getElementById('dataName4') ? document.getElementById('dataName4').value : '';
 
+        const hasChartDataValues = (values) => Array.isArray(values) && values.length > 0;
+
         const palette = getActivePalette();
         const akRed = palette.main; const akOrange = palette.accent; const akGray1 = palette.gray1; const akGray2 = palette.gray2; const akLight = palette.light;
         const linePalette = palette.line || [akRed, akOrange, akGray1, akGray2];
@@ -4771,34 +4957,34 @@ function isTextSheetType(type) {
         if (normType === 'multi-line' || normType === 'combo' || normType === 'multi-combo' || normType === 'multi-bar' || normType === 'stacked-combo' || normType === 'stacked-bar') {
             if (normType === 'multi-line') {
                 datasets.push({ type: 'line', label: name1, data: dataVals1, borderColor: linePalette[0] || '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: linePalette[0] || '#111111', pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
-                if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
-                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akGray1, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akGray1, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
-                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: akLight, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akLight, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                if(hasChartDataValues(dataVals2)) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'rgba(210, 210, 210, 0.4)', fill: true, pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                if(hasChartDataValues(dataVals3)) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akGray1, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akGray1, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
+                if(hasChartDataValues(dataVals4)) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: akLight, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akLight, pointBorderWidth: 3, pointRadius: 6, tension: 0.1 });
             } else if (normType === 'combo') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akLight, borderRadius: 4, barPercentage: 0.55, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
-                if(dataVals2) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
-                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
-                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: linePalette[0] || '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: linePalette[0] || '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(hasChartDataValues(dataVals2)) datasets.push({ type: 'line', label: name2, data: dataVals2, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(hasChartDataValues(dataVals3)) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(hasChartDataValues(dataVals4)) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: linePalette[0] || '#111111', borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: linePalette[0] || '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
             } else if (normType === 'multi-combo') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akLight, borderRadius: 4, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
-                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akGray1, borderRadius: 4, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
-                if(dataVals3) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
-                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(hasChartDataValues(dataVals2)) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akGray1, borderRadius: 4, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(hasChartDataValues(dataVals3)) datasets.push({ type: 'line', label: name3, data: dataVals3, borderColor: akRed, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akRed, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(hasChartDataValues(dataVals4)) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: akOrange, borderWidth: 4, backgroundColor: 'transparent', pointBackgroundColor: '#fff', pointBorderColor: akOrange, pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
             } else if (normType === 'multi-bar') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, borderRadius: 4 });
-                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akOrange, borderRadius: 4 });
-                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, borderRadius: 4 });
-                if(dataVals4) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: akGray2, borderRadius: 4 });
+                if(hasChartDataValues(dataVals2)) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akOrange, borderRadius: 4 });
+                if(hasChartDataValues(dataVals3)) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, borderRadius: 4 });
+                if(hasChartDataValues(dataVals4)) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: akGray2, borderRadius: 4 });
             } else if (normType === 'stacked-combo') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
-                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akLight, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
-                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
-                if(dataVals4) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: linePalette[0] || '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: linePalette[0] || '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
+                if(hasChartDataValues(dataVals2)) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akLight, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(hasChartDataValues(dataVals3)) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akGray1, yAxisID: isHorizontal ? 'x' : 'y', order: 2 });
+                if(hasChartDataValues(dataVals4)) datasets.push({ type: 'line', label: name4, data: dataVals4, borderColor: linePalette[0] || '#111111', borderWidth: 4, pointBackgroundColor: '#fff', pointBorderColor: linePalette[0] || '#111111', pointBorderWidth: 2, pointRadius: 5, yAxisID: isHorizontal ? 'x1' : 'y1', order: 1 });
             } else if (normType === 'stacked-bar') {
                 datasets.push({ type: 'bar', label: name1, data: dataVals1, backgroundColor: akRed });
-                if(dataVals2) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akOrange });
-                if(dataVals3) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akLight });
-                if(dataVals4) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: akGray1 });
+                if(hasChartDataValues(dataVals2)) datasets.push({ type: 'bar', label: name2, data: dataVals2, backgroundColor: akOrange });
+                if(hasChartDataValues(dataVals3)) datasets.push({ type: 'bar', label: name3, data: dataVals3, backgroundColor: akLight });
+                if(hasChartDataValues(dataVals4)) datasets.push({ type: 'bar', label: name4, data: dataVals4, backgroundColor: akGray1 });
             }
         } else {
             let bgColors; let borderColors; let datasetType;
