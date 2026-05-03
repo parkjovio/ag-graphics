@@ -823,9 +823,9 @@
                 </div>
                 <div>
                     <label style="margin-top:8px;">참고 텍스트 굵기</label>
-                    <select id="referenceFontWeight" onchange="updateOutput()">
+                    <select id="referenceFontWeight" onchange="setReferenceFontWeight(this.value)">
                         <option value="700" selected>보통 강조</option>
-                        <option value="500">얇게</option>
+                        <option value="400">얇게</option>
                         <option value="900">굵게</option>
                     </select>
                 </div>
@@ -3071,9 +3071,31 @@
         return Number.isFinite(value) ? value : 14;
     }
 
+    function normalizeReferenceFontWeight(value) {
+        const raw = String(value || '700').trim().toLowerCase();
+        const map = {
+            'normal': '400',
+            'regular': '400',
+            'medium': '500',
+            'semibold': '600',
+            'bold': '700',
+            'extrabold': '800',
+            'black': '900'
+        };
+        const normalized = map[raw] || raw;
+        return ['400', '500', '600', '700', '800', '900'].includes(normalized) ? normalized : '700';
+    }
+
     function getReferenceLabelFontWeight() {
         const input = document.getElementById('referenceFontWeight');
-        return input && input.value ? input.value : '700';
+        return normalizeReferenceFontWeight(input && input.value ? input.value : '700');
+    }
+
+    function setReferenceFontWeight(weight) {
+        const input = document.getElementById('referenceFontWeight');
+        if (input) input.value = normalizeReferenceFontWeight(weight);
+        updateOutput();
+        recordHistoryCheckpoint(`참고 텍스트 굵기 ${getReferenceLabelFontWeight()}`);
     }
 
     function pickIndexedColor(colorValue, dataIndex) {
@@ -3185,7 +3207,7 @@
         const color = getReferenceLabelColor('pie-side', null);
         const size = getReferenceLabelFontSize();
         const weight = getReferenceLabelFontWeight();
-        return `font-size:${size}px; color:${color}; font-weight:${weight};`;
+        return `font-size:${size}px; color:${color}; font-weight:${weight}; font-family:'Noto Sans KR','Pretendard','Malgun Gothic',Arial,sans-serif;`;
     }
 
     function updateReferenceFontDisplay() {
@@ -4947,6 +4969,9 @@ function isTextSheetType(type) {
             const baseOffset = Number(dataLabelHelpers.offset(context)) || 0;
             const refSize = getReferenceLabelFontSize();
             if (normType === 'pie') return Math.max(14, Math.round(refSize * 0.95));
+            if (isHorizontal && !(isStacked && context.dataset.type === 'bar')) {
+                return Math.max(8, Math.round(refSize * 0.45));
+            }
             // 숫자는 바깥쪽, 참고 텍스트는 조금 안쪽에 배치해 두 줄의 위계를 만듭니다.
             return Math.max(0, baseOffset - 2);
         }
@@ -4998,7 +5023,10 @@ function isTextSheetType(type) {
                                 textStrokeColor: dataLabelHelpers.textStrokeColor,
                                 textStrokeWidth: dataLabelHelpers.textStrokeWidth,
                                 formatter: dataLabelHelpers.formatter,
-                                textAlign: 'center',
+                                textAlign: function(context) {
+                                    if (isHorizontal && !(isStacked && context.dataset.type === 'bar')) return 'left';
+                                    return 'center';
+                                },
                                 clamp: true,
                                 clip: false
                             },
@@ -5008,20 +5036,29 @@ function isTextSheetType(type) {
                                 },
                                 align: function(context) {
                                     if (normType === 'pie') return 'bottom';
+                                    if (isHorizontal && !(isStacked && context.dataset.type === 'bar')) return 'top';
                                     return dataLabelHelpers.align(context);
                                 },
                                 anchor: dataLabelHelpers.anchor,
                                 offset: getReferenceLabelOffset,
                                 color: function(context) { return getReferenceLabelColor(normType, context); },
                                 font: function() {
-                                    return { size: getReferenceLabelFontSize(), weight: getReferenceLabelFontWeight(), lineHeight: 1.15 };
+                                    return {
+                                        size: getReferenceLabelFontSize(),
+                                        weight: String(getReferenceLabelFontWeight()),
+                                        lineHeight: 1.15,
+                                        family: "'Noto Sans KR', 'Pretendard', 'Malgun Gothic', Arial, sans-serif"
+                                    };
                                 },
                                 textStrokeColor: function(context) { return getReferenceLabelStrokeColor(normType, context); },
                                 textStrokeWidth: function(context) { return getReferenceLabelStrokeWidth(normType, context); },
                                 formatter: function(value, ctx) {
                                     return getReferenceTextForDataLabel(ctx.datasetIndex, ctx.dataIndex, ctx.chart.data.datasets);
                                 },
-                                textAlign: 'center',
+                                textAlign: function(context) {
+                                    if (isHorizontal && !(isStacked && context.dataset.type === 'bar')) return 'left';
+                                    return 'center';
+                                },
                                 clamp: true,
                                 clip: false
                             }
