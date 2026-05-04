@@ -608,15 +608,17 @@
             <input type="hidden" id="palettePresetKey" value="asiae">
             <div class="palette-preset-grid">
                 <button type="button" class="palette-btn active" data-palette="asiae" onclick="applyPalettePreset('asiae')"><span class="palette-swatch" style="background:#E61E2B"></span>아시아경제 기본</button>
-                <button type="button" class="palette-btn" data-palette="riskRed" onclick="applyPalettePreset('riskRed')"><span class="palette-swatch" style="background:linear-gradient(135deg,#8B0000,#C1121F,#E85D04,#F48C06)"></span>붉은색 계열</button>
-                <button type="button" class="palette-btn" data-palette="cyan" onclick="applyPalettePreset('cyan')"><span class="palette-swatch" style="background:linear-gradient(135deg,#064E3B,#15803D,#65A30D,#A3E635)"></span>초록색 계열</button>
-                <button type="button" class="palette-btn" data-palette="purple" onclick="applyPalettePreset('purple')"><span class="palette-swatch" style="background:linear-gradient(135deg,#3B0764,#7E22CE,#C026D3,#F0ABFC)"></span>보라색 계열</button>
-                <button type="button" class="palette-btn" data-palette="rainbow" onclick="applyPalettePreset('rainbow')"><span class="palette-swatch" style="background:linear-gradient(135deg,#D00000,#FF7B00,#FFD60A,#2D9D41,#0057FF,#7B2CBF)"></span>무지개색 계열</button>
-                <button type="button" class="palette-btn" data-palette="monotone" onclick="applyPalettePreset('monotone')"><span class="palette-swatch" style="background:linear-gradient(135deg,#111,#444,#888,#D9D9D9)"></span>모노톤 계열</button>
-                <button type="button" class="palette-btn" data-palette="pastel" onclick="applyPalettePreset('pastel')"><span class="palette-swatch" style="background:linear-gradient(135deg,#FF8FAB,#FFC857,#8BD3DD,#B8A1FF)"></span>파스텔 계열</button>
-                <button type="button" class="palette-btn" data-palette="deep" onclick="applyPalettePreset('deep')"><span class="palette-swatch" style="background:linear-gradient(135deg,#0B3D91,#00876C,#7B2CBF,#C1121F)"></span>딥컬러 계열</button>
-                <button type="button" class="palette-btn" data-palette="earth" onclick="applyPalettePreset('earth')"><span class="palette-swatch" style="background:linear-gradient(135deg,#5E3023,#BC6C25,#6A994E,#386641)"></span>어스톤 계열</button>
-                <button type="button" class="palette-btn" data-palette="cool" onclick="applyPalettePreset('cool')"><span class="palette-swatch" style="background:linear-gradient(135deg,#003566,#0077B6,#00B4D8,#7209B7)"></span>쿨톤 계열</button>
+                <button type="button" class="palette-btn" data-palette="riskRed" onclick="applyPalettePreset('riskRed')"><span class="palette-swatch" style="background:linear-gradient(135deg,#8B0000,#C1121F,#E85D04,#F48C06)"></span>붉은색</button>
+                <button type="button" class="palette-btn" data-palette="cyan" onclick="applyPalettePreset('cyan')"><span class="palette-swatch" style="background:linear-gradient(135deg,#064E3B,#15803D,#65A30D,#A3E635)"></span>초록색</button>
+                <button type="button" class="palette-btn" data-palette="purple" onclick="applyPalettePreset('purple')"><span class="palette-swatch" style="background:linear-gradient(135deg,#3B0764,#7E22CE,#C026D3,#F0ABFC)"></span>보라색</button>
+                <button type="button" class="palette-btn" data-palette="rainbow" onclick="applyPalettePreset('rainbow')"><span class="palette-swatch" style="background:linear-gradient(135deg,#D00000,#FF7B00,#FFD60A,#2D9D41,#0057FF,#7B2CBF)"></span>무지개색</button>
+                <button type="button" class="palette-btn" data-palette="monotone" onclick="applyPalettePreset('monotone')"><span class="palette-swatch" style="background:linear-gradient(135deg,#111,#444,#888,#D9D9D9)"></span>모노톤</button>
+                <button type="button" class="palette-btn" data-palette="pastel" onclick="applyPalettePreset('pastel')"><span class="palette-swatch" style="background:linear-gradient(135deg,#FF8FAB,#FFC857,#8BD3DD,#B8A1FF)"></span>파스텔</button>
+                <button type="button" class="palette-btn" data-palette="deep" onclick="applyPalettePreset('deep')"><span class="palette-swatch" style="background:linear-gradient(135deg,#0B3D91,#00876C,#7B2CBF,#C1121F)"></span>딥컬러</button>
+                <button type="button" class="palette-btn" data-palette="earth" onclick="applyPalettePreset('earth')"><span class="palette-swatch" style="background:linear-gradient(135deg,#5E3023,#BC6C25,#6A994E,#386641)"></span>어스톤</button>
+                <button type="button" class="palette-btn" data-palette="cool" onclick="applyPalettePreset('cool')"><span class="palette-swatch" style="background:linear-gradient(135deg,#003566,#0077B6,#00B4D8,#7209B7)"></span>쿨톤</button>
+                <button type="button" class="palette-btn" data-palette="sunset" onclick="applyPalettePreset('sunset')"><span class="palette-swatch" style="background:linear-gradient(135deg,#8B1E2D,#243B53,#A16207,#64748B)"></span>클래식</button>
+                <button type="button" class="palette-btn" data-palette="ocean" onclick="applyPalettePreset('ocean')"><span class="palette-swatch" style="background:linear-gradient(135deg,#1E3A5F,#2F6F9F,#0F766E,#94A3B8)"></span>뉴스블루</button>
             </div>
             <span class="help-text" style="margin-top:8px; margin-bottom:0;">그래프·표 강조색을 기사 성격에 맞게 한 번에 바꿉니다.</span>
         </div>
@@ -835,11 +837,6 @@
                 <input type="range" id="referenceFontSize" min="8" max="30" value="14" oninput="updateReferenceFontDisplay(); updateOutput();">
                 <span id="referenceFontDisplay" class="font-size-display">14px</span>
             </div>
-            <div class="reference-size-preset-row">
-                <button type="button" onclick="setReferenceFontSize(12)">작게 12px</button>
-                <button type="button" onclick="setReferenceFontSize(14)">기본 14px</button>
-                <button type="button" onclick="setReferenceFontSize(18)">크게 18px</button>
-            </div>
             <div class="reference-style-row">
                 <div>
                     <label style="margin-top:8px;">색상</label>
@@ -858,7 +855,7 @@
                 <div>
                     <label style="margin-top:8px;">굵기</label>
                     <select id="referenceFontWeight" onchange="setReferenceFontWeight(this.value)">
-                        <option value="700" selected>보통 강조</option>
+                        <option value="700" selected>보통</option>
                         <option value="400">얇게</option>
                         <option value="900">굵게</option>
                     </select>
@@ -1105,58 +1102,81 @@
             pie: ['#E61E2B', '#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9']
         },
         riskRed: {
-            label: '붉은색 계열', main: '#C1121F', accent: '#E85D04', gray1: '#8B0000', gray2: '#5C1111', light: '#F48C06', axis: '#7A0C12',
+            label: '붉은색', main: '#C1121F', accent: '#E85D04', gray1: '#8B0000', gray2: '#5C1111', light: '#F48C06', axis: '#7A0C12',
             bar: ['#8B0000', '#C1121F', '#E85D04', '#F48C06', '#9D0208', '#DC2F02', '#6A040F', '#FFBA08'],
             line: ['#8B0000', '#E85D04', '#C1121F', '#F48C06', '#6A040F', '#DC2F02'],
-            pie: ['#8B0000', '#C1121F', '#E85D04', '#F48C06', '#9D0208', '#DC2F02', '#6A040F', '#FFBA08']
+            pie: ['#7F0000', '#E61E2B', '#FF6B00', '#FFB703', '#9D174D', '#C1121F', '#F94144', '#6A040F'],
+            pieEtc: '#9CA3AF'
         },
         cyan: {
-            label: '초록색 계열', main: '#15803D', accent: '#65A30D', gray1: '#064E3B', gray2: '#3F6212', light: '#A3E635', axis: '#14532D',
+            label: '초록색', main: '#15803D', accent: '#65A30D', gray1: '#064E3B', gray2: '#3F6212', light: '#A3E635', axis: '#14532D',
             bar: ['#064E3B', '#15803D', '#65A30D', '#A3E635', '#166534', '#4D7C0F', '#22C55E', '#84CC16'],
             line: ['#064E3B', '#65A30D', '#15803D', '#A3E635', '#166534', '#4D7C0F'],
-            pie: ['#064E3B', '#15803D', '#65A30D', '#A3E635', '#166534', '#4D7C0F', '#22C55E', '#84CC16']
+            pie: ['#064E3B', '#16A34A', '#84CC16', '#A7F3D0', '#0F766E', '#22C55E', '#3F6212', '#BBF7D0'],
+            pieEtc: '#9CA3AF'
         },
         purple: {
-            label: '보라색 계열', main: '#7E22CE', accent: '#C026D3', gray1: '#3B0764', gray2: '#581C87', light: '#F0ABFC', axis: '#4C1D95',
+            label: '보라색', main: '#7E22CE', accent: '#C026D3', gray1: '#3B0764', gray2: '#581C87', light: '#F0ABFC', axis: '#4C1D95',
             bar: ['#3B0764', '#7E22CE', '#C026D3', '#F0ABFC', '#581C87', '#9333EA', '#A21CAF', '#E879F9'],
             line: ['#3B0764', '#C026D3', '#7E22CE', '#F0ABFC', '#581C87', '#A21CAF'],
-            pie: ['#3B0764', '#7E22CE', '#C026D3', '#F0ABFC', '#581C87', '#9333EA', '#A21CAF', '#E879F9']
+            pie: ['#3B0764', '#7E22CE', '#C026D3', '#F0ABFC', '#4C1D95', '#9333EA', '#A21CAF', '#E879F9'],
+            pieEtc: '#9CA3AF'
         },
         rainbow: {
-            label: '무지개색 계열', main: '#D00000', accent: '#FF7B00', gray1: '#0057FF', gray2: '#2D9D41', light: '#FFD60A', axis: '#555555',
+            label: '무지개색', main: '#D00000', accent: '#FF7B00', gray1: '#0057FF', gray2: '#2D9D41', light: '#FFD60A', axis: '#555555',
             bar: ['#D00000', '#FF7B00', '#FFD60A', '#2D9D41', '#0057FF', '#7B2CBF', '#00B4D8', '#C9184A'],
             line: ['#D00000', '#FF7B00', '#2D9D41', '#0057FF', '#7B2CBF', '#00B4D8'],
-            pie: ['#D00000', '#FF7B00', '#FFD60A', '#2D9D41', '#0057FF', '#7B2CBF', '#00B4D8', '#C9184A']
+            pie: ['#D00000', '#2D9D41', '#7B2CBF', '#FFD60A', '#0057FF', '#FF7B00', '#00B4D8', '#C9184A'],
+            pieEtc: '#9CA3AF'
         },
         monotone: {
-            label: '모노톤 계열', main: '#111111', accent: '#555555', gray1: '#888888', gray2: '#333333', light: '#D9D9D9', axis: '#666666',
+            label: '모노톤', main: '#111111', accent: '#555555', gray1: '#888888', gray2: '#333333', light: '#D9D9D9', axis: '#666666',
             bar: ['#111111', '#333333', '#555555', '#777777', '#999999', '#C7C7C7', '#E0E0E0', '#000000'],
             line: ['#111111', '#555555', '#888888', '#BBBBBB', '#333333', '#D9D9D9'],
-            pie: ['#111111', '#333333', '#555555', '#777777', '#999999', '#C7C7C7', '#E0E0E0', '#000000']
+            pie: ['#111111', '#9CA3AF', '#3F3F46', '#E5E7EB', '#6B7280', '#D1D5DB', '#000000', '#F3F4F6'],
+            pieEtc: '#9CA3AF'
         },
         pastel: {
-            label: '파스텔 계열', main: '#FF8FAB', accent: '#FFC857', gray1: '#8BD3DD', gray2: '#B8A1FF', light: '#C7F9CC', axis: '#7A7A7A',
+            label: '파스텔', main: '#FF8FAB', accent: '#FFC857', gray1: '#8BD3DD', gray2: '#B8A1FF', light: '#C7F9CC', axis: '#7A7A7A',
             bar: ['#FF8FAB', '#FFC857', '#8BD3DD', '#B8A1FF', '#C7F9CC', '#FFB4A2', '#A0C4FF', '#FFD6A5'],
             line: ['#E85D75', '#F4A261', '#2A9D8F', '#6D5DF6', '#57A773', '#4D96FF'],
-            pie: ['#FF8FAB', '#FFC857', '#8BD3DD', '#B8A1FF', '#C7F9CC', '#FFB4A2', '#A0C4FF', '#FFD6A5']
+            pie: ['#FF8FAB', '#FFC857', '#8BD3DD', '#B8A1FF', '#C7F9CC', '#FFB4A2', '#A0C4FF', '#FFD6A5'],
+            pieEtc: '#9CA3AF'
         },
         deep: {
-            label: '딥컬러 계열', main: '#0B3D91', accent: '#00876C', gray1: '#7B2CBF', gray2: '#C1121F', light: '#F4A261', axis: '#334155',
+            label: '딥컬러', main: '#0B3D91', accent: '#00876C', gray1: '#7B2CBF', gray2: '#C1121F', light: '#F4A261', axis: '#334155',
             bar: ['#0B3D91', '#00876C', '#7B2CBF', '#C1121F', '#F4A261', '#264653', '#2A9D8F', '#E76F51'],
             line: ['#0B3D91', '#00876C', '#7B2CBF', '#C1121F', '#F4A261', '#264653'],
-            pie: ['#0B3D91', '#00876C', '#7B2CBF', '#C1121F', '#F4A261', '#264653', '#2A9D8F', '#E76F51']
+            pie: ['#0B3D91', '#00876C', '#7B2CBF', '#C1121F', '#F4A261', '#264653', '#2A9D8F', '#E76F51'],
+            pieEtc: '#9CA3AF'
         },
         earth: {
-            label: '어스톤 계열', main: '#5E3023', accent: '#BC6C25', gray1: '#6A994E', gray2: '#386641', light: '#DDA15E', axis: '#5C5148',
+            label: '어스톤', main: '#5E3023', accent: '#BC6C25', gray1: '#6A994E', gray2: '#386641', light: '#DDA15E', axis: '#5C5148',
             bar: ['#5E3023', '#BC6C25', '#DDA15E', '#6A994E', '#386641', '#936639', '#A68A64', '#283618'],
             line: ['#5E3023', '#BC6C25', '#6A994E', '#386641', '#936639', '#DDA15E'],
-            pie: ['#5E3023', '#BC6C25', '#DDA15E', '#6A994E', '#386641', '#936639', '#A68A64', '#283618']
+            pie: ['#5E3023', '#BC6C25', '#DDA15E', '#6A994E', '#386641', '#936639', '#A68A64', '#283618'],
+            pieEtc: '#9CA3AF'
         },
         cool: {
-            label: '쿨톤 계열', main: '#003566', accent: '#00B4D8', gray1: '#0077B6', gray2: '#7209B7', light: '#90E0EF', axis: '#2B4C7E',
+            label: '쿨톤', main: '#003566', accent: '#00B4D8', gray1: '#0077B6', gray2: '#7209B7', light: '#90E0EF', axis: '#2B4C7E',
             bar: ['#003566', '#0077B6', '#00B4D8', '#7209B7', '#4361EE', '#3A0CA3', '#4CC9F0', '#90E0EF'],
             line: ['#003566', '#00B4D8', '#7209B7', '#0077B6', '#3A0CA3', '#4CC9F0'],
-            pie: ['#003566', '#0077B6', '#00B4D8', '#7209B7', '#4361EE', '#3A0CA3', '#4CC9F0', '#90E0EF']
+            pie: ['#003566', '#0077B6', '#00B4D8', '#7209B7', '#4361EE', '#3A0CA3', '#4CC9F0', '#90E0EF'],
+            pieEtc: '#9CA3AF'
+        },
+        sunset: {
+            label: '클래식', main: '#8B1E2D', accent: '#A16207', gray1: '#475569', gray2: '#243B53', light: '#CBD5E1', axis: '#334155',
+            bar: ['#8B1E2D', '#243B53', '#0F766E', '#A16207', '#64748B', '#7C2D12', '#3F6212', '#94A3B8'],
+            line: ['#8B1E2D', '#243B53', '#0F766E', '#A16207', '#475569', '#7C2D12'],
+            pie: ['#8B1E2D', '#243B53', '#0F766E', '#A16207', '#64748B', '#7C2D12', '#3F6212', '#94A3B8'],
+            pieEtc: '#94A3B8'
+        },
+        ocean: {
+            label: '뉴스블루', main: '#1E3A5F', accent: '#2F6F9F', gray1: '#0F766E', gray2: '#475569', light: '#D8E2EC', axis: '#334155',
+            bar: ['#1E3A5F', '#2F6F9F', '#0F766E', '#B45309', '#64748B', '#3D5A80', '#6B7280', '#94A3B8'],
+            line: ['#1E3A5F', '#2F6F9F', '#0F766E', '#B45309', '#475569', '#3D5A80'],
+            pie: ['#1E3A5F', '#2F6F9F', '#0F766E', '#B45309', '#64748B', '#3D5A80', '#6B7280', '#94A3B8'],
+            pieEtc: '#94A3B8'
         }
     };
     let activePaletteKey = 'asiae';
@@ -1527,6 +1547,18 @@
             syncQuickMenuButtons('input');
             panel.dataset.responsiveMenuReady = 'true';
         }
+    }
+
+
+    function forceInitialInputMenu() {
+        closeOtherQuickMenus('input');
+        const inputSection = document.getElementById('sectionGemini');
+        if (inputSection) inputSection.open = true;
+        ['sectionDataEdit', 'sectionDesign', 'sectionExport'].forEach(id => {
+            const section = document.getElementById(id);
+            if (section) section.open = false;
+        });
+        syncQuickMenuButtons('input');
     }
 
     function buildFriendlyControlMenu() {
@@ -2956,19 +2988,182 @@
         }
     }
 
-    function getPieColors(values) {
+    function normalizePieHexColor(colorValue) {
+        const rgb = parseCssColorToRgb(colorValue);
+        if (!rgb) return null;
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0').toUpperCase();
+        return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+    }
+
+    function mixPieColor(colorValue, mixWith = '#ffffff', amount = 0.2) {
+        const base = parseCssColorToRgb(colorValue);
+        const target = parseCssColorToRgb(mixWith);
+        if (!base || !target) return colorValue;
+        const ratio = Math.max(0, Math.min(1, Number(amount) || 0));
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0').toUpperCase();
+        const r = base.r + (target.r - base.r) * ratio;
+        const g = base.g + (target.g - base.g) * ratio;
+        const b = base.b + (target.b - base.b) * ratio;
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+
+    function getPieColorDistance(colorA, colorB) {
+        const rgbA = parseCssColorToRgb(colorA);
+        const rgbB = parseCssColorToRgb(colorB);
+        if (!rgbA || !rgbB) return 0;
+        const channelDistance = Math.sqrt(
+            Math.pow(rgbA.r - rgbB.r, 2) +
+            Math.pow(rgbA.g - rgbB.g, 2) +
+            Math.pow(rgbA.b - rgbB.b, 2)
+        ) / 441.67295593;
+        const luminanceDistance = Math.abs(getRelativeLuminance(rgbA) - getRelativeLuminance(rgbB));
+        return channelDistance * 0.72 + luminanceDistance * 0.28;
+    }
+
+    function buildDistinctPiePalette(baseColors, neededCount) {
+        const fallback = ['#E61E2B', '#16A34A', '#7E22CE', '#9CA3AF', '#F48F1F', '#2563EB', '#111827', '#D1D5DB'];
+        const normalized = (Array.isArray(baseColors) && baseColors.length ? baseColors : fallback)
+            .map(normalizePieHexColor)
+            .filter(Boolean);
+        const colors = [];
+        const used = new Set();
+        const addColor = (color) => {
+            const normalizedColor = normalizePieHexColor(color);
+            if (!normalizedColor || used.has(normalizedColor.toLowerCase())) return;
+            used.add(normalizedColor.toLowerCase());
+            colors.push(normalizedColor);
+        };
+
+        normalized.forEach(addColor);
+        const variants = [
+            { mixWith: '#ffffff', amount: 0.24 },
+            { mixWith: '#000000', amount: 0.22 },
+            { mixWith: '#ffffff', amount: 0.42 },
+            { mixWith: '#000000', amount: 0.38 }
+        ];
+
+        let variantCursor = 0;
+        while (colors.length < neededCount && normalized.length) {
+            const base = normalized[variantCursor % normalized.length];
+            const variant = variants[Math.floor(variantCursor / normalized.length) % variants.length];
+            addColor(mixPieColor(base, variant.mixWith, variant.amount));
+            variantCursor += 1;
+            if (variantCursor > normalized.length * variants.length * 4) break;
+        }
+
+        fallback.forEach(addColor);
+        return colors.slice(0, Math.max(neededCount, colors.length));
+    }
+
+    function isEtcPieLabel(label) {
+        return /(기타|그\s*외|그\s*밖|나머지|others?|etc)/i.test(String(label || '').trim());
+    }
+
+    function getPieEtcColor() {
         const palette = getActivePalette();
-        const grayPalette = palette.pie && palette.pie.length ? palette.pie.slice(1) : ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
+        return normalizePieHexColor(palette.pieEtc || '#9CA3AF') || '#9CA3AF';
+    }
+
+    function getNextDistinctPieColor(candidates, usedColors, neighborColor) {
+        if (!candidates.length) return '#9CA3AF';
+        const neighborThreshold = activePaletteKey === 'monotone' ? 0.12 : 0.22;
+        const usedThreshold = activePaletteKey === 'monotone' ? 0.08 : 0.14;
+
+        // 팔레트 제작자가 의도한 색 순서를 먼저 존중합니다.
+        // 단, 바로 앞 조각이나 이미 사용한 색과 너무 가까우면 다음 후보로 넘깁니다.
+        for (let index = 0; index < candidates.length; index++) {
+            const color = candidates[index];
+            const neighborDistance = neighborColor ? getPieColorDistance(color, neighborColor) : 1;
+            const minUsedDistance = usedColors.length
+                ? Math.min(...usedColors.map(usedColor => getPieColorDistance(color, usedColor)))
+                : 1;
+            if (neighborDistance >= neighborThreshold && minUsedDistance >= usedThreshold) {
+                return candidates.splice(index, 1)[0];
+            }
+        }
+
+        // 조건을 모두 만족하는 색이 없을 때만 가장 멀리 떨어진 색을 선택합니다.
+        let bestIndex = 0;
+        let bestScore = -Infinity;
+        candidates.forEach((color, index) => {
+            const minUsedDistance = usedColors.length
+                ? Math.min(...usedColors.map(usedColor => getPieColorDistance(color, usedColor)))
+                : 1;
+            const neighborDistance = neighborColor ? getPieColorDistance(color, neighborColor) : 1;
+            const score = neighborDistance * 0.65 + minUsedDistance * 0.35;
+            if (score > bestScore) {
+                bestScore = score;
+                bestIndex = index;
+            }
+        });
+        return candidates.splice(bestIndex, 1)[0];
+    }
+
+
+    function getOriginalPalettePieColors(values) {
+        const palette = getActivePalette();
+        const fallbackPalette = palette.pie && palette.pie.length
+            ? palette.pie.slice(1)
+            : ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
         const numericValues = values.map(v => Number(v) || 0);
+        if (!numericValues.length) return [];
         const maxValue = Math.max(...numericValues);
         const maxIndex = numericValues.indexOf(maxValue);
-        let grayCursor = 0;
+        let paletteCursor = 0;
         return numericValues.map((_, index) => {
             if (index === maxIndex) return palette.main || '#E61E2B';
-            const color = grayPalette[grayCursor % grayPalette.length];
-            grayCursor += 1;
+            const color = fallbackPalette[paletteCursor % fallbackPalette.length];
+            paletteCursor += 1;
             return color;
         });
+    }
+
+    function getPieColors(values, labels = []) {
+        const palette = getActivePalette();
+        const numericValues = values.map(v => Number(v) || 0);
+        if (!numericValues.length) return [];
+
+        // 아래 프리셋은 제작기의 원래 원그래프 배색 로직을 그대로 사용합니다.
+        if (['asiae', 'pastel', 'deep', 'earth', 'cool'].includes(activePaletteKey)) {
+            return getOriginalPalettePieColors(numericValues);
+        }
+
+        const maxValue = Math.max(...numericValues);
+        const maxIndex = numericValues.indexOf(maxValue);
+        const mainColor = normalizePieHexColor(palette.main || (palette.pie && palette.pie[0]) || '#E61E2B') || '#E61E2B';
+        const etcColor = getPieEtcColor();
+        const neededCount = Math.max(numericValues.length + 6, 12);
+        const candidates = buildDistinctPiePalette(palette.pie, neededCount)
+            .filter(color => color.toLowerCase() !== mainColor.toLowerCase())
+            .filter(color => color.toLowerCase() !== etcColor.toLowerCase());
+
+        const colors = new Array(numericValues.length);
+        const usedColors = [];
+
+        // '기타/그 외/Others' 항목은 어느 팔레트를 쓰더라도 중립 회색으로 고정해
+        // 본문 주요 항목과 시각적으로 분리합니다.
+        labels.forEach((label, index) => {
+            if (isEtcPieLabel(label)) {
+                colors[index] = etcColor;
+                usedColors.push(etcColor);
+            }
+        });
+
+        // 가장 큰 조각은 기사에서 가장 먼저 눈에 띄도록 팔레트의 대표색을 사용합니다.
+        if (!colors[maxIndex]) {
+            colors[maxIndex] = mainColor;
+            usedColors.push(mainColor);
+        }
+
+        numericValues.forEach((_, index) => {
+            if (colors[index]) return;
+            const previousColor = index > 0 ? colors[index - 1] : '';
+            const color = getNextDistinctPieColor(candidates, usedColors, previousColor);
+            colors[index] = color;
+            usedColors.push(color);
+        });
+
+        return colors;
     }
 
     const getLineRank = (context) => {
@@ -5200,7 +5395,7 @@ function isTextSheetType(type) {
             let bgColors; let borderColors; let datasetType;
 
             if (normType === 'pie') {
-                datasetType = 'doughnut'; bgColors = getPieColors(dataVals1); borderColors = '#ffffff';
+                datasetType = 'doughnut'; bgColors = getPieColors(dataVals1, labels); borderColors = '#ffffff';
             } else if (normType === 'bar') {
                 datasetType = 'bar';
                 if (dataVals1.length === 2) { bgColors = [akOrange, akRed]; borderColors = [akOrange, akRed]; } 
@@ -5213,7 +5408,7 @@ function isTextSheetType(type) {
                 type: datasetType,
                 data: dataVals1,
                 borderColor: borderColors,
-                borderWidth: normType === 'pie' ? 2 : (normType === 'line' ? 4 : 0),
+                borderWidth: normType === 'pie' ? 3 : (normType === 'line' ? 4 : 0),
                 backgroundColor: bgColors,
                 fill: normType === 'line',
                 pointBackgroundColor: '#fff',
@@ -5307,7 +5502,10 @@ function isTextSheetType(type) {
                 const highlightColor = getHighlightColorForTarget(highlightConfig, context.datasetIndex, context.dataIndex);
                 const isHighlightedPoint = !!highlightColor;
                 const datasetLabelColor = getDatasetLabelColor(context.datasetIndex);
-                if (normType === 'pie') return datasetLabelColor || '#ffffff';
+                if (normType === 'pie') {
+                    if (datasetLabelColor) return datasetLabelColor;
+                    return getReadableTextColorForBackground(pickIndexedColor(context.dataset.backgroundColor, context.dataIndex));
+                }
                 if (highlightConfig.enabled) {
                     if (isHighlightedPoint) {
                         if (isStacked && context.dataset.type === 'bar') return '#ffffff';
@@ -5760,6 +5958,7 @@ function isTextSheetType(type) {
             }
         });
 
+        forceInitialInputMenu();
         recordHistoryCheckpoint('초기 상태');
     };
 </script>
