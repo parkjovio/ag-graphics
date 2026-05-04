@@ -609,7 +609,8 @@
         <button class="btn-sheet" id="openSheetBtn" onclick="openDataSheet()">📊 데이터 시트 편집 (수치·추가 텍스트)</button>
 
         <div class="data-group" id="palettePresetGroup">
-            <label style="color:var(--ak-red); font-size:14px;">🎨 색상 팔레트 프리셋</label>
+            <label style="color:var(--ak-red); font-size:14px; display:block;">🎨 색상 팔레트 프리셋</label>
+            <div style="font-size:11px; color:#777; margin:-2px 0 8px; line-height:1.4;">버튼 클릭시 마다 색상 변경, 되돌리기 ctrl+Z</div>
             <input type="hidden" id="palettePresetKey" value="asiae">
             <div class="palette-preset-grid">
                 <button type="button" class="palette-btn active" data-palette="asiae" onclick="applyPalettePreset('asiae')"><span class="palette-swatch" style="background:#E61E2B"></span>아시아경제 기본</button>
@@ -1185,6 +1186,8 @@
         }
     };
     let activePaletteKey = 'asiae';
+    const PALETTE_VARIATION_STEP_COUNT = 6;
+    let paletteVariationMap = { asiae: 0 };
     const HISTORY_LIMIT = 50;
     let undoStack = [];
     let isRestoringState = false;
@@ -1615,8 +1618,17 @@
         window.addEventListener('resize', applyResponsiveMenuState);
     }
 
+    function getBasePalette(key = activePaletteKey) {
+        return PALETTE_PRESETS[key] || PALETTE_PRESETS.asiae;
+    }
+
+    function getPaletteVariationIndex(key = activePaletteKey) {
+        const value = Number(paletteVariationMap[key]);
+        return Number.isFinite(value) ? value : 0;
+    }
+
     function getActivePalette() {
-        return PALETTE_PRESETS[activePaletteKey] || PALETTE_PRESETS.asiae;
+        return getPaletteWithVariation(activePaletteKey, getPaletteVariationIndex(activePaletteKey));
     }
 
     function syncPaletteButtons() {
@@ -1637,7 +1649,20 @@
 
     function applyPalettePreset(key, options = {}) {
         if (!PALETTE_PRESETS[key]) key = 'asiae';
+        const previousKey = activePaletteKey;
         activePaletteKey = key;
+
+        if (options.skipVariationAdvance) {
+            if (!Number.isFinite(Number(paletteVariationMap[key]))) paletteVariationMap[key] = 0;
+        } else if (key === 'asiae') {
+            paletteVariationMap[key] = 0;
+        } else {
+            const currentIndex = Number(paletteVariationMap[key]);
+            paletteVariationMap[key] = Number.isFinite(currentIndex)
+                ? (currentIndex + 1) % PALETTE_VARIATION_STEP_COUNT
+                : 0;
+        }
+
         const palette = getActivePalette();
         // 메뉴 UI의 기본 색상은 고정하고, 출력 미리보기 영역에만 팔레트 색상을 반영합니다.
         syncOutputPaletteVars();
@@ -1645,7 +1670,12 @@
         refreshTableColorControls();
         syncPaletteButtons();
         if (!options.skipUpdate) updateOutput();
-        if (!options.skipHistory) recordHistoryCheckpoint(`팔레트: ${palette.label}`);
+        if (!options.skipHistory) {
+            const historyLabel = previousKey === key && !options.skipVariationAdvance
+                ? `팔레트 톤 변경: ${palette.label}`
+                : `팔레트: ${palette.label}`;
+            recordHistoryCheckpoint(historyLabel);
+        }
     }
 
     function parseLabelSeries(raw) {
@@ -1787,6 +1817,7 @@
             }
         });
         values.__activePaletteKey = activePaletteKey;
+        values.__paletteVariationMap = JSON.parse(JSON.stringify(paletteVariationMap || {}));
         return values;
     }
 
@@ -1794,7 +1825,7 @@
         if (!state) return;
         isRestoringState = true;
         Object.entries(state).forEach(([id, payload]) => {
-            if (id === '__activePaletteKey') return;
+            if (id === '__activePaletteKey' || id === '__paletteVariationMap') return;
             const el = document.getElementById(id);
             if (!el || !payload) return;
             if (payload.type === 'checkbox' || payload.type === 'radio') {
@@ -1806,8 +1837,11 @@
                 el.value = payload.value;
             }
         });
+        paletteVariationMap = state.__paletteVariationMap && typeof state.__paletteVariationMap === 'object'
+            ? Object.assign({ asiae: 0 }, state.__paletteVariationMap)
+            : { asiae: 0 };
         if (state.__activePaletteKey) {
-            applyPalettePreset(state.__activePaletteKey, { skipUpdate: true, skipHistory: true });
+            applyPalettePreset(state.__activePaletteKey, { skipUpdate: true, skipHistory: true, skipVariationAdvance: true });
         }
         isRestoringState = false;
         toggleInputs();
@@ -3019,6 +3053,145 @@
         return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     }
 
+    function clamp01(value) {
+        return Math.max(0, Math.min(1, Number(value) || 0));
+    }
+
+    function rgbToHex(rgb) {
+        if (!rgb) return null;
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0').toUpperCase();
+        return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+    }
+
+    function rgbToHsl(rgb) {
+        if (!rgb) return null;
+        const r = Math.max(0, Math.min(255, rgb.r)) / 255;
+        const g = Math.max(0, Math.min(255, rgb.g)) / 255;
+        const b = Math.max(0, Math.min(255, rgb.b)) / 255;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const delta = max - min;
+        let h = 0;
+        const l = (max + min) / 2;
+        const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+        if (delta !== 0) {
+            if (max === r) h = ((g - b) / delta) % 6;
+            else if (max === g) h = ((b - r) / delta) + 2;
+            else h = ((r - g) / delta) + 4;
+            h *= 60;
+            if (h < 0) h += 360;
+        }
+        return { h, s, l };
+    }
+
+    function hslToRgb(h, s, l) {
+        const hue = ((Number(h) || 0) % 360 + 360) % 360;
+        const sat = clamp01(s);
+        const light = clamp01(l);
+        const c = (1 - Math.abs(2 * light - 1)) * sat;
+        const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
+        const m = light - c / 2;
+        let r1 = 0, g1 = 0, b1 = 0;
+        if (hue < 60) [r1, g1, b1] = [c, x, 0];
+        else if (hue < 120) [r1, g1, b1] = [x, c, 0];
+        else if (hue < 180) [r1, g1, b1] = [0, c, x];
+        else if (hue < 240) [r1, g1, b1] = [0, x, c];
+        else if (hue < 300) [r1, g1, b1] = [x, 0, c];
+        else [r1, g1, b1] = [c, 0, x];
+        return {
+            r: Math.round((r1 + m) * 255),
+            g: Math.round((g1 + m) * 255),
+            b: Math.round((b1 + m) * 255)
+        };
+    }
+
+    function getPaletteVariantProfile(variantIndex = 0) {
+        const safeIndex = Math.abs(Number(variantIndex) || 0) % PALETTE_VARIATION_STEP_COUNT;
+        const hueShift = [0, 4, -4, 6, -6, 2][safeIndex];
+        const saturationShift = [0, 0.03, -0.02, 0.04, -0.03, 0.015][safeIndex];
+        const lightnessShift = [0, 0.018, -0.025, 0.035, -0.03, 0.01][safeIndex];
+        return { hueShift, saturationShift, lightnessShift };
+    }
+
+    function shiftColorTone(colorValue, options = {}) {
+        const rgb = parseCssColorToRgb(colorValue);
+        if (!rgb) return normalizePieHexColor(colorValue) || colorValue;
+        const hsl = rgbToHsl(rgb);
+        if (!hsl) return normalizePieHexColor(colorValue) || colorValue;
+        const hueShift = Number(options.hueShift) || 0;
+        const saturationShift = Number(options.saturationShift) || 0;
+        const lightnessShift = Number(options.lightnessShift) || 0;
+        const mixed = hslToRgb(
+            hsl.h + hueShift,
+            clamp01(hsl.s + saturationShift),
+            clamp01(hsl.l + lightnessShift)
+        );
+        let shifted = rgbToHex(mixed) || normalizePieHexColor(colorValue) || colorValue;
+        if (options.mixWith) shifted = mixPieColor(shifted, options.mixWith, options.mixAmount || 0);
+        return normalizePieHexColor(shifted) || shifted;
+    }
+
+    function buildPaletteArrayVariant(colors, variantIndex = 0) {
+        const list = (Array.isArray(colors) ? colors : []).map(normalizePieHexColor).filter(Boolean);
+        if (!list.length) return [];
+        const profile = getPaletteVariantProfile(variantIndex);
+        const rotateBy = list.length ? (Math.abs(Number(variantIndex) || 0) % list.length) : 0;
+        const rotated = list.map((_, index) => list[(index + rotateBy) % list.length]);
+        return rotated.map((color, index) => {
+            const itemHueShift = ((index % 2 === 0 ? -1 : 1) * Math.min(5, index * 0.35));
+            const itemLightnessShift = ((index % 3) - 1) * 0.012;
+            const itemSaturationShift = index % 2 === 0 ? 0.01 : -0.005;
+            return shiftColorTone(color, {
+                hueShift: profile.hueShift + itemHueShift,
+                saturationShift: profile.saturationShift + itemSaturationShift,
+                lightnessShift: profile.lightnessShift + itemLightnessShift
+            });
+        });
+    }
+
+    function getPaletteWithVariation(key = activePaletteKey, variantIndex = 0) {
+        const base = getBasePalette(key);
+        if (!base) return PALETTE_PRESETS.asiae;
+        if (key === 'asiae') return base;
+        const profile = getPaletteVariantProfile(variantIndex);
+        return Object.assign({}, base, {
+            main: shiftColorTone(base.main || '#E61E2B', {
+                hueShift: profile.hueShift * 0.35,
+                saturationShift: profile.saturationShift,
+                lightnessShift: profile.lightnessShift * 0.8
+            }),
+            accent: shiftColorTone(base.accent || base.main || '#F48F1F', {
+                hueShift: profile.hueShift * 0.45,
+                saturationShift: profile.saturationShift,
+                lightnessShift: profile.lightnessShift
+            }),
+            gray1: shiftColorTone(base.gray1 || base.main || '#888888', {
+                hueShift: profile.hueShift * 0.25,
+                saturationShift: profile.saturationShift * 0.4,
+                lightnessShift: profile.lightnessShift * 0.65
+            }),
+            gray2: shiftColorTone(base.gray2 || base.main || '#444444', {
+                hueShift: profile.hueShift * 0.2,
+                saturationShift: profile.saturationShift * 0.35,
+                lightnessShift: profile.lightnessShift * 0.5
+            }),
+            light: shiftColorTone(base.light || base.accent || '#BBBBBB', {
+                hueShift: profile.hueShift * 0.15,
+                saturationShift: profile.saturationShift * 0.55,
+                lightnessShift: profile.lightnessShift + 0.02
+            }),
+            axis: shiftColorTone(base.axis || '#666666', {
+                hueShift: profile.hueShift * 0.1,
+                saturationShift: profile.saturationShift * 0.18,
+                lightnessShift: profile.lightnessShift * 0.2
+            }),
+            bar: buildPaletteArrayVariant(base.bar || [base.main, base.accent, base.gray1, base.gray2], variantIndex),
+            line: buildPaletteArrayVariant(base.line || [base.main, base.accent, base.gray1, base.gray2], variantIndex),
+            pie: buildPaletteArrayVariant(base.pie || base.bar || [base.main, base.accent, base.gray1, base.gray2, base.light], variantIndex),
+            pieEtc: normalizePieHexColor(base.pieEtc || '#9CA3AF') || '#9CA3AF'
+        });
+    }
+
     function getPieColorDistance(colorA, colorB) {
         const rgbA = parseCssColorToRgb(colorA);
         const rgbB = parseCssColorToRgb(colorB);
@@ -3032,11 +3205,15 @@
         return channelDistance * 0.72 + luminanceDistance * 0.28;
     }
 
-    function buildDistinctPiePalette(baseColors, neededCount) {
-        const fallback = ['#E61E2B', '#16A34A', '#7E22CE', '#9CA3AF', '#F48F1F', '#2563EB', '#111827', '#D1D5DB'];
-        const normalized = (Array.isArray(baseColors) && baseColors.length ? baseColors : fallback)
+    function buildDistinctPiePalette(baseColors, neededCount, options = {}) {
+        const paletteKey = options.paletteKey || activePaletteKey;
+        const variantIndex = Number.isFinite(Number(options.variantIndex)) ? Number(options.variantIndex) : getPaletteVariationIndex(paletteKey);
+        const palette = getPaletteWithVariation(paletteKey, variantIndex);
+        const fallbackSeeds = [palette.main, palette.accent, palette.gray1, palette.gray2, palette.light];
+        const seeds = (Array.isArray(baseColors) && baseColors.length ? baseColors : fallbackSeeds)
             .map(normalizePieHexColor)
             .filter(Boolean);
+        const normalizedSeeds = seeds.length ? seeds : fallbackSeeds.map(normalizePieHexColor).filter(Boolean);
         const colors = [];
         const used = new Set();
         const addColor = (color) => {
@@ -3046,25 +3223,52 @@
             colors.push(normalizedColor);
         };
 
-        normalized.forEach(addColor);
-        const variants = [
-            { mixWith: '#ffffff', amount: 0.24 },
-            { mixWith: '#000000', amount: 0.22 },
-            { mixWith: '#ffffff', amount: 0.42 },
-            { mixWith: '#000000', amount: 0.38 }
+        normalizedSeeds.forEach(addColor);
+        const profile = getPaletteVariantProfile(variantIndex);
+        const recipes = [
+            { lightnessShift: 0.10, saturationShift: 0.02, mixWith: '#ffffff', mixAmount: 0.05 },
+            { lightnessShift: -0.08, saturationShift: 0.025 },
+            { lightnessShift: 0.18, saturationShift: -0.01, mixWith: '#ffffff', mixAmount: 0.10 },
+            { lightnessShift: -0.14, saturationShift: 0.03, mixWith: '#000000', mixAmount: 0.05 },
+            { lightnessShift: 0.26, saturationShift: -0.03, mixWith: '#ffffff', mixAmount: 0.16 },
+            { lightnessShift: -0.20, saturationShift: 0.045, mixWith: '#000000', mixAmount: 0.08 },
+            { lightnessShift: 0.32, saturationShift: -0.05, mixWith: '#ffffff', mixAmount: 0.22 },
+            { lightnessShift: -0.24, saturationShift: 0.05, mixWith: '#000000', mixAmount: 0.11 }
         ];
 
-        let variantCursor = 0;
-        while (colors.length < neededCount && normalized.length) {
-            const base = normalized[variantCursor % normalized.length];
-            const variant = variants[Math.floor(variantCursor / normalized.length) % variants.length];
-            addColor(mixPieColor(base, variant.mixWith, variant.amount));
-            variantCursor += 1;
-            if (variantCursor > normalized.length * variants.length * 4) break;
+        let cycle = 0;
+        while (colors.length < neededCount && cycle < recipes.length) {
+            normalizedSeeds.forEach((seed, index) => {
+                const recipe = recipes[cycle];
+                const hueOffset = ((index % 2 === 0 ? -1 : 1) * Math.min(6, cycle + (index * 0.45)));
+                const lightnessSpread = ((index % 3) - 1) * 0.014;
+                addColor(shiftColorTone(seed, {
+                    hueShift: profile.hueShift * 0.6 + hueOffset,
+                    saturationShift: profile.saturationShift + recipe.saturationShift,
+                    lightnessShift: profile.lightnessShift + recipe.lightnessShift + lightnessSpread,
+                    mixWith: recipe.mixWith,
+                    mixAmount: recipe.mixAmount
+                }));
+            });
+            cycle += 1;
         }
 
-        fallback.forEach(addColor);
-        return colors.slice(0, Math.max(neededCount, colors.length));
+        if (colors.length < neededCount && normalizedSeeds.length) {
+            let emergencyCycle = 0;
+            while (colors.length < neededCount && emergencyCycle < 20) {
+                const seed = normalizedSeeds[emergencyCycle % normalizedSeeds.length];
+                addColor(shiftColorTone(seed, {
+                    hueShift: profile.hueShift + ((emergencyCycle % 2 === 0) ? -2 : 2),
+                    saturationShift: profile.saturationShift + (emergencyCycle % 3 === 0 ? -0.03 : 0.03),
+                    lightnessShift: profile.lightnessShift + (emergencyCycle % 4 < 2 ? 0.36 : -0.28),
+                    mixWith: emergencyCycle % 2 === 0 ? '#ffffff' : '#000000',
+                    mixAmount: emergencyCycle % 2 === 0 ? 0.24 : 0.12
+                }));
+                emergencyCycle += 1;
+            }
+        }
+
+        return colors.slice(0, Math.max(neededCount, 1));
     }
 
     function isEtcPieLabel(label) {
@@ -3078,11 +3282,9 @@
 
     function getNextDistinctPieColor(candidates, usedColors, neighborColor) {
         if (!candidates.length) return '#9CA3AF';
-        const neighborThreshold = activePaletteKey === 'monotone' ? 0.12 : 0.22;
-        const usedThreshold = activePaletteKey === 'monotone' ? 0.08 : 0.14;
+        const neighborThreshold = activePaletteKey === 'monotone' ? 0.10 : 0.16;
+        const usedThreshold = activePaletteKey === 'monotone' ? 0.07 : 0.10;
 
-        // 팔레트 제작자가 의도한 색 순서를 먼저 존중합니다.
-        // 단, 바로 앞 조각이나 이미 사용한 색과 너무 가까우면 다음 후보로 넘깁니다.
         for (let index = 0; index < candidates.length; index++) {
             const color = candidates[index];
             const neighborDistance = neighborColor ? getPieColorDistance(color, neighborColor) : 1;
@@ -3094,7 +3296,6 @@
             }
         }
 
-        // 조건을 모두 만족하는 색이 없을 때만 가장 멀리 떨어진 색을 선택합니다.
         let bestIndex = 0;
         let bestScore = -Infinity;
         candidates.forEach((color, index) => {
@@ -3102,7 +3303,7 @@
                 ? Math.min(...usedColors.map(usedColor => getPieColorDistance(color, usedColor)))
                 : 1;
             const neighborDistance = neighborColor ? getPieColorDistance(color, neighborColor) : 1;
-            const score = neighborDistance * 0.65 + minUsedDistance * 0.35;
+            const score = neighborDistance * 0.52 + minUsedDistance * 0.48;
             if (score > bestScore) {
                 bestScore = score;
                 bestIndex = index;
@@ -3111,9 +3312,8 @@
         return candidates.splice(bestIndex, 1)[0];
     }
 
-
     function getOriginalPalettePieColors(values) {
-        const palette = getActivePalette();
+        const palette = getBasePalette('asiae');
         const fallbackPalette = palette.pie && palette.pie.length
             ? palette.pie.slice(1)
             : ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
@@ -3135,8 +3335,7 @@
         const numericValues = values.map(v => Number(v) || 0);
         if (!numericValues.length) return [];
 
-        // 아래 프리셋은 제작기의 원래 원그래프 배색 로직을 그대로 사용합니다.
-        if (['asiae', 'pastel', 'deep', 'earth', 'cool'].includes(activePaletteKey)) {
+        if (activePaletteKey === 'asiae') {
             return getOriginalPalettePieColors(numericValues);
         }
 
@@ -3144,16 +3343,17 @@
         const maxIndex = numericValues.indexOf(maxValue);
         const mainColor = normalizePieHexColor(palette.main || (palette.pie && palette.pie[0]) || '#E61E2B') || '#E61E2B';
         const etcColor = getPieEtcColor();
-        const neededCount = Math.max(numericValues.length + 6, 12);
-        const candidates = buildDistinctPiePalette(palette.pie, neededCount)
+        const neededCount = Math.max(numericValues.length + 8, 18);
+        const candidates = buildDistinctPiePalette(palette.pie, neededCount, {
+            paletteKey: activePaletteKey,
+            variantIndex: getPaletteVariationIndex(activePaletteKey)
+        })
             .filter(color => color.toLowerCase() !== mainColor.toLowerCase())
             .filter(color => color.toLowerCase() !== etcColor.toLowerCase());
 
         const colors = new Array(numericValues.length);
         const usedColors = [];
 
-        // '기타/그 외/Others' 항목은 어느 팔레트를 쓰더라도 중립 회색으로 고정해
-        // 본문 주요 항목과 시각적으로 분리합니다.
         labels.forEach((label, index) => {
             if (isEtcPieLabel(label)) {
                 colors[index] = etcColor;
@@ -3161,7 +3361,6 @@
             }
         });
 
-        // 가장 큰 조각은 기사에서 가장 먼저 눈에 띄도록 팔레트의 대표색을 사용합니다.
         if (!colors[maxIndex]) {
             colors[maxIndex] = mainColor;
             usedColors.push(mainColor);
@@ -5935,7 +6134,7 @@ function isTextSheetType(type) {
         setupChartQuickEditing();
         setupPreviewQuickEditing();
         setupPieSideListQuickEditing();
-        applyPalettePreset('asiae', { skipUpdate: true, skipHistory: true });
+        applyPalettePreset('asiae', { skipUpdate: true, skipHistory: true, skipVariationAdvance: true });
         const initialType = document.getElementById('chartType').value;
         initializedChartTypes.add(initialType);
         loadExampleData();
