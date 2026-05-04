@@ -72,6 +72,9 @@
         #displayTitle.inline-placeholder[contenteditable="true"], #displaySub.inline-placeholder[contenteditable="true"] { color: #111; border-style: solid; background: #fff; }
         
         #chart-container { height: 420px; margin-top: 0px; flex-shrink: 0; transition: none; position: relative;}
+        #capture-area.pie-tight-layout #chart-container { margin-top: -18px; margin-bottom: -28px; }
+        #capture-area.pie-tight-layout #displayFootnote { margin-top: 0px; }
+        #capture-area.pie-tight-layout .footer-watermark { margin-top: 8px; padding-top: 10px; }
         #pie-side-list { display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 210px; z-index: 5; }
         .pie-side-list-inner { display: flex; flex-direction: column; gap: 10px; }
         .pie-side-item { display: flex; align-items: flex-start; gap: 8px; min-width: 0; cursor: pointer; border-radius: 8px; padding: 4px; margin: -4px; transition: box-shadow 0.15s ease, background-color 0.15s ease; }
@@ -2931,6 +2934,12 @@
         return !!(geminiInput && geminiInput.value.trim());
     }
 
+    function syncPieTightLayout(chartType) {
+        const captureArea = document.getElementById('capture-area');
+        if (!captureArea) return;
+        captureArea.classList.toggle('pie-tight-layout', chartType === 'pie');
+    }
+
     function handleChartTypeChange() {
         const type = document.getElementById('chartType').value;
         if (!initializedChartTypes.has(type)) {
@@ -2945,6 +2954,7 @@
             toggleInputs();
         }
 
+        syncPieTightLayout(type);
         stabilizeChartLayout();
     }
 
@@ -5335,6 +5345,7 @@ function isTextSheetType(type) {
         const highlightConfig = getHighlightConfig(chartType, labels);
         const dataVals1 = parseNumericSeries(document.getElementById('dataInput1').value, labels.length);
         if (chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
+        syncPieTightLayout(chartType);
         if (pieSideList) {
             pieSideList.style.display = 'none';
             pieSideList.innerHTML = '';
