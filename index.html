@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 3.0</title>
+    <title>그래픽 보조 데스크 V 4.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -56,10 +56,55 @@
         .export-option-group { background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #e0e0e0; margin-top: 10px; }
         .export-option-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
         .export-option-row select { flex: 1; margin-bottom: 0; }
+        .graph-tab-swap-btn { appearance:none; width:42px; min-width:42px; height:38px; border:0; border-right:1px solid #d7d7d7; background:#f0f0f0; color:#444; border-radius:0; padding:0; font-family: var(--main-font); font-size: 18px; font-weight: 900; cursor:pointer; line-height:1; position:relative; z-index:22; }
+        .graph-tab-swap-btn:hover { background:#fff8f8; color:var(--ak-red); }
+        .graph-tab-swap-btn:focus-visible { outline:2px solid rgba(230,30,43,0.35); outline-offset:-2px; }
         .export-size-hint { font-size: 12px; color: #666; line-height: 1.4; margin-top: 6px; display: block; }
 
-        .preview-area { flex: 1; display: flex; justify-content: flex-start; align-items: flex-start; width: 100%; position: sticky; top: 20px;}
+        .preview-area { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 18px; width: 100%; position: sticky; top: 20px;}
+        .preview-area.multi-mode { top: 10px; max-height: calc(100vh - 20px); overflow-y: auto; overflow-x: hidden; padding-right: 6px; }
+        .preview-area.multi-mode #capture-area,
+        .preview-area.multi-mode #joinedPreviewPanel { zoom: 1; }
         #capture-area { background: white; width: 750px; padding: 40px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
+        .joined-preview-panel { width: 750px; display: none; }
+        .joined-preview-label { font-size: 14px; font-weight: 800; color: var(--ak-red); margin: 0 0 8px; }
+        .joined-preview-image-wrap { width: 100%; }
+        .joined-preview-image-wrap img { display:block; width:100%; height:auto; background:#fff; }
+        #multi-capture-area { background: white; width: 750px; padding: 40px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; flex-direction: column; position: relative; }
+        .multi-graph-layout { display: grid; gap: 18px; width: 100%; }
+        .multi-graph-layout.side { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .multi-graph-layout.stack { grid-template-columns: 1fr; }
+        .multi-graph-card { display: flex; flex-direction: column; min-width: 0; }
+        .multi-card-topline { width: 100%; height: 4px; background: var(--ak-red); margin-bottom: 6px; }
+        .multi-card-title { font-size: 22px; font-weight: 800; line-height: 1.22; margin: 0 0 0; color: #111; word-break: keep-all; }
+        .multi-card-sub { font-size: 13px; font-weight: 700; line-height: 1.25; color: #666; margin: 0 0 3px; word-break: keep-all; }
+        .multi-card-title:empty, .multi-card-sub:empty { display:none; margin:0; }
+        .multi-card-chart { position: relative; width: 100%; height: 300px; margin: 0; }
+        .multi-graph-layout.side .multi-card-chart { height: 262px; }
+        .multi-card-footnote { margin-top: 2px; font-size: 12px; line-height: 1.3; color: #666; word-break: keep-all; min-height: 0; }
+        .multi-capture-footer { margin-top: 4px; padding-top: 8px; }
+        .multi-graph-help { font-size: 11px; color: #777; line-height: 1.45; margin-top: 6px; }
+        .multi-graph-inline { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .multi-graph-inline label { margin: 0; font-size: 13px; color: #444; }
+        .multi-graph-warning { border: 1px dashed #d7d7d7; border-radius: 10px; padding: 20px 16px; font-size: 13px; line-height: 1.6; color: #666; background: #fafafa; }
+        .multi-style-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
+        .multi-style-card { border: 1px solid #ececec; border-radius: 10px; padding: 12px; background: #fff; }
+        .multi-style-card h4 { margin: 0 0 8px; font-size: 14px; color: #222; }
+        .multi-style-card label { margin-top: 6px; font-size: 12px; color: #555; }
+        .multi-style-card .slider-group { margin-top: 4px; }
+        .multi-style-card .help-text { margin-top: 6px; }
+        .ai-input-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+        .ai-input-header h3 { margin:0; }
+        .desk-title-with-toggle { display:flex !important; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+        .multi-editor-toggle { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:#333; font-weight:700; white-space:nowrap; }
+        .title-toggle { font-size:13px; background:#f7f8fb; border:1px solid #e1e4ea; border-radius:999px; padding:5px 10px; color:#333; }
+        .graph-editor-tabs { display:none; width:100%; box-sizing:border-box; gap:0; margin:10px 0 12px; padding:0; flex-wrap:nowrap; align-items:stretch; background:#e9e9e9; border:1px solid #e1e1e1; min-height:38px; position:sticky; top:var(--control-scroll-offset, 120px); z-index:85; pointer-events:auto; align-self:auto; box-shadow:0 4px 10px rgba(0,0,0,0.06); }
+        .graph-editor-tabs::after { content:none; display:none; }
+        .graph-editor-tab { appearance:none; min-width:120px; height:38px; border:0; border-right:1px solid #d7d7d7; background:#e2e2e2; color:#8a8a8a; border-radius:0; padding:0 18px; font-size:12px; font-weight:800; cursor:pointer; position:relative; z-index:21; pointer-events:auto; letter-spacing:-0.04em; white-space:nowrap; }
+        .graph-editor-tab:hover { color:#555; background:#eeeeee; }
+        .graph-editor-tab.active { color: var(--ak-red); background:#fff; box-shadow:none; }
+        .graph-editor-mode-help { display:none !important; }
+        .multi-card-title.is-height-matched { display:flex; align-items:flex-start; }
         
         /* 🚨 제목과 그래프 사이 간격 대폭 좁힘 🚨 */
         .header-line { border-top: 3px solid #000; margin-bottom: 12px; }
@@ -73,9 +118,10 @@
         
         #chart-container { height: 420px; margin-top: 0px; flex-shrink: 0; transition: none; position: relative;}
         #capture-area.pie-tight-layout #displayTitle { margin-bottom: 0px; }
-        #capture-area.pie-tight-layout #displaySub { line-height: 1.1; }
-        #capture-area.pie-tight-layout #chart-container { margin-top: -38px; margin-bottom: -44px; }
-        #capture-area.pie-tight-layout #displayFootnote { margin-top: -4px; }
+        #capture-area.pie-tight-layout #displaySub { line-height: 1.1; position: relative; z-index: 30; pointer-events: auto; }
+        #capture-area.pie-tight-layout #chart-container { margin-top: -38px; margin-bottom: -44px; z-index: 1; }
+        #capture-area.pie-tight-layout #displayFootnote { margin-top: -4px; position: relative; z-index: 30; pointer-events: auto; }
+        #capture-area.pie-tight-layout #displayTitle { position: relative; z-index: 30; pointer-events: auto; }
         #capture-area.pie-tight-layout .footer-watermark { margin-top: 2px; padding-top: 8px; }
         #pie-side-list { display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 210px; z-index: 5; }
         .pie-side-list-inner { display: flex; flex-direction: column; gap: 10px; }
@@ -209,7 +255,7 @@
 
 
         /* 사용자 친화형 단계 메뉴 + 신규 기능 UI */
-        .quick-action-bar { display: grid; grid-template-columns: 0.76fr 0.86fr 1.05fr 0.78fr 0.76fr; gap: 5px; margin: -6px 0 10px; align-items: stretch; }
+        .quick-action-bar { display: grid; grid-template-columns: 0.76fr 0.86fr 1.05fr 0.78fr 0.76fr; gap: 5px; margin: -6px 0 10px; align-items: stretch; width: 100%; }
         .quick-btn { border: 1px solid #ddd; background: #fff; color: #333; padding: 8px 3px; border-radius: 8px; cursor: pointer; font-weight: 800; font-family: var(--main-font); font-size: 10.5px; line-height: 1.1; min-height: 36px; word-break: keep-all; white-space: nowrap; text-align: center; letter-spacing: -0.04em; min-width: 0; }
         .quick-btn { position: relative; overflow: hidden; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease; }
         .quick-btn::before { content: ''; position: absolute; left: 8px; right: 8px; top: 4px; height: 3px; border-radius: 999px; background: currentColor; opacity: 0; transition: opacity 0.15s ease; }
@@ -408,8 +454,16 @@
             .menu-subhead { padding: 8px 9px; margin-bottom: 8px; }
             .data-group { padding: 9px; }
             .compact-action-grid { grid-template-columns: 1fr; }
-            .preview-area { width: 100%; overflow-x: auto; padding-bottom: 10px; position: relative; top: auto; }
+            .preview-area { width: 100%; overflow-x: auto; padding-bottom: 10px; position: relative; top: auto; max-height: none; }
+            .preview-area.multi-mode { max-height: none; overflow: auto; }
+            .preview-area.multi-mode #capture-area,
+            .preview-area.multi-mode #joinedPreviewPanel { zoom: 1; }
             #capture-area { min-width: 750px; }
+            .joined-preview-panel { min-width: 750px; }
+            #multi-capture-area { min-width: 750px; }
+            .multi-graph-layout.side { grid-template-columns: 1fr; }
+            .multi-style-grid { grid-template-columns: 1fr; }
+            .ai-input-header { align-items:flex-start; }
         }
 
         @media screen and (max-width: 480px) {
@@ -417,6 +471,8 @@
             .control-panel { padding: 14px; }
             .quick-action-bar { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 3px; scrollbar-width: thin; }
             .quick-btn { flex: 0 0 auto; min-width: 68px; font-size: 10px; padding: 8px 7px; min-height: 34px; white-space: nowrap; }
+            .graph-editor-tabs { min-height: 34px; margin:8px 0 10px; }
+            .graph-editor-tab { min-width: 100px; font-size: 11px; padding: 0 10px; }
             .panel-sticky-header { margin: -14px 0 9px; padding: 7px 0 7px; }
             .panel-sticky-header h2 { font-size: 16px; margin-bottom: 6px; }
             .panel-sticky-header .quick-btn { min-height: 32px; padding: 6px 8px; }
@@ -564,7 +620,7 @@
 <body>
 
     <div class="control-panel">
-        <h2>🛠️ 그래픽 보조 데스크 V 3.0</h2>
+        <h2 class="desk-title-with-toggle">🛠️ 그래픽 보조 데스크 V 4.0 <label class="multi-editor-toggle title-toggle"><input type="checkbox" id="multiEditorEnabled" onchange="handleMultiEditorToggle()"> 복수 그래프</label></h2>
 
         <div class="quick-action-bar" id="quickActionBar">
             <button type="button" class="quick-btn" id="undoBtn" onclick="undoLastChange()" title="Ctrl+Z / Command+Z">되돌리기</button>
@@ -575,13 +631,36 @@
         </div>
         <div class="history-status" id="historyStatus">작업 이력이 준비되었습니다.</div>
 
+        <div id="graphEditorTabs" class="graph-editor-tabs" aria-hidden="true">
+            <button type="button" class="graph-editor-tab active" id="graphEditorTab1" onclick="switchGraphEditorTab(1, event)">왼쪽 그래프</button>
+            <button type="button" class="graph-tab-swap-btn" id="graphEditorSwapBtn" onclick="toggleMultiGraphOrder()" title="그래프 순서 바꾸기" aria-label="그래프 순서 바꾸기">↔</button>
+            <button type="button" class="graph-editor-tab" id="graphEditorTab2" onclick="switchGraphEditorTab(2, event)">오른쪽 그래프</button>
+        </div>
+
         <div class="ai-input-group">
-            <h3>🤖 제미나이 데이터 자동 입력</h3>
+            <div class="ai-input-header">
+                <h3>🤖 제미나이 데이터 자동 입력</h3>
+            </div>
             <span class="help-text" style="color: #0056b3; margin-bottom:5px;">제미나이가 생성한 텍스트를 통째로 붙여넣으세요.</span>
             <textarea id="geminiInput" placeholder="[종류] multi-line&#10;[제목] 서울 아파트 가격 추이&#10;..."></textarea>
             <button class="btn-ai" id="autoFillBtn" onclick="parseGeminiData()">🪄 AI 데이터 자동 완성하기</button>
         </div>
         
+        <div class="data-group" id="multiGraphGroup" style="display:none;">
+            <label style="color:var(--ak-red); font-size:14px; display:block;">🧩 멀티 그래프 붙이기</label>
+            <div class="multi-graph-inline" style="margin-top:6px;">
+                <label><input type="checkbox" id="multiGraphEnabled" onchange="updateOutput()"> 두 번째 그래프 함께 출력</label>
+                <label for="multiGraphLayout">배치</label>
+                <select id="multiGraphLayout" onchange="updateOutput()" style="max-width:180px;">
+                    <option value="side">가로 2개 붙이기</option>
+                    <option value="stack">세로 2개 붙이기</option>
+                </select>
+            </div>
+            <label style="margin-top:10px;">두 번째 그래프용 제미나이 데이터</label>
+            <textarea id="secondGeminiInput" rows="8" placeholder="[종류] pie&#10;[제목] 두 번째 그래프 제목&#10;[부제목] (단위 및 출처)&#10;[X축] 항목1, 항목2, 항목3&#10;[데이터1이름] 값&#10;[데이터1수치] 30, 20, 50&#10;[하단주석] *주석"></textarea>
+            <div class="multi-graph-help">첫 번째 그래프는 현재 입력창과 설정을 그대로 사용하고, 여기에는 두 번째 그래프용 데이터만 넣으시면 됩니다. 원그래프 2개를 가로로 붙이거나, 서로 다른 그래프 2개를 세로로 이어 붙일 수 있습니다.</div>
+        </div>
+
         <div id="chartTypeHeaderRow" style="display: flex; justify-content: space-between; align-items: flex-end;">
             <label style="margin-bottom: 0;">종류 선택</label>
             <span style="font-size: 12px; cursor: pointer; color: var(--ak-red); font-weight: bold; text-decoration: underline;" onclick="loadExampleData()">📝 예시 불러오기</span>
@@ -611,6 +690,7 @@
         <div class="data-group" id="palettePresetGroup">
             <label style="color:var(--ak-red); font-size:14px; display:block;">🎨 색상 팔레트 프리셋</label>
             <div style="font-size:11px; color:#777; margin:-2px 0 8px; line-height:1.4;">버튼 클릭시 마다 색상 변경, 되돌리기 ctrl+Z</div>
+            <div id="paletteTargetHint" style="font-size:11px; color:#555; margin:-2px 0 8px; line-height:1.4;">현재 그래프에 적용됩니다.</div>
             <input type="hidden" id="palettePresetKey" value="asiae">
             <div class="palette-preset-grid">
                 <button type="button" class="palette-btn active" data-palette="asiae" onclick="applyPalettePreset('asiae')"><span class="palette-swatch" style="background:#E61E2B"></span>아시아경제 기본</button>
@@ -625,11 +705,89 @@
                 <button type="button" class="palette-btn" data-palette="cool" onclick="applyPalettePreset('cool')"><span class="palette-swatch" style="background:linear-gradient(135deg,#003566,#0077B6,#00B4D8,#7209B7)"></span>쿨톤</button>
                 <button type="button" class="palette-btn" data-palette="sunset" onclick="applyPalettePreset('sunset')"><span class="palette-swatch" style="background:linear-gradient(135deg,#8B1E2D,#243B53,#A16207,#64748B)"></span>클래식</button>
                 <button type="button" class="palette-btn" data-palette="ocean" onclick="applyPalettePreset('ocean')"><span class="palette-swatch" style="background:linear-gradient(135deg,#1E3A5F,#2F6F9F,#0F766E,#94A3B8)"></span>뉴스블루</button>
+                <button type="button" class="palette-btn" data-palette="trendMuted" onclick="applyPalettePreset('trendMuted')"><span class="palette-swatch" style="background:linear-gradient(135deg,#284655,#289B91,#EBC369,#F5A05F,#E66E50)"></span>트렌드 1</button>
+                <button type="button" class="palette-btn" data-palette="trendCoolRed" onclick="applyPalettePreset('trendCoolRed')"><span class="palette-swatch" style="background:linear-gradient(135deg,#E63746,#F0FAF0,#AADCDC,#467D9B,#1E3755)"></span>트렌드 2</button>
+                <button type="button" class="palette-btn" data-palette="trendNavyWarm" onclick="applyPalettePreset('trendNavyWarm')"><span class="palette-swatch" style="background:linear-gradient(135deg,#00324B,#D72828,#F57D00,#FABE4B,#EBE1B9)"></span>트렌드 3</button>
+                <button type="button" class="palette-btn" data-palette="trendSpectrum" onclick="applyPalettePreset('trendSpectrum')"><span class="palette-swatch" style="background:linear-gradient(135deg,#FA4146,#F5732D,#FA961E,#FAC850,#91BE6E,#41AA8C,#4B918C,#287DA0)"></span>트렌드 4</button>
             </div>
             <span class="help-text" style="margin-top:8px; margin-bottom:0;">그래프·표 강조색을 기사 성격에 맞게 한 번에 바꿉니다.</span>
         </div>
 
-        <div class="data-group" id="labelSettingGroup">
+        
+        <div class="data-group" id="multiGraphStyleGroup" style="display:none !important;">
+            <label style="color:var(--ak-red); font-size:14px; display:block;">🧩 멀티 그래프 개별 디자인</label>
+            <span class="help-text" style="margin-top:6px;">멀티 그래프 사용 시 1번 그래프와 2번 그래프를 각각 따로 꾸밀 수 있습니다. 아래 설정은 공통 디자인보다 우선 적용됩니다.</span>
+            <div class="multi-style-grid">
+                <div class="multi-style-card">
+                    <h4>1번 그래프</h4>
+                    <label for="multiGraphPalette1">팔레트</label>
+                    <select id="multiGraphPalette1" onchange="updateOutput()"></select>
+                    <label for="multiGraphFontSize1">글자 크기</label>
+                    <div class="slider-group">
+                        <input type="range" id="multiGraphFontSize1" min="12" max="32" value="20" oninput="document.getElementById('multiGraphFontDisplay1').innerText = this.value + 'px'; updateOutput();">
+                        <span id="multiGraphFontDisplay1" class="font-size-display">20px</span>
+                    </div>
+                    <label for="multiGraphDataFontSize1">데이터 글자 크기</label>
+                    <div class="slider-group">
+                        <input type="range" id="multiGraphDataFontSize1" min="10" max="32" value="18" oninput="document.getElementById('multiGraphDataFontDisplay1').innerText = this.value + 'px'; updateOutput();">
+                        <span id="multiGraphDataFontDisplay1" class="font-size-display">18px</span>
+                    </div>
+                    <label for="multiGraphDataFontColor1">데이터 글자 색상</label>
+                    <select id="multiGraphDataFontColor1" onchange="updateOutput()">
+                        <option value="auto" selected>자동</option>
+                        <option value="#111111">검정</option>
+                        <option value="#555555">회색</option>
+                        <option value="#E61E2B">빨강</option>
+                        <option value="#F48F1F">주황</option>
+                        <option value="#2F6BFF">파랑</option>
+                        <option value="#2E8B57">초록</option>
+                        <option value="#8A2BE2">보라</option>
+                        <option value="#00B4D8">청록</option>
+                    </select>
+                    <label for="multiGraphLabelDisplayType1">수치 표기 유무</label>
+                    <select id="multiGraphLabelDisplayType1" onchange="updateOutput()">
+                        <option value="follow" selected>공통값 따름</option>
+                        <option value="all">모든 데이터에 표시</option>
+                        <option value="none">표시 안 함</option>
+                    </select>
+                </div>
+                <div class="multi-style-card">
+                    <h4>2번 그래프</h4>
+                    <label for="multiGraphPalette2">팔레트</label>
+                    <select id="multiGraphPalette2" onchange="updateOutput()"></select>
+                    <label for="multiGraphFontSize2">글자 크기</label>
+                    <div class="slider-group">
+                        <input type="range" id="multiGraphFontSize2" min="12" max="32" value="20" oninput="document.getElementById('multiGraphFontDisplay2').innerText = this.value + 'px'; updateOutput();">
+                        <span id="multiGraphFontDisplay2" class="font-size-display">20px</span>
+                    </div>
+                    <label for="multiGraphDataFontSize2">데이터 글자 크기</label>
+                    <div class="slider-group">
+                        <input type="range" id="multiGraphDataFontSize2" min="10" max="32" value="18" oninput="document.getElementById('multiGraphDataFontDisplay2').innerText = this.value + 'px'; updateOutput();">
+                        <span id="multiGraphDataFontDisplay2" class="font-size-display">18px</span>
+                    </div>
+                    <label for="multiGraphDataFontColor2">데이터 글자 색상</label>
+                    <select id="multiGraphDataFontColor2" onchange="updateOutput()">
+                        <option value="auto" selected>자동</option>
+                        <option value="#111111">검정</option>
+                        <option value="#555555">회색</option>
+                        <option value="#E61E2B">빨강</option>
+                        <option value="#F48F1F">주황</option>
+                        <option value="#2F6BFF">파랑</option>
+                        <option value="#2E8B57">초록</option>
+                        <option value="#8A2BE2">보라</option>
+                        <option value="#00B4D8">청록</option>
+                    </select>
+                    <label for="multiGraphLabelDisplayType2">수치 표기 유무</label>
+                    <select id="multiGraphLabelDisplayType2" onchange="updateOutput()">
+                        <option value="follow" selected>공통값 따름</option>
+                        <option value="all">모든 데이터에 표시</option>
+                        <option value="none">표시 안 함</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+<div class="data-group" id="labelSettingGroup">
             <label style="color:var(--ak-red); font-size:14px;">📌 수치 표기 유무</label>
             <select id="labelDisplayType" onchange="updateOutput()">
                 <option value="all" selected>전체 기본값: 모든 데이터에 표시</option>
@@ -993,7 +1151,14 @@
                     <option value="3">3배 고정 출력 (2250px 기준)</option>
                 </select>
             </div>
-            <span class="export-size-hint">현재 750px 작업 화면을 기준으로 2배/3배 크기로 고정 저장합니다.</span>
+            <label style="margin-top:8px; color:var(--ak-red); font-size:14px;">🧩 2개 이어붙이기(가로/세로)</label>
+            <div class="export-option-row">
+                <select id="multiSaveJoinDirection" onchange="syncMultiGraphOrderButton(); renderMultiGraphComposition(); updateExportSizeHint();">
+                    <option value="side" selected>가로로 2개 이어붙이기</option>
+                    <option value="stack">세로로 2개 이어붙이기</option>
+                </select>
+            </div>
+            <span class="export-size-hint">현재 750px 작업 화면을 기준으로 2배/3배 크기로 고정 저장합니다. 복수 그래프를 체크한 경우 저장 시 이 설정대로 2개를 이어붙입니다.</span>
         </div>
 
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 PNG 저장</button>
@@ -1086,6 +1251,17 @@
                 <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
             </div>
         </div>
+
+        <div id="joinedPreviewPanel" class="joined-preview-panel">
+            <div class="joined-preview-label">🧩 이어붙인 최종 미리보기</div>
+            <div id="multi-capture-area">
+                <div id="multiGraphLayoutWrap" class="multi-graph-layout stack"></div>
+                <div class="footer-watermark multi-capture-footer">
+                    그래픽&nbsp;&nbsp;<span id="multiDisplayName">박조비 기자</span>
+                    <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1094,6 +1270,7 @@
     Chart.defaults.font.family = globalFont;
 
     let myChart = null;
+    let multiChartInstances = [];
     const EDIT_HOVER_MESSAGE = '더블클릭해서 데이터 수정';
     const ITEM_EDIT_HOVER_MESSAGE = '항목명 수정 · 더블클릭해서 데이터 수정';
     const VALUE_EDIT_HOVER_MESSAGE = '데이터값 수정 · 더블클릭해서 데이터 수정';
@@ -1183,6 +1360,34 @@
             line: ['#1E3A5F', '#2F6F9F', '#0F766E', '#B45309', '#475569', '#3D5A80'],
             pie: ['#1E3A5F', '#2F6F9F', '#0F766E', '#B45309', '#64748B', '#3D5A80', '#6B7280', '#94A3B8'],
             pieEtc: '#94A3B8'
+        },
+        trendMuted: {
+            label: '트렌드 1', main: '#284655', accent: '#289B91', gray1: '#EBC369', gray2: '#F5A05F', light: '#E66E50', axis: '#284655',
+            bar: ['#284655', '#289B91', '#EBC369', '#F5A05F', '#E66E50'],
+            line: ['#284655', '#289B91', '#E66E50', '#EBC369', '#F5A05F'],
+            pie: ['#284655', '#289B91', '#EBC369', '#F5A05F', '#E66E50'],
+            pieEtc: '#A7B2B8'
+        },
+        trendCoolRed: {
+            label: '트렌드 2', main: '#E63746', accent: '#467D9B', gray1: '#AADCDC', gray2: '#1E3755', light: '#F0FAF0', axis: '#1E3755',
+            bar: ['#E63746', '#F0FAF0', '#AADCDC', '#467D9B', '#1E3755'],
+            line: ['#E63746', '#467D9B', '#1E3755', '#AADCDC', '#F0FAF0'],
+            pie: ['#E63746', '#F0FAF0', '#AADCDC', '#467D9B', '#1E3755'],
+            pieEtc: '#A8B7C2'
+        },
+        trendNavyWarm: {
+            label: '트렌드 3', main: '#00324B', accent: '#D72828', gray1: '#F57D00', gray2: '#FABE4B', light: '#EBE1B9', axis: '#00324B',
+            bar: ['#00324B', '#D72828', '#F57D00', '#FABE4B', '#EBE1B9'],
+            line: ['#00324B', '#D72828', '#F57D00', '#FABE4B', '#EBE1B9'],
+            pie: ['#00324B', '#D72828', '#F57D00', '#FABE4B', '#EBE1B9'],
+            pieEtc: '#C8C0A2'
+        },
+        trendSpectrum: {
+            label: '트렌드 4', main: '#FA4146', accent: '#FA961E', gray1: '#91BE6E', gray2: '#4B918C', light: '#FAC850', axis: '#287DA0',
+            bar: ['#FA4146', '#F5732D', '#FA961E', '#FA824B', '#FAC850', '#91BE6E', '#41AA8C', '#4B918C', '#557391', '#287DA0'],
+            line: ['#FA4146', '#FA961E', '#91BE6E', '#41AA8C', '#287DA0', '#557391'],
+            pie: ['#FA4146', '#F5732D', '#FA961E', '#FA824B', '#FAC850', '#91BE6E', '#41AA8C', '#4B918C', '#557391', '#287DA0'],
+            pieEtc: '#8FA4B1'
         }
     };
     let activePaletteKey = 'asiae';
@@ -1192,6 +1397,18 @@
     let undoStack = [];
     let isRestoringState = false;
     let historyDebounceTimer = null;
+    let graphEditorStates = { 1: null, 2: null };
+    let suppressMultiEditorJoinedPreview = false;
+    let multiEditorPreviewRenderToken = 0;
+    let activeGraphEditorIndex = 1;
+    let multiGraphOrderSwapped = false;
+    const GRAPH_EDITOR_STATE_EXCLUDE_IDS = new Set([
+        'multiEditorEnabled', 'exportScale', 'multiSaveJoinDirection',
+        'multiGraphEnabled', 'multiGraphLayout', 'secondGeminiInput',
+        'multiGraphPalette1', 'multiGraphPalette2', 'multiGraphFontSize1', 'multiGraphFontSize2',
+        'multiGraphDataFontSize1', 'multiGraphDataFontSize2', 'multiGraphDataFontColor1', 'multiGraphDataFontColor2',
+        'multiGraphLabelDisplayType1', 'multiGraphLabelDisplayType2'
+    ]);
 
     let initializedChartTypes = new Set();
     const NORMAL_CHART_DPR = Math.max(window.devicePixelRatio || 1, 1);
@@ -1231,7 +1448,7 @@
     }
 
     function getFixedExportSize() {
-        const captureDiv = document.getElementById('capture-area');
+        const captureDiv = getActiveCaptureElement();
         const baseWidth = 750;
         const rect = captureDiv.getBoundingClientRect();
         const baseHeight = Math.max(Math.round(rect.height), captureDiv.scrollHeight, captureDiv.offsetHeight);
@@ -1584,6 +1801,8 @@
 
         const anchor = stickyHeader || quickBar;
         anchor.insertAdjacentElement('afterend', geminiSection.details);
+        const graphTabs = document.getElementById('graphEditorTabs');
+        if (graphTabs) geminiSection.details.insertAdjacentElement('beforebegin', graphTabs);
         geminiSection.details.insertAdjacentElement('afterend', dataEditSection.details);
         dataEditSection.details.insertAdjacentElement('afterend', designSection.details);
         designSection.details.insertAdjacentElement('afterend', exportSection.details);
@@ -1642,14 +1861,39 @@
     function syncOutputPaletteVars() {
         const palette = getActivePalette();
         const captureArea = document.getElementById('capture-area');
-        if (!captureArea) return;
-        captureArea.style.setProperty('--ak-red', palette.main || '#E61E2B');
-        captureArea.style.setProperty('--ak-orange', palette.accent || '#F48F1F');
+        const multiCaptureArea = document.getElementById('multi-capture-area');
+        [captureArea, multiCaptureArea].forEach(area => {
+            if (!area) return;
+            area.style.setProperty('--ak-red', palette.main || '#E61E2B');
+            area.style.setProperty('--ak-orange', palette.accent || '#F48F1F');
+        });
+    }
+
+    function getGraphEditorName(index) {
+        return index === 2 ? '오른쪽 그래프' : '왼쪽 그래프';
+    }
+
+    function syncPaletteTargetHint() {
+        const hint = document.getElementById('paletteTargetHint');
+        if (!hint) return;
+        hint.textContent = isMultiEditorEnabled()
+            ? `현재 적용 대상: ${getGraphEditorName(activeGraphEditorIndex)}`
+            : '현재 그래프에 적용됩니다.';
+    }
+
+    function syncActivePaletteToGraphControls() {
+        if (!isMultiEditorEnabled()) return;
+        const select = document.getElementById(`multiGraphPalette${activeGraphEditorIndex}`);
+        if (select) select.value = activePaletteKey || 'asiae';
     }
 
     function applyPalettePreset(key, options = {}) {
         if (!PALETTE_PRESETS[key]) key = 'asiae';
         const previousKey = activePaletteKey;
+        const inactiveIndex = activeGraphEditorIndex === 1 ? 2 : 1;
+        const preservedInactiveState = isMultiEditorEnabled() && graphEditorStates[inactiveIndex]
+            ? JSON.parse(JSON.stringify(graphEditorStates[inactiveIndex]))
+            : null;
         activePaletteKey = key;
 
         if (options.skipVariationAdvance) {
@@ -1669,7 +1913,28 @@
         // 텍스트표 색상은 열별 팔레트 칩으로 선택하므로 선택 UI를 갱신합니다.
         refreshTableColorControls();
         syncPaletteButtons();
-        if (!options.skipUpdate) updateOutput();
+        syncActivePaletteToGraphControls();
+        syncPaletteTargetHint();
+        if (isMultiEditorEnabled()) {
+            const persistedState = graphEditorStates[activeGraphEditorIndex]
+                ? JSON.parse(JSON.stringify(graphEditorStates[activeGraphEditorIndex]))
+                : {};
+            persistedState.__activePaletteKey = activePaletteKey;
+            persistedState.__paletteVariationMap = JSON.parse(JSON.stringify(paletteVariationMap || { asiae: 0 }));
+            graphEditorStates[activeGraphEditorIndex] = persistedState;
+        }
+        if (!options.skipUpdate) {
+            updateOutput();
+            if (isMultiEditorEnabled()) {
+                graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+                renderMultiGraphComposition();
+            }
+        }
+        if (preservedInactiveState) {
+            graphEditorStates[inactiveIndex] = JSON.parse(JSON.stringify(preservedInactiveState));
+            const inactiveSelect = document.getElementById(`multiGraphPalette${inactiveIndex}`);
+            if (inactiveSelect) inactiveSelect.value = preservedInactiveState.__activePaletteKey || 'asiae';
+        }
         if (!options.skipHistory) {
             const historyLabel = previousKey === key && !options.skipVariationAdvance
                 ? `팔레트 톤 변경: ${palette.label}`
@@ -1798,6 +2063,378 @@
     function normalizeNumberInput(raw, expectedCount = null) {
         const values = parseNumericSeries(raw, expectedCount);
         return values.length ? values.join(', ') : String(raw || '').trim();
+    }
+
+    function isMultiEditorEnabled() {
+        const checkbox = document.getElementById('multiEditorEnabled');
+        return !!(checkbox && checkbox.checked);
+    }
+
+    function getGraphEditorControlElements() {
+        return getStateControlElements().filter(el => !GRAPH_EDITOR_STATE_EXCLUDE_IDS.has(el.id));
+    }
+
+    function applyGraphEditorStateValues(state) {
+        if (!state) return;
+        Object.entries(state).forEach(([id, payload]) => {
+            if (id === '__activePaletteKey' || id === '__paletteVariationMap') return;
+            if (GRAPH_EDITOR_STATE_EXCLUDE_IDS.has(id)) return;
+            const el = document.getElementById(id);
+            if (!el || !payload) return;
+            if (payload.type === 'checkbox' || payload.type === 'radio') {
+                el.checked = !!payload.checked;
+            } else if (payload.type === 'multiple') {
+                const values = Array.isArray(payload.value) ? payload.value : [];
+                Array.from(el.options || []).forEach(option => option.selected = values.includes(option.value));
+            } else if ('value' in payload) {
+                el.value = payload.value;
+            }
+        });
+    }
+
+    function serializeGraphEditorState() {
+        const values = {};
+        getGraphEditorControlElements().forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                values[el.id] = { type: el.type, checked: el.checked };
+            } else if (el.multiple) {
+                values[el.id] = { type: 'multiple', value: Array.from(el.selectedOptions).map(option => option.value) };
+            } else {
+                values[el.id] = { type: el.type || el.tagName.toLowerCase(), value: el.value };
+            }
+        });
+        values.__activePaletteKey = activePaletteKey;
+        values.__paletteVariationMap = JSON.parse(JSON.stringify(paletteVariationMap || {}));
+        return values;
+    }
+
+    function restoreGraphEditorState(state, options = {}) {
+        if (!state) return;
+        const snapshot = JSON.parse(JSON.stringify(state));
+        isRestoringState = true;
+
+        const applyPaletteState = () => {
+            paletteVariationMap = snapshot.__paletteVariationMap && typeof snapshot.__paletteVariationMap === 'object'
+                ? Object.assign({ asiae: 0 }, snapshot.__paletteVariationMap)
+                : { asiae: 0 };
+            if (snapshot.__activePaletteKey) {
+                applyPalettePreset(snapshot.__activePaletteKey, { skipUpdate: true, skipHistory: true, skipVariationAdvance: true });
+            }
+            syncActivePaletteToGraphControls();
+            syncPaletteTargetHint();
+        };
+
+        applyGraphEditorStateValues(snapshot);
+        applyPaletteState();
+        isRestoringState = false;
+        toggleInputs();
+        updateOutput();
+
+        if (options.stabilize !== false) {
+            isRestoringState = true;
+            applyGraphEditorStateValues(snapshot);
+            applyPaletteState();
+            isRestoringState = false;
+            toggleInputs();
+            updateOutput();
+        }
+
+        if (isMultiEditorEnabled() && options.saveRestoredState !== false) {
+            graphEditorStates[activeGraphEditorIndex] = JSON.parse(JSON.stringify(snapshot));
+        }
+        updateHistoryStatus();
+        if (!options.skipSyncTabs) syncGraphEditorTabs();
+    }
+
+    function syncGraphEditorTabs() {
+        const tabs = document.getElementById('graphEditorTabs');
+        const help = document.getElementById('graphEditorModeHelp');
+        const enabled = isMultiEditorEnabled();
+        if (tabs) {
+            tabs.style.display = enabled ? 'flex' : 'none';
+            tabs.setAttribute('aria-hidden', enabled ? 'false' : 'true');
+        }
+        if (help) help.style.display = enabled ? 'block' : 'none';
+        [1, 2].forEach(index => {
+            const btn = document.getElementById(`graphEditorTab${index}`);
+            if (!btn) return;
+            const isActive = index === activeGraphEditorIndex;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            btn.tabIndex = enabled ? 0 : -1;
+        });
+        syncPaletteTargetHint();
+    }
+
+    function ensureGraphEditorStatesInitialized() {
+        if (!graphEditorStates[1]) graphEditorStates[1] = serializeGraphEditorState();
+        if (!graphEditorStates[2]) graphEditorStates[2] = JSON.parse(JSON.stringify(graphEditorStates[1]));
+    }
+
+    function handleMultiEditorToggle() {
+        if (isMultiEditorEnabled()) {
+            ensureGraphEditorStatesInitialized();
+            graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+        } else {
+            graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+            activeGraphEditorIndex = 1;
+            if (graphEditorStates[1]) restoreGraphEditorState(graphEditorStates[1], { skipSyncTabs: true });
+            const joinedPanel = document.getElementById('joinedPreviewPanel');
+            const multiArea = document.getElementById('multi-capture-area');
+            if (joinedPanel) joinedPanel.style.display = 'none';
+            if (multiArea) multiArea.style.display = 'none';
+            forceInitialInputMenu();
+        }
+        syncGraphEditorTabs();
+        updateOutput();
+        if (!isMultiEditorEnabled()) forceInitialInputMenu();
+    }
+
+    function switchGraphEditorTab(targetIndex, event) {
+        if (event && typeof event.preventDefault === 'function') event.preventDefault();
+        if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+        const target = targetIndex === 2 ? 2 : 1;
+        if (!isMultiEditorEnabled()) {
+            syncGraphEditorTabs();
+            return;
+        }
+        ensureGraphEditorStatesInitialized();
+        if (target === activeGraphEditorIndex) {
+            syncGraphEditorTabs();
+            return;
+        }
+        try {
+            graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+        } catch (error) {
+            console.error('현재 그래프 상태 저장 오류:', error);
+        }
+        activeGraphEditorIndex = target;
+        syncGraphEditorTabs();
+        const fallbackState = graphEditorStates[1] ? JSON.parse(JSON.stringify(graphEditorStates[1])) : serializeGraphEditorState();
+        if (!graphEditorStates[activeGraphEditorIndex]) graphEditorStates[activeGraphEditorIndex] = fallbackState;
+        try {
+            restoreGraphEditorState(graphEditorStates[activeGraphEditorIndex], { skipSyncTabs: true });
+        } catch (error) {
+            console.error('그래프 탭 전환 오류:', error);
+        }
+        syncActivePaletteToGraphControls();
+        syncGraphEditorTabs();
+        try { updateOutput(); } catch (error) { console.error('탭 전환 후 미리보기 갱신 오류:', error); }
+    }
+
+    function getMultiSaveJoinDirection() {
+        const el = document.getElementById('multiSaveJoinDirection');
+        return el && el.value === 'stack' ? 'stack' : 'side';
+    }
+
+    function isMultiGraphOrderSwapped() {
+        return !!multiGraphOrderSwapped;
+    }
+
+    function syncMultiGraphOrderButton() {
+        const btn = document.getElementById('graphEditorSwapBtn');
+        if (btn) {
+            btn.textContent = '↔';
+            btn.title = '왼쪽/오른쪽 그래프 순서 바꾸기';
+            btn.setAttribute('aria-label', btn.title);
+        }
+    }
+
+    function toggleMultiGraphOrder() {
+        if (!isMultiEditorEnabled()) return;
+        ensureGraphEditorStatesInitialized();
+        graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+
+        const leftState = graphEditorStates[1] ? JSON.parse(JSON.stringify(graphEditorStates[1])) : null;
+        const rightState = graphEditorStates[2] ? JSON.parse(JSON.stringify(graphEditorStates[2])) : null;
+        graphEditorStates[1] = rightState;
+        graphEditorStates[2] = leftState;
+        multiGraphOrderSwapped = false;
+
+        const leftPaletteSelect = document.getElementById('multiGraphPalette1');
+        const rightPaletteSelect = document.getElementById('multiGraphPalette2');
+        if (leftPaletteSelect && graphEditorStates[1]) leftPaletteSelect.value = graphEditorStates[1].__activePaletteKey || 'asiae';
+        if (rightPaletteSelect && graphEditorStates[2]) rightPaletteSelect.value = graphEditorStates[2].__activePaletteKey || 'asiae';
+
+        const activeState = graphEditorStates[activeGraphEditorIndex];
+        if (activeState) {
+            restoreGraphEditorState(activeState, { skipSyncTabs: true });
+        } else {
+            updateOutput();
+        }
+        syncGraphEditorTabs();
+        syncMultiGraphOrderButton();
+        renderMultiGraphComposition();
+    }
+
+    async function captureMultiEditorCanvases(exportScale = 1, chartExportDpr = NORMAL_CHART_DPR) {
+        ensureGraphEditorStatesInitialized();
+        graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+        const originalActive = activeGraphEditorIndex;
+        const originalState = JSON.parse(JSON.stringify(graphEditorStates[originalActive]));
+        const canvases = [];
+        suppressMultiEditorJoinedPreview = true;
+        try {
+            canvases.push(await captureGraphCanvasForExport(1, exportScale, chartExportDpr));
+            canvases.push(await captureGraphCanvasForExport(2, exportScale, chartExportDpr));
+            return canvases;
+        } finally {
+            graphEditorStates[originalActive] = originalState;
+            activeGraphEditorIndex = originalActive;
+            restoreGraphEditorState(originalState, { skipSyncTabs: true });
+            syncGraphEditorTabs();
+            suppressMultiEditorJoinedPreview = false;
+        }
+    }
+
+    function buildJoinedCanvasFromCanvases(canvases, direction = 'side') {
+        const first = canvases[0];
+        const second = canvases[1];
+        const canvas = document.createElement('canvas');
+        if (direction === 'stack') {
+            canvas.width = Math.max(first.width, second.width);
+            canvas.height = first.height + second.height;
+        } else {
+            canvas.width = first.width + second.width;
+            canvas.height = Math.max(first.height, second.height);
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (direction === 'stack') {
+            ctx.drawImage(first, 0, 0);
+            ctx.drawImage(second, 0, first.height);
+        } else {
+            ctx.drawImage(first, 0, 0);
+            ctx.drawImage(second, first.width, 0);
+        }
+        return canvas;
+    }
+
+    async function captureGraphCanvasForExport(graphIndex, exportScale, chartExportDpr) {
+        ensureGraphEditorStatesInitialized();
+        const state = graphEditorStates[graphIndex];
+        if (!state) throw new Error('그래프 상태가 없습니다.');
+        restoreGraphEditorState(state, { skipSyncTabs: true });
+        syncGraphEditorTabs();
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+        await setAllChartPixelRatios(chartExportDpr);
+        await waitForNextPaint();
+        const captureDiv = document.getElementById('capture-area');
+        return await html2canvas(captureDiv, {
+            scale: exportScale,
+            width: captureDiv.offsetWidth,
+            height: captureDiv.offsetHeight,
+            windowWidth: captureDiv.offsetWidth,
+            windowHeight: captureDiv.offsetHeight,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false
+        });
+    }
+
+    async function buildMultiEditorExportCanvas(exportScale, chartExportDpr) {
+        ensureGraphEditorStatesInitialized();
+        graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+        const joinedPanel = document.getElementById('joinedPreviewPanel');
+        const captureDiv = document.getElementById('multi-capture-area');
+        const host = document.getElementById('multiGraphLayoutWrap');
+        if (!captureDiv || !host) throw new Error('최종 미리보기 영역을 찾을 수 없습니다.');
+        const previousPanelDisplay = joinedPanel ? joinedPanel.style.display : '';
+        const previousCaptureDisplay = captureDiv.style.display;
+        const previousSuppress = suppressMultiEditorJoinedPreview;
+        try {
+            suppressMultiEditorJoinedPreview = true;
+            if (joinedPanel) joinedPanel.style.display = 'block';
+            captureDiv.style.display = 'flex';
+            const ok = renderMultiEditorJoinedCards(host, graphEditorStates[1], graphEditorStates[2], getMultiSaveJoinDirection());
+            if (!ok) throw new Error('복수 그래프 데이터가 충분하지 않습니다.');
+            await waitForNextPaint();
+            if (document.fonts && document.fonts.ready) await document.fonts.ready;
+            await setAllChartPixelRatios(chartExportDpr);
+            await waitForNextPaint();
+            const rect = captureDiv.getBoundingClientRect();
+            const exportWidth = Math.max(750, captureDiv.scrollWidth, captureDiv.offsetWidth, Math.round(rect.width));
+            const exportHeight = Math.max(100, captureDiv.scrollHeight, captureDiv.offsetHeight, Math.round(rect.height));
+            return await html2canvas(captureDiv, {
+                scale: exportScale,
+                width: exportWidth,
+                height: exportHeight,
+                windowWidth: exportWidth,
+                windowHeight: exportHeight,
+                useCORS: true,
+                allowTaint: false,
+                backgroundColor: '#ffffff',
+                logging: false
+            });
+        } finally {
+            await setAllChartPixelRatios(NORMAL_CHART_DPR);
+            suppressMultiEditorJoinedPreview = previousSuppress;
+            if (joinedPanel) joinedPanel.style.display = previousPanelDisplay;
+            captureDiv.style.display = previousCaptureDisplay;
+            renderMultiGraphComposition();
+        }
+    }
+
+    async function downloadImageForMultiEditor() {
+        const btn = document.getElementById('downloadBtn');
+        const originalText = btn.innerText;
+        const exportScale = getSelectedExportScale();
+        const chartExportDpr = Math.max(EXPORT_CHART_DPR, exportScale * 2);
+        btn.innerText = `⏳ ${exportScale}배 합성 이미지 생성 중...`;
+        btn.style.backgroundColor = '#666';
+        const restoreFootnotePlaceholder = hideFootnotePlaceholderForExport();
+        try {
+            const joinedCanvas = await buildMultiEditorExportCanvas(exportScale, chartExportDpr);
+            const link = document.createElement('a');
+            link.download = `asia_multi_${getMultiSaveJoinDirection()}_${exportScale}x_` + new Date().getTime() + '.png';
+            link.href = joinedCanvas.toDataURL('image/png');
+            link.click();
+        } catch (err) {
+            console.error(err);
+            alert('복수 그래프 저장 오류가 발생했습니다. 두 그래프 데이터가 모두 들어갔는지 확인해 주세요.');
+        } finally {
+            restoreFootnotePlaceholder();
+            updateExportSizeHint();
+            btn.innerText = originalText;
+            btn.style.backgroundColor = '#333';
+        }
+    }
+
+    async function downloadSvgForMultiEditor() {
+        const btn = document.getElementById('svgDownloadBtn');
+        const originalText = btn.innerText;
+        const exportScale = getSelectedExportScale();
+        const chartExportDpr = Math.max(EXPORT_CHART_DPR, exportScale * 2);
+        btn.innerText = `⏳ ${exportScale}배 SVG 생성 중...`;
+        btn.style.backgroundColor = '#666';
+        const restoreFootnotePlaceholder = hideFootnotePlaceholderForExport();
+        try {
+            const joinedCanvas = await buildMultiEditorExportCanvas(exportScale, chartExportDpr);
+            const width = joinedCanvas.width;
+            const height = joinedCanvas.height;
+            const imageData = joinedCanvas.toDataURL('image/png');
+            const svgMarkup = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<image href="${imageData}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none"/>
+</svg>`;
+            const blob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `asia_multi_${getMultiSaveJoinDirection()}_svg_${exportScale}x_` + new Date().getTime() + '.svg';
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+        } catch (err) {
+            console.error(err);
+            alert('복수 그래프 SVG 저장 오류가 발생했습니다. 두 그래프 데이터가 모두 들어갔는지 확인해 주세요.');
+        } finally {
+            restoreFootnotePlaceholder();
+            updateExportSizeHint();
+            btn.innerText = originalText;
+            btn.style.backgroundColor = '#333';
+        }
     }
 
     function getStateControlElements() {
@@ -2076,6 +2713,25 @@
         };
     }
 
+    function beginInlineEdit(displayId) {
+        const displayEl = document.getElementById(displayId);
+        if (!displayEl || displayEl.style.display === 'none') return;
+        if (displayEl.getAttribute('contenteditable') === 'true') return;
+        if ((displayId === 'displaySub' || displayId === 'displayTitle') && displayEl.classList.contains('inline-placeholder')) {
+            displayEl.innerText = '';
+        }
+        if (displayId === 'displayFootnote' && displayEl.classList.contains('footnote-placeholder')) {
+            displayEl.innerText = '';
+        }
+        displayEl.setAttribute('contenteditable', 'true');
+        displayEl.focus();
+        const range = document.createRange();
+        range.selectNodeContents(displayEl);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
     function setupInlineEditing() {
         const editableMap = [
             { displayId: 'displayTitle', inputId: 'titleInput', emptyText: '', placeholderText: TITLE_PLACEHOLDER_TEXT },
@@ -2102,19 +2758,11 @@
                 recordHistoryCheckpoint('미리보기 직접 편집');
             };
 
-            displayEl.addEventListener('dblclick', () => {
-                if (displayEl.style.display === 'none') return;
-                if (placeholderText && isInlinePlaceholder(displayEl)) {
-                    displayEl.innerText = '';
-                }
-                displayEl.setAttribute('contenteditable', 'true');
-                displayEl.focus();
-                const range = document.createRange();
-                range.selectNodeContents(displayEl);
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(range);
-            });
+            const startInlineEdit = () => {
+                beginInlineEdit(displayId);
+            };
+            displayEl.addEventListener('dblclick', startInlineEdit);
+            displayEl.addEventListener('click', startInlineEdit);
             displayEl.addEventListener('blur', finish);
             displayEl.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
@@ -2958,6 +3606,1011 @@
         editor.dataset.quickEditReady = 'true';
     }
 
+
+    function destroyMultiChartInstances() {
+        if (!Array.isArray(multiChartInstances)) {
+            multiChartInstances = [];
+            return;
+        }
+        multiChartInstances.forEach(chart => {
+            try { if (chart) chart.destroy(); } catch (error) {}
+        });
+        multiChartInstances = [];
+    }
+
+    function isMultiGraphMode() {
+        const enabled = document.getElementById('multiGraphEnabled');
+        const secondInput = document.getElementById('secondGeminiInput');
+        return !!(enabled && enabled.checked && secondInput && secondInput.value.trim());
+    }
+
+    function getActiveCaptureElement() {
+        return document.getElementById(isMultiGraphMode() ? 'multi-capture-area' : 'capture-area');
+    }
+
+    function getPrimaryPreviewReporterName() {
+        const nameInput = document.getElementById('nameInput');
+        return nameInput && nameInput.value.trim() ? nameInput.value.trim() : '박조비 기자';
+    }
+
+    function extractCurrentGraphConfig() {
+        const labels = parseLabelSeries(document.getElementById('labelsInput') ? document.getElementById('labelsInput').value : '');
+        const expectedCount = labels.length || null;
+        return {
+            type: document.getElementById('chartType') ? document.getElementById('chartType').value : 'pie',
+            title: document.getElementById('titleInput') ? document.getElementById('titleInput').value.trim() : '',
+            subtitle: document.getElementById('subInput') ? document.getElementById('subInput').value.trim() : '',
+            labels,
+            datasetNames: [1, 2, 3, 4].map(index => {
+                const el = document.getElementById(`dataName${index}`);
+                return el ? el.value.trim() : '';
+            }),
+            datasets: [1, 2, 3, 4].map(index => parseNumericSeries(document.getElementById(`dataInput${index}`) ? document.getElementById(`dataInput${index}`).value : '', expectedCount)).filter(arr => arr.length),
+            footnote: document.getElementById('footnoteInput') ? document.getElementById('footnoteInput').value.trim() : '',
+            reporter: getPrimaryPreviewReporterName()
+        };
+    }
+
+    function normalizeCompositeGraphType(rawType) {
+        const raw = String(rawType || '').trim().toLowerCase();
+        if (!raw) return 'pie';
+        if (raw.includes('stacked-combo') || raw.includes('누적막대+선')) return 'stacked-combo';
+        if (raw.includes('multi-combo') || raw.includes('다중막대+선')) return 'multi-combo';
+        if (raw.includes('combo') || raw.includes('혼합')) return 'combo';
+        if (raw.includes('h-stacked-bar') || raw.includes('가로형 누적막대')) return 'h-stacked-bar';
+        if (raw.includes('h-multi-bar') || raw.includes('가로형 다중막대')) return 'h-multi-bar';
+        if (raw.includes('stacked-bar') || raw.includes('누적막대')) return 'stacked-bar';
+        if (raw.includes('multi-bar') || raw.includes('다중막대')) return 'multi-bar';
+        if (raw.includes('multi-line') || raw.includes('다중선')) return 'multi-line';
+        if (raw.includes('line') || raw.includes('선')) return 'line';
+        if (raw.includes('h-bar') || raw.includes('가로형 막대')) return 'h-bar';
+        if (raw.includes('bar') || raw.includes('막대')) return 'bar';
+        if (raw.includes('pie') || raw.includes('원') || raw.includes('도넛')) return 'pie';
+        return raw;
+    }
+
+    function parseCompositeGeminiInput(rawText) {
+        const raw = String(rawText || '').replace(/\r/g, '');
+        const result = {
+            type: 'pie',
+            title: '',
+            subtitle: '',
+            labels: [],
+            datasetNames: ['', '', '', ''],
+            datasets: [],
+            footnote: '',
+            reporter: getPrimaryPreviewReporterName()
+        };
+
+        // 첫 번째 입력창과 같은 방식으로 [태그] 값을 읽습니다.
+        // [제목] 값처럼 한 줄에 붙여 써도 되고,
+        // [제목]\n값처럼 다음 줄에 써도 됩니다.
+        const parsed = {};
+        let currentTag = '';
+        const tagLinePattern = /^\s*(\[[^\]]+\])\s*[:：]?\s*(.*)$/;
+        raw.split('\n').forEach(line => {
+            const match = line.match(tagLinePattern);
+            if (match) {
+                currentTag = match[1].trim();
+                if (!parsed[currentTag]) parsed[currentTag] = '';
+                const inlineValue = (match[2] || '').trim();
+                if (inlineValue) parsed[currentTag] += (parsed[currentTag] ? '\n' : '') + inlineValue;
+                return;
+            }
+            if (currentTag) {
+                const text = line.trim();
+                if (parsed[currentTag] !== '' || text !== '') {
+                    parsed[currentTag] += (parsed[currentTag] ? '\n' : '') + text;
+                }
+            }
+        });
+
+        const getBy = (...patterns) => {
+            for (const [tag, value] of Object.entries(parsed)) {
+                const cleanTag = tag.replace(/[\[\]]/g, '').trim();
+                if (patterns.some(pattern => pattern.test(cleanTag))) return String(value || '').trim();
+            }
+            return '';
+        };
+
+        const rawType = getBy(/^종류$/i, /그래프\s*종류/i, /chart\s*type/i);
+        result.type = normalizeCompositeGraphType(rawType || 'pie');
+        result.title = getBy(/^제목$/i, /title/i);
+        result.subtitle = getBy(/^부제목$/i, /^단위/, /출처/, /subtitle/i);
+        result.footnote = getBy(/^하단주석$/i, /^주석$/i, /footnote/i);
+        result.reporter = getBy(/^기자$/i, /바이라인/i) || result.reporter;
+
+        const labelsText = getBy(/^X축$/i, /^항목$/i, /라벨/i, /labels?/i);
+        result.labels = parseLabelSeries(labelsText);
+
+        for (let index = 1; index <= 4; index++) {
+            const nameText = getBy(new RegExp(`^데이터\\s*${index}\\s*이름$`, 'i'), new RegExp(`^데이터${index}이름$`, 'i'), new RegExp(`^data\\s*${index}\\s*name$`, 'i'));
+            const dataText = getBy(new RegExp(`^데이터\\s*${index}\\s*수치$`, 'i'), new RegExp(`^데이터${index}수치$`, 'i'), new RegExp(`^data\\s*${index}$`, 'i'));
+            if (nameText) result.datasetNames[index - 1] = nameText;
+            if (dataText) result.datasets[index - 1] = parseNumericSeries(dataText, result.labels.length || null);
+        }
+
+        // 두 번째 데이터가 들어온 경우, 종류가 단일형이면 자동으로 다중형으로 올립니다.
+        const activeDatasetCount = result.datasets.filter(arr => Array.isArray(arr) && arr.length).length;
+        if (activeDatasetCount >= 2) {
+            if (result.type === 'line') result.type = 'multi-line';
+            else if (result.type === 'bar') result.type = 'multi-bar';
+            else if (result.type === 'h-bar') result.type = 'h-multi-bar';
+        }
+
+        result.datasets = result.datasets.filter(arr => Array.isArray(arr) && arr.length);
+        if (!result.labels.length && result.datasets[0] && result.datasets[0].length) {
+            result.labels = result.datasets[0].map((_, index) => `항목 ${index + 1}`);
+        }
+        if (!result.title) result.title = '제목입력';
+        if (!result.subtitle) result.subtitle = '(단위 및 출처 입력)';
+        return result;
+    }
+
+    function getCompositeLayoutMode() {
+        const el = document.getElementById('multiGraphLayout');
+        return el && el.value === 'stack' ? 'stack' : 'side';
+    }
+
+    function getCompositeCardHeight(type, layoutMode) {
+        const normalized = normalizeCompositeGraphType(type);
+        if (layoutMode === 'side') return normalized === 'pie' ? 252 : 268;
+        if (normalized === 'pie') return 300;
+        if (normalized.includes('combo') || normalized.includes('multi')) return 316;
+        return 296;
+    }
+
+    function getCompositeDisplayLabels(config) {
+        const labels = Array.isArray(config.labels) ? config.labels : [];
+        if (labels.length) return labels;
+        const source = Array.isArray(config.datasets) && config.datasets[0] ? config.datasets[0] : [];
+        return source.map((_, index) => `항목 ${index + 1}`);
+    }
+
+    function populateMultiGraphPaletteSelects() {
+        const options = ['<option value="__follow">공통 팔레트 따름</option>']
+            .concat(Object.entries(PALETTE_PRESETS).map(([key, preset]) => `<option value="${escapeHtml(key)}">${escapeHtml(preset.label || key)}</option>`));
+        [1, 2].forEach(index => {
+            const select = document.getElementById(`multiGraphPalette${index}`);
+            if (!select) return;
+            const currentValue = select.value || '__follow';
+            select.innerHTML = options.join('');
+            select.value = currentValue;
+            if (!select.value) select.value = '__follow';
+        });
+    }
+
+    function refreshMultiGraphStyleGroup() {
+        const group = document.getElementById('multiGraphStyleGroup');
+        const enabled = document.getElementById('multiGraphEnabled');
+        if (!group) return;
+        group.style.display = enabled && enabled.checked ? 'block' : 'none';
+    }
+
+    function getMultiGraphPalette(graphIndex) {
+        const select = document.getElementById(`multiGraphPalette${graphIndex}`);
+        const key = select && select.value && select.value !== '__follow' ? select.value : activePaletteKey;
+        return getPaletteWithVariation(key, getPaletteVariationIndex(key));
+    }
+
+    function getMultiGraphLabelDisplayOverride(graphIndex) {
+        const select = document.getElementById(`multiGraphLabelDisplayType${graphIndex}`);
+        return select && select.value ? select.value : 'follow';
+    }
+
+    function getMultiGraphDataFontColorOverride(graphIndex) {
+        const select = document.getElementById(`multiGraphDataFontColor${graphIndex}`);
+        return select && select.value && select.value !== 'auto' ? select.value : null;
+    }
+
+    function clampCompositeFontSize(value, min, max) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return min;
+        return Math.max(min, Math.min(max, numeric));
+    }
+
+    function getMultiGraphDesignSettings(layoutMode, graphIndex = 1) {
+        const fontSlider = document.getElementById(`multiGraphFontSize${graphIndex}`) || document.getElementById('globalFontSize');
+        const dataFontSlider = document.getElementById(`multiGraphDataFontSize${graphIndex}`);
+        const baseFontSize = fontSlider ? parseInt(fontSlider.value, 10) : 20;
+        const dataFontSize = dataFontSlider ? parseInt(dataFontSlider.value, 10) : getDatasetLabelFontSize(0);
+        const safeBaseFontSize = Number.isFinite(baseFontSize) ? baseFontSize : 20;
+        const safeDataFontSize = Number.isFinite(dataFontSize) ? dataFontSize : 18;
+        const scale = safeBaseFontSize / 20;
+        const isSide = layoutMode === 'side';
+        return {
+            titleSize: clampCompositeFontSize((isSide ? 18 : 22) * scale, 15, 30),
+            subtitleSize: clampCompositeFontSize((isSide ? 11.5 : 13) * scale, 10, 18),
+            footnoteSize: clampCompositeFontSize((isSide ? 10.5 : 12) * scale, 10, 16),
+            legendSize: clampCompositeFontSize((isSide ? 10 : 11) * scale, 9, 16),
+            axisSize: clampCompositeFontSize((isSide ? 10 : 11) * scale, 9, 16),
+            pieLabelSize: clampCompositeFontSize((isSide ? 0.78 : 0.9) * safeDataFontSize, 9, 20),
+            lineLabelSize: clampCompositeFontSize((isSide ? 0.72 : 0.86) * safeDataFontSize, 9, 18),
+            datasetLabelSizes: [0,1,2,3].map(() => clampCompositeFontSize((isSide ? 0.72 : 0.86) * safeDataFontSize, 9, 18))
+        };
+    }
+
+    function shouldShowCompositeDataLabel(graphIndex, datasetIndex, dataIndex) {
+        const overrideType = getMultiGraphLabelDisplayOverride(graphIndex);
+        const displayType = overrideType !== 'follow' ? overrideType : getDatasetLabelDisplayType(datasetIndex);
+        if (displayType === 'none') return false;
+        if (displayType === 'selected') {
+            const selectedTargets = getSelectedLabelDisplayTargets();
+            return selectedTargets.has(`${datasetIndex}|${dataIndex}`);
+        }
+        return true;
+    }
+
+    function getCompositeDataLabelColor(context, isPie, graphIndex) {
+        const graphColor = getMultiGraphDataFontColorOverride(graphIndex);
+        if (graphColor) return graphColor;
+        const customColor = getDatasetLabelColor(context.datasetIndex);
+        if (customColor) return customColor;
+        if (isPie) {
+            const bg = Array.isArray(context.dataset.backgroundColor)
+                ? context.dataset.backgroundColor[context.dataIndex]
+                : context.dataset.backgroundColor;
+            return getReadableTextColorForBackground(bg);
+        }
+        const dataset = context.dataset || {};
+        const datasetColor = Array.isArray(dataset.borderColor)
+            ? dataset.borderColor[context.dataIndex]
+            : (dataset.borderColor || (Array.isArray(dataset.backgroundColor) ? dataset.backgroundColor[context.dataIndex] : dataset.backgroundColor));
+        return datasetColor || '#333333';
+    }
+
+    function getCompositePieColorsForPalette(values, labels = [], palette = getActivePalette(), paletteKey = activePaletteKey) {
+        const numericValues = values.map(v => Number(v) || 0);
+        if (!numericValues.length) return [];
+
+        if (paletteKey === 'asiae') {
+            const basePalette = getBasePalette('asiae');
+            const fallbackPalette = basePalette.pie && basePalette.pie.length
+                ? basePalette.pie.slice(1)
+                : ['#6B6B6B', '#8A8A8A', '#A7A7A7', '#C2C2C2', '#D9D9D9', '#EEEEEE'];
+            const maxValue = Math.max(...numericValues);
+            const maxIndex = numericValues.indexOf(maxValue);
+            let paletteCursor = 0;
+            return numericValues.map((_, index) => {
+                if (index === maxIndex) return basePalette.main || '#E61E2B';
+                const color = fallbackPalette[paletteCursor % fallbackPalette.length];
+                paletteCursor += 1;
+                return color;
+            });
+        }
+
+        const maxValue = Math.max(...numericValues);
+        const maxIndex = numericValues.indexOf(maxValue);
+        const mainColor = normalizePieHexColor(palette.main || (palette.pie && palette.pie[0]) || '#E61E2B') || '#E61E2B';
+        const etcColor = normalizePieHexColor(palette.pieEtc || '#9CA3AF') || '#9CA3AF';
+        const neededCount = Math.max(numericValues.length + 8, 18);
+        const candidates = buildDistinctPiePalette(palette.pie || [palette.main, palette.accent, palette.gray1, palette.gray2, palette.light], neededCount, {
+            paletteKey,
+            variantIndex: getPaletteVariationIndex(paletteKey)
+        })
+            .filter(color => color.toLowerCase() !== mainColor.toLowerCase())
+            .filter(color => color.toLowerCase() !== etcColor.toLowerCase());
+
+        const colors = new Array(numericValues.length);
+        const usedColors = [];
+
+        labels.forEach((label, index) => {
+            if (isEtcPieLabel(label)) {
+                colors[index] = etcColor;
+                usedColors.push(etcColor);
+            }
+        });
+
+        if (!colors[maxIndex]) {
+            colors[maxIndex] = mainColor;
+            usedColors.push(mainColor);
+        }
+
+        numericValues.forEach((_, index) => {
+            if (colors[index]) return;
+            const previousColor = index > 0 ? colors[index - 1] : '';
+            const color = getNextDistinctPieColor(candidates, usedColors, previousColor);
+            colors[index] = color;
+            usedColors.push(color);
+        });
+
+        return colors;
+    }
+
+    function buildCompositeDatasets(config, palette, chartType, paletteKey = activePaletteKey) {
+        const labels = getCompositeDisplayLabels(config);
+        const datasets = Array.isArray(config.datasets) ? config.datasets.filter(arr => Array.isArray(arr) && arr.length) : [];
+        const names = Array.isArray(config.datasetNames) ? config.datasetNames : [];
+        const type = normalizeCompositeGraphType(chartType);
+        if (!datasets.length) return [];
+        if (type === 'pie') {
+            return [{
+                type: 'doughnut',
+                label: names[0] || '값',
+                data: datasets[0],
+                backgroundColor: getCompositePieColorsForPalette(datasets[0], labels, palette, paletteKey),
+                borderColor: '#ffffff',
+                borderWidth: 2
+            }];
+        }
+        if (type === 'line' || type === 'multi-line') {
+            const lineColors = (palette.line || palette.bar || [palette.main]).slice();
+            if (datasets.length === 1) {
+                lineColors[0] = palette.main || lineColors[0];
+            }
+            return datasets.map((series, index) => {
+                const color = lineColors[index % lineColors.length];
+                return {
+                    type: 'line',
+                    label: names[index] || `데이터 ${index + 1}`,
+                    data: series,
+                    borderColor: color,
+                    backgroundColor: 'transparent',
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: color,
+                    pointBorderWidth: 2,
+                    borderWidth: 3.5,
+                    tension: 0.1,
+                    pointRadius: 4.5,
+                    pointHoverRadius: 4.5,
+                    fill: false
+                };
+            });
+        }
+        if (type === 'combo' || type === 'multi-combo' || type === 'stacked-combo') {
+            const barCount = type === 'multi-combo' ? Math.min(2, datasets.length) : 1;
+            return datasets.map((series, index) => {
+                const isBar = index < barCount;
+                const colors = isBar ? (palette.bar || [palette.main]) : (palette.line || palette.bar || [palette.main]);
+                const color = colors[index % colors.length];
+                return {
+                    type: isBar ? 'bar' : 'line',
+                    label: names[index] || `데이터 ${index + 1}`,
+                    data: series,
+                    backgroundColor: isBar ? color : 'transparent',
+                    borderColor: color,
+                    borderWidth: isBar ? 0 : 3.5,
+                    pointBackgroundColor: isBar ? undefined : '#ffffff',
+                    pointBorderColor: isBar ? undefined : color,
+                    pointBorderWidth: isBar ? 0 : 2,
+                    tension: isBar ? 0 : 0.1,
+                    pointRadius: isBar ? 0 : 4.5,
+                    pointHoverRadius: isBar ? 0 : 4.5,
+                    order: isBar ? 10 : 0,
+                    yAxisID: isBar ? 'y' : 'y1'
+                };
+            });
+        }
+        const isHorizontal = type === 'h-bar' || type === 'h-multi-bar' || type === 'h-stacked-bar';
+        const isStacked = type === 'stacked-bar' || type === 'h-stacked-bar';
+        return datasets.map((series, index) => ({
+            type: 'bar',
+            label: names[index] || `데이터 ${index + 1}`,
+            data: series,
+            backgroundColor: type === 'bar' || type === 'h-bar'
+                ? (palette.main || '#E61E2B')
+                : (palette.bar || [palette.main])[index % (palette.bar || [palette.main]).length],
+            borderRadius: isHorizontal ? 5 : 4,
+            borderSkipped: false,
+            categoryPercentage: isHorizontal ? 0.72 : 0.74,
+            barPercentage: datasets.length > 1 ? 0.88 : 0.72,
+            maxBarThickness: isHorizontal ? 28 : 34,
+            stack: isStacked ? 'stack-0' : undefined
+        }));
+    }
+
+    function getSnapshotControlValue(state, id, fallback = '') {
+        if (!state || !state[id]) return fallback;
+        const payload = state[id];
+        if (payload.type === 'checkbox' || payload.type === 'radio') return !!payload.checked;
+        if (payload.type === 'multiple') return Array.isArray(payload.value) ? payload.value : fallback;
+        return Object.prototype.hasOwnProperty.call(payload, 'value') ? payload.value : fallback;
+    }
+
+    function extractCompositeConfigFromState(state) {
+        const labels = parseLabelSeries(String(getSnapshotControlValue(state, 'labelsInput', '') || ''));
+        const expectedCount = labels.length || null;
+        return {
+            type: getSnapshotControlValue(state, 'chartType', 'pie'),
+            title: String(getSnapshotControlValue(state, 'titleInput', '') || '').trim(),
+            subtitle: String(getSnapshotControlValue(state, 'subInput', '') || '').trim(),
+            labels,
+            datasetNames: [1, 2, 3, 4].map(index => String(getSnapshotControlValue(state, `dataName${index}`, '') || '').trim()),
+            datasets: [1, 2, 3, 4].map(index => parseNumericSeries(String(getSnapshotControlValue(state, `dataInput${index}`, '') || ''), expectedCount)).filter(arr => arr.length),
+            footnote: String(getSnapshotControlValue(state, 'footnoteInput', '') || '').trim(),
+            reporter: String(getSnapshotControlValue(state, 'nameInput', '박조비 기자') || '박조비 기자').trim()
+        };
+    }
+
+    function getPaletteFromStateSnapshot(state) {
+        const paletteKey = state
+            ? (state.__activePaletteKey || 'asiae')
+            : activePaletteKey;
+        const variationMap = state && state.__paletteVariationMap && typeof state.__paletteVariationMap === 'object'
+            ? state.__paletteVariationMap
+            : paletteVariationMap;
+        const safeVariationMap = variationMap && typeof variationMap === 'object' ? variationMap : { asiae: 0 };
+        const variationIndex = Object.prototype.hasOwnProperty.call(safeVariationMap, paletteKey)
+            ? Number(safeVariationMap[paletteKey]) || 0
+            : 0;
+        return getPaletteWithVariation(paletteKey, variationIndex);
+    }
+
+    function getMultiGraphDesignSettingsFromState(state, layoutMode) {
+        const baseFontSize = parseInt(getSnapshotControlValue(state, 'globalFontSize', '20'), 10);
+        const safeBaseFontSize = Number.isFinite(baseFontSize) ? baseFontSize : 20;
+        const scale = safeBaseFontSize / 20;
+        const isSide = layoutMode === 'side';
+        const datasetFontSizes = [1, 2, 3, 4].map(index => {
+            const val = parseInt(getSnapshotControlValue(state, `datasetFontSize${index}`, '18'), 10);
+            return Number.isFinite(val) ? val : 18;
+        });
+        return {
+            titleSize: clampCompositeFontSize((isSide ? 18.5 : 22) * scale, 15, 30),
+            subtitleSize: clampCompositeFontSize((isSide ? 11.2 : 13) * scale, 10, 18),
+            footnoteSize: clampCompositeFontSize((isSide ? 10.2 : 12) * scale, 10, 16),
+            legendSize: clampCompositeFontSize((isSide ? 10.5 : 11) * scale, 9, 16),
+            axisSize: clampCompositeFontSize((isSide ? 11 : 11.5) * scale, 9, 16),
+            pieLabelSize: clampCompositeFontSize((isSide ? 0.8 : 0.92) * datasetFontSizes[0], 9, 20),
+            lineLabelSize: clampCompositeFontSize((isSide ? 0.8 : 0.9) * datasetFontSizes[0], 9, 18),
+            datasetLabelSizes: datasetFontSizes.map(size => clampCompositeFontSize((isSide ? 0.8 : 0.9) * size, 9, 18))
+        };
+    }
+
+    function getLabelDisplayTypesFromState(state) {
+        const globalType = normalizeLabelDisplayType(String(getSnapshotControlValue(state, 'labelDisplayType', 'all') || 'all'));
+        return [1, 2, 3, 4].map(index => {
+            const value = String(getSnapshotControlValue(state, `datasetLabelDisplayType${index}`, 'follow') || 'follow');
+            return value === 'follow' ? globalType : normalizeLabelDisplayType(value);
+        });
+    }
+
+    function getSelectedLabelDisplayTargetsFromState(state) {
+        const payload = state && state.labelDisplayTargets;
+        if (!payload) return new Set();
+        if (payload.type === 'multiple') return new Set(Array.isArray(payload.value) ? payload.value : []);
+        if (Array.isArray(payload.value)) return new Set(payload.value);
+        if (typeof payload.value === 'string' && payload.value) return new Set([payload.value]);
+        return new Set();
+    }
+
+    function getDatasetFontColorsFromState(state) {
+        return [1, 2, 3, 4].map(index => {
+            const value = String(getSnapshotControlValue(state, `datasetFontColor${index}`, 'auto') || 'auto');
+            return value === 'auto' ? null : value;
+        });
+    }
+
+    function getMultiSelectValuesFromState(state, id) {
+        const payload = state && state[id];
+        if (!payload) return [];
+        if (payload.type === 'multiple') return Array.isArray(payload.value) ? payload.value : [];
+        if (Array.isArray(payload.value)) return payload.value;
+        if (typeof payload.value === 'string' && payload.value) return [payload.value];
+        return [];
+    }
+
+    function getHighlightConfigFromState(state, type, labels, datasetNames) {
+        const mode = String(getSnapshotControlValue(state, 'highlightMode', 'none') || 'none');
+        if (mode !== 'custom') return { enabled: false, targetColorMap: new Map() };
+        const palette = getHighlightPalette();
+        const targetColorMap = new Map();
+        [
+            { id: 'highlightTargetsRed', color: palette.red },
+            { id: 'highlightTargetsOrange', color: palette.orange },
+            { id: 'highlightTargetsBlue', color: palette.blue }
+        ].forEach(({ id, color }) => {
+            getMultiSelectValuesFromState(state, id).forEach(value => targetColorMap.set(value, color));
+        });
+        return { enabled: targetColorMap.size > 0, targetColorMap };
+    }
+
+    function getCompositeAxisSettingsFromState(state, type) {
+        const normalizedType = normalizeCompositeGraphType(type);
+        const isHorizontal = normalizedType === 'h-bar' || normalizedType === 'h-multi-bar' || normalizedType === 'h-stacked-bar';
+        const baseChartType = normalizedType.startsWith('h-') ? normalizedType.replace('h-', '') : normalizedType;
+        const parseMaybeNumber = value => {
+            const str = String(value ?? '').trim();
+            if (str === '') return undefined;
+            const num = Number(str.replace(/,/g, ''));
+            return Number.isFinite(num) ? num : undefined;
+        };
+        return {
+            isHorizontal,
+            baseChartType,
+            yMin: parseMaybeNumber(getSnapshotControlValue(state, 'yMin', '')),
+            yMax: parseMaybeNumber(getSnapshotControlValue(state, 'yMax', '')),
+            y1Min: parseMaybeNumber(getSnapshotControlValue(state, 'y1Min', '')),
+            y1Max: parseMaybeNumber(getSnapshotControlValue(state, 'y1Max', ''))
+        };
+    }
+
+    function renderMultiEditorJoinedCards(host, leftState, rightState, layoutMode) {
+        const leftConfig = extractCompositeConfigFromState(leftState);
+        const rightConfig = extractCompositeConfigFromState(rightState);
+        host.className = `multi-graph-layout ${layoutMode}`;
+        host.style.gridTemplateColumns = layoutMode === 'side' ? 'repeat(2, minmax(0, 1fr))' : '1fr';
+        host.innerHTML = '';
+        const supportedTypes = ['pie', 'line', 'multi-line', 'bar', 'multi-bar', 'stacked-bar', 'h-bar', 'h-multi-bar', 'h-stacked-bar', 'combo', 'multi-combo', 'stacked-combo'];
+        const invalidConfig = [leftConfig, rightConfig].find(cfg => !supportedTypes.includes(normalizeCompositeGraphType(cfg.type)) || !cfg.datasets.length);
+        if (invalidConfig) {
+            host.innerHTML = '<div class="multi-graph-warning">복수 그래프 최종 미리보기는 차트형 그래프 2개 조합을 지원합니다. 왼쪽과 오른쪽 그래프 모두 막대·선·원그래프 계열 데이터로 채워주세요.</div>';
+            return false;
+        }
+        const renderSequence = [
+            {
+                config: leftConfig,
+                graphIndex: 1,
+                options: {
+                    palette: getPaletteFromStateSnapshot(leftState),
+                    paletteKey: leftState.__activePaletteKey || 'asiae',
+                    design: getMultiGraphDesignSettingsFromState(leftState, layoutMode),
+                    labelDisplayTypes: getLabelDisplayTypesFromState(leftState),
+                    selectedLabelDisplayTargets: getSelectedLabelDisplayTargetsFromState(leftState),
+                    highlightConfig: getHighlightConfigFromState(leftState, leftConfig.type, leftConfig.labels, leftConfig.datasetNames),
+                    datasetFontColors: getDatasetFontColorsFromState(leftState),
+                    axisSettings: getCompositeAxisSettingsFromState(leftState, leftConfig.type),
+                    koreanNumberApply: getKoreanNumberApplyFromState(leftState),
+                    koreanNumberSubText: leftConfig.subtitle || ''
+                }
+            },
+            {
+                config: rightConfig,
+                graphIndex: 2,
+                options: {
+                    palette: getPaletteFromStateSnapshot(rightState),
+                    paletteKey: rightState.__activePaletteKey || 'asiae',
+                    design: getMultiGraphDesignSettingsFromState(rightState, layoutMode),
+                    labelDisplayTypes: getLabelDisplayTypesFromState(rightState),
+                    selectedLabelDisplayTargets: getSelectedLabelDisplayTargetsFromState(rightState),
+                    highlightConfig: getHighlightConfigFromState(rightState, rightConfig.type, rightConfig.labels, rightConfig.datasetNames),
+                    datasetFontColors: getDatasetFontColorsFromState(rightState),
+                    axisSettings: getCompositeAxisSettingsFromState(rightState, rightConfig.type),
+                    koreanNumberApply: getKoreanNumberApplyFromState(rightState),
+                    koreanNumberSubText: rightConfig.subtitle || '',
+                    allowEmptyTitle: true,
+                    allowEmptySubtitle: true
+                }
+            }
+        ];
+        renderSequence.forEach(item => renderCompositeGraphCard(host, item.config, item.graphIndex, layoutMode, item.options));
+        matchCompositeTitleHeights(host);
+        return true;
+    }
+
+    function getKoreanNumberApplyFromState(state) {
+        return String(getSnapshotControlValue(state, 'koreanNumberType', 'apply') || 'apply') === 'apply';
+    }
+
+    function matchCompositeTitleHeights(host) {
+        if (!host) return;
+        const titles = Array.from(host.querySelectorAll('.multi-card-title'));
+        titles.forEach(title => {
+            title.style.minHeight = '';
+            title.classList.remove('is-height-matched');
+        });
+        if (titles.length < 2) return;
+        const maxHeight = Math.max(...titles.map(title => Math.ceil(title.getBoundingClientRect().height)));
+        titles.forEach(title => {
+            title.style.minHeight = `${maxHeight}px`;
+            title.classList.add('is-height-matched');
+        });
+    }
+
+    function getCompositeAxisNumericValues(datasets, axisId = 'y') {
+        return (datasets || [])
+            .filter(ds => (axisId === 'y1' ? ds.yAxisID === 'y1' : (ds.yAxisID || 'y') === 'y'))
+            .flatMap(ds => Array.isArray(ds.data) ? ds.data : [])
+            .map(value => Number(value))
+            .filter(value => Number.isFinite(value));
+    }
+
+    function getCompositeSuggestedMax(values, beginAtZero = false, padRatio = 1.15) {
+        if (!Array.isArray(values) || !values.length) return undefined;
+        const maxValue = Math.max(...values);
+        const minValue = Math.min(...values);
+        const domainMax = Math.max(maxValue, beginAtZero ? 0 : minValue);
+        if (!Number.isFinite(domainMax)) return undefined;
+        if (domainMax === 0) return 1;
+        const safePadRatio = Number.isFinite(Number(padRatio)) && Number(padRatio) > 1 ? Number(padRatio) : 1.15;
+        const padded = domainMax * safePadRatio;
+        const magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(padded))));
+        const normalized = padded / magnitude;
+        let step = 1;
+        if (normalized > 7.5) step = 10;
+        else if (normalized > 5) step = 7.5;
+        else if (normalized > 3) step = 5;
+        else if (normalized > 2) step = 2.5;
+        else if (normalized > 1) step = 2;
+        return Math.ceil(padded / (step * magnitude)) * step * magnitude;
+    }
+
+    function formatCompositeAxisTick(value, shouldApplyKoreanNumber, subText = '') {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) return '';
+        const absValue = Math.abs(numericValue);
+        if (shouldApplyKoreanNumber && absValue >= 10000) {
+            return formatKoreanNumber(Math.round(numericValue), subText);
+        }
+        if (Number.isInteger(numericValue)) return numericValue.toLocaleString('ko-KR');
+        return numericValue.toLocaleString('ko-KR', { maximumFractionDigits: 2 });
+    }
+
+    function renderCompositeGraphCard(host, config, graphIndex, layoutMode, renderOptions = {}) {
+        const type = normalizeCompositeGraphType(config.type);
+        const labels = getCompositeDisplayLabels(config);
+        const palette = renderOptions.palette || getActivePalette();
+        const paletteKeyForRender = renderOptions.paletteKey || activePaletteKey;
+        const design = renderOptions.design || getMultiGraphDesignSettings(layoutMode, graphIndex);
+        const labelDisplayTypes = Array.isArray(renderOptions.labelDisplayTypes) ? renderOptions.labelDisplayTypes : null;
+        const selectedLabelDisplayTargets = renderOptions.selectedLabelDisplayTargets instanceof Set
+            ? renderOptions.selectedLabelDisplayTargets
+            : new Set(Array.isArray(renderOptions.selectedLabelDisplayTargets) ? renderOptions.selectedLabelDisplayTargets : []);
+        const highlightConfigForRender = renderOptions.highlightConfig || { enabled: false, targetColorMap: new Map() };
+        const datasetFontColors = Array.isArray(renderOptions.datasetFontColors) ? renderOptions.datasetFontColors : null;
+        const axisSettings = renderOptions.axisSettings || {};
+        const shouldApplyKoreanNumber = renderOptions.koreanNumberApply !== undefined
+            ? !!renderOptions.koreanNumberApply
+            : (document.getElementById('koreanNumberType') ? document.getElementById('koreanNumberType').value === 'apply' : false);
+        const koreanNumberSubText = renderOptions.koreanNumberSubText || config.subtitle || '';
+        const formatCompositeNumber = (rawValue) => {
+            const numericValue = Number(rawValue);
+            if (!Number.isFinite(numericValue)) return rawValue;
+            return shouldApplyKoreanNumber ? formatKoreanNumber(numericValue, koreanNumberSubText) : rawValue;
+        };
+        const card = document.createElement('div');
+        card.className = 'multi-graph-card';
+        const cardHeight = getCompositeCardHeight(type, layoutMode);
+        const title = renderOptions.allowEmptyTitle ? (config.title || '') : (config.title || '제목입력');
+        const subtitle = renderOptions.allowEmptySubtitle ? (config.subtitle || '') : (config.subtitle || '(단위 및 출처 입력)');
+        const footnote = config.footnote || '';
+        card.innerHTML = `
+            <div class="multi-card-topline"></div>
+            <div class="multi-card-title" style="font-size:${design.titleSize}px;">${escapeHtml(title)}</div>
+            <div class="multi-card-sub" style="font-size:${design.subtitleSize}px;">${escapeHtml(subtitle)}</div>
+            <div class="multi-card-chart" style="height:${cardHeight}px;"><canvas id="multiChartCanvas${graphIndex}"></canvas></div>
+            <div class="multi-card-footnote" style="font-size:${design.footnoteSize}px;">${footnote ? escapeHtml(footnote) : '&nbsp;'}</div>
+        `;
+        host.appendChild(card);
+        if (isMultiEditorEnabled()) {
+            const fieldMap = [
+                { selector: '.multi-card-title', inputId: 'titleInput', displayId: 'displayTitle' },
+                { selector: '.multi-card-sub', inputId: 'subInput', displayId: 'displaySub' },
+                { selector: '.multi-card-footnote', inputId: 'footnoteInput', displayId: 'displayFootnote' }
+            ];
+            fieldMap.forEach(({ selector, inputId, displayId }) => {
+                const target = card.querySelector(selector);
+                if (!target) return;
+                target.style.cursor = 'text';
+                target.title = '클릭해서 수정';
+                target.addEventListener('click', () => {
+                    try {
+                        if (activeGraphEditorIndex !== graphIndex) switchGraphEditorTab(graphIndex);
+                        setTimeout(() => {
+                            const input = document.getElementById(inputId);
+                            if (input) {
+                                input.focus();
+                                if (typeof input.select === 'function') input.select();
+                            }
+                            beginInlineEdit(displayId);
+                        }, 30);
+                    } catch (error) {
+                        console.error('이어붙이기 텍스트 편집 전환 오류:', error);
+                    }
+                });
+            });
+        }
+        const canvas = card.querySelector('canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let datasets = buildCompositeDatasets(config, palette, type, paletteKeyForRender);
+        if (highlightConfigForRender && highlightConfigForRender.enabled) {
+            datasets = applyHighlightToDatasets(datasets, labels, type, highlightConfigForRender);
+        }
+        const isPie = type === 'pie';
+        const isHorizontal = type === 'h-bar' || type === 'h-multi-bar' || type === 'h-stacked-bar';
+        const isStacked = type === 'stacked-bar' || type === 'h-stacked-bar' || type === 'stacked-combo';
+        const baseChartType = String(axisSettings.baseChartType || (type.startsWith('h-') ? type.replace('h-', '') : type));
+        const disableKoreanNumberOnAxes = type === 'combo' || type === 'multi-combo' || type === 'stacked-combo';
+        const hasLineSeries = datasets.some(ds => String(ds.type || '').includes('line'));
+        const hasBarSeries = datasets.some(ds => String(ds.type || '') === 'bar');
+        const primaryAxisValues = getCompositeAxisNumericValues(datasets, 'y');
+        const secondaryAxisValues = getCompositeAxisNumericValues(datasets, 'y1');
+        const primaryPadRatio = hasBarSeries && !hasLineSeries
+            ? (isHorizontal ? (isStacked ? 1.03 : 1.04) : (isStacked ? 1.05 : 1.07))
+            : 1.15;
+        const secondaryPadRatio = hasBarSeries && hasLineSeries ? 1.10 : 1.15;
+        const primarySuggestedMax = getCompositeSuggestedMax(primaryAxisValues, !isHorizontal && baseChartType === 'bar', primaryPadRatio);
+        const secondarySuggestedMax = getCompositeSuggestedMax(secondaryAxisValues, true, secondaryPadRatio);
+        const showLegend = datasets.length > 1 && !isPie;
+        const getCompositeLabelReferenceBackground = (context) => {
+            if (!context || !context.dataset) return '';
+            const datasetType = String(context.dataset.type || '');
+            if (isPie || datasetType === 'bar') {
+                return pickIndexedColor(context.dataset.backgroundColor, context.dataIndex)
+                    || pickIndexedColor(context.dataset.borderColor, context.dataIndex)
+                    || '';
+            }
+            if (datasetType.includes('line') && (type === 'combo' || type === 'multi-combo' || type === 'stacked-combo')) {
+                const barDataset = datasets.find(ds => String(ds.type || '') === 'bar');
+                if (barDataset) {
+                    return pickIndexedColor(barDataset.backgroundColor, context.dataIndex)
+                        || pickIndexedColor(barDataset.borderColor, context.dataIndex)
+                        || '';
+                }
+            }
+            return '';
+        };
+        const getLabelFillColor = (context) => {
+            if (datasetFontColors && datasetFontColors[context.datasetIndex]) return datasetFontColors[context.datasetIndex];
+            const refBg = getCompositeLabelReferenceBackground(context);
+            if (refBg) return getReadableTextColorForBackground(refBg);
+            const datasetType = String(context.dataset?.type || '');
+            if (datasetType.includes('line')) return '#111111';
+            return getCompositeDataLabelColor(context, isPie, graphIndex);
+        };
+        const getLabelStrokeColor = (context) => {
+            const fillColor = String(getLabelFillColor(context)).toLowerCase();
+            const isLight = fillColor === '#ffffff' || fillColor.includes('255,255,255');
+            return isLight ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)';
+        };
+        const getLabelStrokeWidth = (context) => {
+            const datasetType = String(context.dataset?.type || '');
+            const refBg = getCompositeLabelReferenceBackground(context);
+            if (refBg) return 3;
+            if (datasetType.includes('line')) return 3;
+            return isPie ? 2.4 : 2;
+        };
+        const chart = new Chart(ctx, {
+            type: isPie ? 'doughnut' : ((datasets[0] && datasets[0].type === 'line') ? 'line' : 'bar'),
+            data: { labels, datasets },
+            plugins: [ChartDataLabels],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                indexAxis: isHorizontal ? 'y' : 'x',
+                cutout: isPie ? '30%' : '0%',
+                layout: {
+                    padding: isPie
+                        ? { top: 2, right: 2, bottom: 0, left: 2 }
+                        : (isHorizontal
+                            ? { top: 4, right: isStacked ? 9 : 11, bottom: 2, left: 4 }
+                            : (hasLineSeries
+                                ? { top: 8, right: 24, bottom: 2, left: 10 }
+                                : { top: 2, right: 4, bottom: 0, left: 4 }))
+                },
+                font: { family: "'Noto Sans KR', 'Pretendard', 'Malgun Gothic', Arial, sans-serif" },
+                plugins: {
+                    legend: {
+                        display: showLegend,
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            padding: 8,
+                            font: { size: design.legendSize, weight: 'bold' },
+                            color: '#333'
+                        }
+                    },
+                    tooltip: { enabled: false },
+                    datalabels: {
+                        display: function(context) {
+                            const forcedType = labelDisplayTypes ? (labelDisplayTypes[context.datasetIndex] || 'all') : 'all';
+                            if (forcedType === 'none') return false;
+                            if (forcedType === 'selected') return selectedLabelDisplayTargets.has(`${context.datasetIndex}|${context.dataIndex}`);
+                            return true;
+                        },
+                        color: function(context) {
+                            return getLabelFillColor(context);
+                        },
+                        textStrokeColor: function(context) {
+                            return getLabelStrokeColor(context);
+                        },
+                        textStrokeWidth: function(context) {
+                            return getLabelStrokeWidth(context);
+                        },
+                        font: function(context) {
+                            if (isPie) {
+                                return { size: design.pieLabelSize, weight: 'bold', lineHeight: 1.15 };
+                            }
+                            const datasetSize = design.datasetLabelSizes[context.datasetIndex] || design.lineLabelSize;
+                            return { size: datasetSize, weight: 'bold' };
+                        },
+                        align: function(context) {
+                            if (isPie) return 'center';
+                            if ((context.dataset.type || '').includes('line')) return 'top';
+                            if (isStacked && String(context.dataset.type || '') === 'bar') return 'center';
+                            if (isHorizontal) return 'right';
+                            return 'end';
+                        },
+                        anchor: function(context) {
+                            if (isPie) return 'center';
+                            if ((context.dataset.type || '').includes('line')) return 'end';
+                            if (isStacked && String(context.dataset.type || '') === 'bar') return 'center';
+                            return 'end';
+                        },
+                        offset: function(context) {
+                            if (isPie) return 0;
+                            if (isStacked && String(context.dataset.type || '') === 'bar') return 0;
+                            return (context.dataset.type || '').includes('line') ? 4 : 2;
+                        },
+                        formatter: function(value, context) {
+                            const numeric = Number(value);
+                            if (!Number.isFinite(numeric)) return '';
+                            const formattedValue = String(formatCompositeNumber(numeric));
+                            if (isPie) {
+                                const total = context.dataset.data.reduce((sum, item) => sum + (Number(item) || 0), 0);
+                                const ratio = total ? numeric / total : 0;
+                                if (ratio < (layoutMode === 'side' ? 0.08 : 0.06)) return '';
+                                return [labels[context.dataIndex] || '', formattedValue];
+                            }
+                            return formattedValue;
+                        },
+                        clip: false,
+                        clamp: true
+                    }
+                },
+                scales: isPie ? {} : {
+                    x: {
+                        display: true,
+                        stacked: isStacked,
+                        type: isHorizontal ? 'linear' : 'category',
+                        offset: !isHorizontal && (hasLineSeries || hasBarSeries),
+                        grace: isHorizontal && axisSettings.yMax === undefined ? (isStacked ? '3.5%' : '4.5%') : undefined,
+                        grid: {
+                            display: isHorizontal ? true : false,
+                            color: function(context) { return isHorizontal && context.tick && context.tick.value === 0 ? '#000000' : '#e0e0e0'; },
+                            lineWidth: function(context) { return isHorizontal && context.tick && context.tick.value === 0 ? 2 : 1; },
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: isHorizontal ? '#666' : '#333',
+                            padding: 4,
+                            font: { size: design.axisSize, weight: isHorizontal ? 'normal' : 'bold' },
+                            callback: function(value) {
+                                if (isHorizontal) return formatCompositeAxisTick(value, shouldApplyKoreanNumber && !disableKoreanNumberOnAxes, koreanNumberSubText);
+                                return this.getLabelForValue ? this.getLabelForValue(value) : value;
+                            }
+                        },
+                        beginAtZero: isHorizontal ? true : false,
+                        min: isHorizontal ? axisSettings.yMin : undefined,
+                        max: isHorizontal ? axisSettings.yMax : undefined,
+                        suggestedMax: isHorizontal && axisSettings.yMax === undefined ? primarySuggestedMax : undefined
+                    },
+                    y: {
+                        display: true,
+                        stacked: isStacked,
+                        type: isHorizontal ? 'category' : 'linear',
+                        offset: isHorizontal && hasBarSeries,
+                        beginAtZero: !isHorizontal && (baseChartType === 'bar'),
+                        min: !isHorizontal ? axisSettings.yMin : undefined,
+                        max: !isHorizontal ? axisSettings.yMax : undefined,
+                        grace: !isHorizontal ? (hasBarSeries && !hasLineSeries ? (isStacked ? '6%' : '8%') : '15%') : undefined,
+                        grid: {
+                            display: isHorizontal ? false : true,
+                            color: function(context) { return !isHorizontal && context.tick && context.tick.value === 0 ? '#000000' : '#e0e0e0'; },
+                            lineWidth: function(context) { return !isHorizontal && context.tick && context.tick.value === 0 ? 2 : 1; },
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#666',
+                            padding: 4,
+                            font: { size: design.axisSize, weight: isHorizontal ? 'bold' : 'normal' },
+                            callback: function(value) {
+                                if (!isHorizontal) return formatCompositeAxisTick(value, shouldApplyKoreanNumber && !disableKoreanNumberOnAxes, koreanNumberSubText);
+                                return this.getLabelForValue ? this.getLabelForValue(value) : value;
+                            }
+                        },
+                        suggestedMax: !isHorizontal && axisSettings.yMax === undefined ? primarySuggestedMax : undefined
+                    },
+                    y1: {
+                        display: datasets.some(ds => ds.yAxisID === 'y1'),
+                        beginAtZero: true,
+                        min: axisSettings.y1Min,
+                        max: axisSettings.y1Max,
+                        grace: '15%',
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            color: '#666',
+                            padding: 4,
+                            font: { size: Math.max(9, design.axisSize - 1), weight: 'bold' },
+                            callback: function(value) { return formatCompositeAxisTick(value, shouldApplyKoreanNumber && !disableKoreanNumberOnAxes, koreanNumberSubText); }
+                        },
+                        suggestedMax: axisSettings.y1Max === undefined ? secondarySuggestedMax : undefined
+                    }
+                }
+            }
+        });
+        multiChartInstances.push(chart);
+    }
+
+    function syncMultiCaptureVisibility() {
+        const previewArea = document.querySelector('.preview-area');
+        const single = document.getElementById('capture-area');
+        const multi = document.getElementById('multi-capture-area');
+        const joinedPanel = document.getElementById('joinedPreviewPanel');
+        const footer = document.querySelector('.multi-capture-footer');
+        refreshMultiGraphStyleGroup();
+        if (footer) footer.style.display = 'flex';
+        if (!single || !multi || !joinedPanel) return;
+        if (previewArea) previewArea.classList.toggle('multi-mode', isMultiEditorEnabled());
+        if (isMultiEditorEnabled()) {
+            joinedPanel.style.order = '1';
+            single.style.order = '2';
+            single.style.display = 'flex';
+            joinedPanel.style.display = 'block';
+            multi.style.display = 'flex';
+        } else if (isMultiGraphMode()) {
+            joinedPanel.style.order = '2';
+            single.style.order = '1';
+            single.style.display = 'none';
+            joinedPanel.style.display = 'block';
+            multi.style.display = 'flex';
+        } else {
+            joinedPanel.style.order = '2';
+            single.style.order = '1';
+            joinedPanel.style.display = 'none';
+            multi.style.display = 'none';
+            single.style.display = 'flex';
+        }
+    }
+
+    function renderMultiEditorJoinedPreview() {
+        const host = document.getElementById('multiGraphLayoutWrap');
+        const multiName = document.getElementById('multiDisplayName');
+        const footer = document.querySelector('.multi-capture-footer');
+        if (!host) return;
+        if (footer) footer.style.display = 'flex';
+        ensureGraphEditorStatesInitialized();
+        graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+        const leftState = graphEditorStates[1];
+        const rightState = graphEditorStates[2];
+        if (multiName) {
+            const leftConfig = extractCompositeConfigFromState(leftState);
+            const rightConfig = extractCompositeConfigFromState(rightState);
+            multiName.textContent = leftConfig.reporter || rightConfig.reporter || getPrimaryPreviewReporterName();
+        }
+        if (suppressMultiEditorJoinedPreview) return;
+        renderMultiEditorJoinedCards(host, leftState, rightState, getMultiSaveJoinDirection());
+    }
+
+    function renderMultiGraphComposition() {
+        destroyMultiChartInstances();
+        syncMultiCaptureVisibility();
+        const host = document.getElementById('multiGraphLayoutWrap');
+        const multiName = document.getElementById('multiDisplayName');
+        if (multiName) multiName.textContent = getPrimaryPreviewReporterName();
+        if (!host) return;
+        if (isMultiEditorEnabled()) {
+            renderMultiEditorJoinedPreview();
+            return;
+        }
+        if (!isMultiGraphMode()) { host.innerHTML = ''; return; }
+        const secondInput = document.getElementById('secondGeminiInput');
+        const secondConfig = parseCompositeGeminiInput(secondInput ? secondInput.value : '');
+        const firstConfig = extractCurrentGraphConfig();
+        const layoutMode = getCompositeLayoutMode();
+        host.className = `multi-graph-layout ${layoutMode}`;
+        host.style.gridTemplateColumns = layoutMode === 'side' ? 'repeat(2, minmax(0, 1fr))' : '1fr';
+        host.innerHTML = '';
+        const supportedTypes = ['pie', 'line', 'multi-line', 'bar', 'multi-bar', 'stacked-bar', 'h-bar', 'h-multi-bar', 'h-stacked-bar', 'combo', 'multi-combo', 'stacked-combo'];
+        const invalidConfig = [firstConfig, secondConfig].find(cfg => !supportedTypes.includes(normalizeCompositeGraphType(cfg.type)) || !cfg.datasets.length);
+        if (invalidConfig) { host.innerHTML = '<div class="multi-graph-warning">멀티 그래프 붙이기는 현재 차트형 그래프 2개 조합을 지원합니다. 첫 번째와 두 번째 그래프 모두 막대·선·원그래프 계열 데이터로 넣어주세요.</div>'; return; }
+        renderCompositeGraphCard(host, firstConfig, 1, layoutMode);
+        renderCompositeGraphCard(host, secondConfig, 2, layoutMode);
+        matchCompositeTitleHeights(host);
+    }
+
+    async function setAllChartPixelRatios(pixelRatio) {
+        await setChartPixelRatio(pixelRatio);
+        if (!Array.isArray(multiChartInstances) || !multiChartInstances.length) return;
+        multiChartInstances.forEach(chart => { try { chart.options.devicePixelRatio = pixelRatio; chart.resize(); chart.update('none'); } catch (error) {} });
+        await waitForNextPaint();
+    }
+
     function updateExportSizeHint() {
         const hintEl = document.querySelector('.export-size-hint');
         if (!hintEl) return;
@@ -2995,43 +4648,46 @@
     }
 
     function formatKoreanNumber(num, subText = '') {
-        if (isNaN(num) || num === 0) return num;
-        let absNum = Math.abs(num);
-        let sign = num < 0 ? '-' : '';
-        if (absNum < 10000) return num;
+        const numeric = Number(num);
+        if (!Number.isFinite(numeric) || numeric === 0) return num;
+        const absNum = Math.abs(numeric);
+        const sign = numeric < 0 ? '-' : '';
+        if (absNum < 10000) return numeric;
 
-        let isUck = /단위.*억/.test(subText) && !/십억|백억|천억/.test(subText);
-        let isMan = /단위.*만/.test(subText) && !/십만|백만|천만/.test(subText);
+        const formatChunks = (value, units) => {
+            let tempNum = Math.floor(value);
+            const chunks = [];
+            while (tempNum > 0) {
+                chunks.push(tempNum % 10000);
+                tempNum = Math.floor(tempNum / 10000);
+            }
+            let result = '';
+            for (let i = chunks.length - 1; i >= 0; i--) {
+                if (chunks[i] > 0) result += `${chunks[i]}${units[i] || ''}`;
+            }
+            return result || '0';
+        };
+
+        const isUck = /단위.*억/.test(subText) && !/십억|백억|천억/.test(subText);
+        const isMan = /단위.*만/.test(subText) && !/십만|백만|천만/.test(subText);
 
         if (isUck || isMan) {
-            let scale = isUck ? 100000000 : 10000;
-            let scaledNum = Number((absNum * scale).toFixed(4));
-            let intPart = Math.floor(scaledNum);
-            let scaledStr = String(scaledNum);
-            let decStr = scaledStr.includes('.') ? '.' + scaledStr.split('.')[1] : '';
-            
-            let result = '';
-            let units = ['', '만', '억', '조', '경', '해'];
-            let chunks = [];
-            let tempNum = intPart;
-            while (tempNum > 0) { chunks.push(tempNum % 10000); tempNum = Math.floor(tempNum / 10000); }
-            for (let i = chunks.length - 1; i >= 0; i--) { if (chunks[i] > 0) result += chunks[i] + units[i]; }
-
+            const scale = isUck ? 100000000 : 10000;
+            const scaledNum = absNum / scale;
+            const intPart = Math.floor(scaledNum);
+            const decimalPart = scaledNum - intPart;
+            const resultUnits = ['', '만', '억', '조', '경', '해'];
+            let result = formatChunks(intPart, resultUnits);
             if (isUck && result.endsWith('억')) result = result.slice(0, -1);
             else if (isMan && result.endsWith('만')) result = result.slice(0, -1);
-            return sign + result + decStr;
-        } else {
-            let intPart = Math.floor(absNum);
-            let numStr = String(absNum);
-            let decStr = numStr.includes('.') ? '.' + numStr.split('.')[1] : '';
-            let result = '';
-            let units = ['', '만', '억', '조', '경'];
-            let chunks = [];
-            let tempNum = intPart;
-            while (tempNum > 0) { chunks.push(tempNum % 10000); tempNum = Math.floor(tempNum / 10000); }
-            for (let i = chunks.length - 1; i >= 0; i--) { if (chunks[i] > 0) result += chunks[i] + units[i]; }
+            let decStr = '';
+            if (decimalPart > 0) {
+                decStr = decimalPart.toFixed(4).replace(/0+$/, '').replace(/^0/, '');
+            }
             return sign + result + decStr;
         }
+
+        return sign + formatChunks(absNum, ['', '만', '억', '조', '경', '해']);
     }
 
     function normalizePieHexColor(colorValue) {
@@ -5341,6 +6997,7 @@ function isTextSheetType(type) {
             }
         }
 
+        renderMultiGraphComposition();
         updateExportSizeHint();
     }
 
@@ -5942,9 +7599,13 @@ function isTextSheetType(type) {
         hideChartQuickEditor(true);
         hidePreviewQuickEditor(true);
         if (!validateReporterName()) return;
+        if (isMultiEditorEnabled()) {
+            await downloadImageForMultiEditor();
+            return;
+        }
 
         const restoreFootnotePlaceholder = hideFootnotePlaceholderForExport();
-        const captureDiv = document.getElementById('capture-area');
+        const captureDiv = getActiveCaptureElement();
         const btn = document.getElementById('downloadBtn');
         const originalText = btn.innerText;
         const { exportScale, baseWidth, baseHeight, exportWidth, exportHeight } = getFixedExportSize();
@@ -5958,7 +7619,7 @@ function isTextSheetType(type) {
                 await document.fonts.ready;
             }
 
-            await setChartPixelRatio(chartExportDpr);
+            await setAllChartPixelRatios(chartExportDpr);
             await waitForNextPaint();
 
             const canvas = await html2canvas(captureDiv, {
@@ -5981,14 +7642,14 @@ function isTextSheetType(type) {
 
                 const link = document.createElement('a');
                 const type = document.getElementById('chartType').value;
-                let filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
+                let filePrefix = isMultiGraphMode() ? 'asia_multi_' : (type === 'table' ? 'asia_table_' : 'asia_chart_');
                 link.download = `${filePrefix}${exportScale}x_` + new Date().getTime() + '.png';
                 link.href = fixedCanvas.toDataURL('image/png');
                 link.click();
             } else {
                 const link = document.createElement('a');
                 const type = document.getElementById('chartType').value;
-                let filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
+                let filePrefix = isMultiGraphMode() ? 'asia_multi_' : (type === 'table' ? 'asia_table_' : 'asia_chart_');
                 link.download = `${filePrefix}${exportScale}x_` + new Date().getTime() + '.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
@@ -5997,7 +7658,7 @@ function isTextSheetType(type) {
             console.error(err);
             alert('저장 오류가 발생했습니다.');
         } finally {
-            await setChartPixelRatio(NORMAL_CHART_DPR);
+            await setAllChartPixelRatios(NORMAL_CHART_DPR);
             restoreFootnotePlaceholder();
             updateExportSizeHint();
             btn.innerText = originalText;
@@ -6019,7 +7680,7 @@ function isTextSheetType(type) {
     }
 
     function cloneCaptureAreaForSvg() {
-        const captureDiv = document.getElementById('capture-area');
+        const captureDiv = getActiveCaptureElement();
         const clone = captureDiv.cloneNode(true);
         const originalCanvases = captureDiv.querySelectorAll('canvas');
         const clonedCanvases = clone.querySelectorAll('canvas');
@@ -6048,8 +7709,12 @@ function isTextSheetType(type) {
         hideChartQuickEditor(true);
         hidePreviewQuickEditor(true);
         if (!validateReporterName()) return;
+        if (isMultiEditorEnabled()) {
+            await downloadSvgForMultiEditor();
+            return;
+        }
         const restoreFootnotePlaceholder = hideFootnotePlaceholderForExport();
-        const captureDiv = document.getElementById('capture-area');
+        const captureDiv = getActiveCaptureElement();
         const btn = document.getElementById('svgDownloadBtn');
         const originalText = btn ? btn.innerText : '';
         const { exportScale, baseWidth, baseHeight, exportWidth, exportHeight } = getFixedExportSize();
@@ -6065,7 +7730,7 @@ function isTextSheetType(type) {
                 await document.fonts.ready;
             }
 
-            await setChartPixelRatio(chartExportDpr);
+            await setAllChartPixelRatios(chartExportDpr);
             await waitForNextPaint();
 
             const renderedCanvas = await html2canvas(captureDiv, {
@@ -6104,7 +7769,7 @@ function isTextSheetType(type) {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             const type = document.getElementById('chartType').value;
-            const filePrefix = type === 'table' ? 'asia_table_' : 'asia_chart_';
+            const filePrefix = isMultiGraphMode() ? 'asia_multi_' : (type === 'table' ? 'asia_table_' : 'asia_chart_');
             link.download = filePrefix + 'svg_' + exportScale + 'x_' + new Date().getTime() + '.svg';
             link.href = url;
             document.body.appendChild(link);
@@ -6115,7 +7780,7 @@ function isTextSheetType(type) {
             console.error(err);
             alert('SVG \uC800\uC7A5 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4. PNG \uC800\uC7A5\uC744 \uC774\uC6A9\uD574 \uC8FC\uC138\uC694.');
         } finally {
-            await setChartPixelRatio(NORMAL_CHART_DPR);
+            await setAllChartPixelRatios(NORMAL_CHART_DPR);
             restoreFootnotePlaceholder();
             updateExportSizeHint();
             if (btn) {
@@ -6135,7 +7800,12 @@ function isTextSheetType(type) {
         setupPreviewQuickEditing();
         setupPieSideListQuickEditing();
         applyPalettePreset('asiae', { skipUpdate: true, skipHistory: true, skipVariationAdvance: true });
-        const initialType = document.getElementById('chartType').value;
+        populateMultiGraphPaletteSelects();
+        refreshMultiGraphStyleGroup();
+        syncGraphEditorTabs();
+        const chartTypeEl = document.getElementById('chartType');
+        if (chartTypeEl) chartTypeEl.value = 'pie';
+        const initialType = chartTypeEl ? chartTypeEl.value : 'pie';
         initializedChartTypes.add(initialType);
         loadExampleData();
         updateExportSizeHint();
@@ -6169,8 +7839,32 @@ function isTextSheetType(type) {
                 this.selectionStart = this.selectionEnd = start + 1;
             }
         });
+        ['multiGraphEnabled', 'multiGraphLayout'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', updateOutput); });
+        const secondGeminiInput = document.getElementById('secondGeminiInput');
+        if (secondGeminiInput) secondGeminiInput.addEventListener('input', updateOutput);
+        [1, 2].forEach(index => {
+            const tabButton = document.getElementById(`graphEditorTab${index}`);
+            if (tabButton && tabButton.dataset.boundClick !== 'true') {
+                tabButton.addEventListener('click', event => switchGraphEditorTab(index, event));
+                tabButton.dataset.boundClick = 'true';
+            }
+        });
+        ['multiGraphFontSize1','multiGraphFontSize2','multiGraphDataFontSize1','multiGraphDataFontSize2'].forEach(id => {
+            const el = document.getElementById(id);
+            const display = document.getElementById(id.replace('Size', 'Display'));
+            if (el && display) display.innerText = el.value + 'px';
+        });
 
         forceInitialInputMenu();
+        renderMultiGraphComposition();
+        graphEditorStates[1] = serializeGraphEditorState();
+        graphEditorStates[2] = JSON.parse(JSON.stringify(graphEditorStates[1]));
+        const leftPaletteSelect = document.getElementById('multiGraphPalette1');
+        const rightPaletteSelect = document.getElementById('multiGraphPalette2');
+        if (leftPaletteSelect) leftPaletteSelect.value = graphEditorStates[1].__activePaletteKey || 'asiae';
+        if (rightPaletteSelect) rightPaletteSelect.value = graphEditorStates[2].__activePaletteKey || 'asiae';
+        syncGraphEditorTabs();
+        syncMultiGraphOrderButton();
         recordHistoryCheckpoint('초기 상태');
     };
 </script>
