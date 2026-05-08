@@ -80,6 +80,11 @@
         .multi-card-sub { font-size: 13px; font-weight: 700; line-height: 1.25; color: #666; margin: 0 0 3px; word-break: keep-all; }
         .multi-card-title:empty, .multi-card-sub:empty { display:none; margin:0; }
         .multi-card-chart { position: relative; width: 100%; height: 300px; margin: 0; }
+        .multi-pie-small-list { display: none; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: -4px 0 4px; padding: 6px 8px 2px; border-top: 0; color: #333; line-height: 1.35; word-break: keep-all; }
+        .multi-pie-small-item { display: inline-flex; align-items: center; gap: 5px; min-width: 0; font-weight: 800; }
+        .multi-pie-small-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.10); }
+        .multi-pie-small-label { min-width: 0; }
+        .multi-pie-small-value { font-weight: 900; }
         .multi-graph-layout.side .multi-card-chart { height: 262px; }
         .multi-card-footnote { margin-top: 2px; font-size: 12px; line-height: 1.3; color: #666; word-break: keep-all; min-height: 0; }
         .multi-capture-footer { margin-top: 4px; padding-top: 8px; }
@@ -1253,7 +1258,7 @@
         </div>
 
         <div id="joinedPreviewPanel" class="joined-preview-panel">
-            <div class="joined-preview-label">🧩 이어붙인 그래프 미리보기</div>
+            <div class="joined-preview-label">🧩 이어붙인 최종 미리보기</div>
             <div id="multi-capture-area">
                 <div id="multiGraphLayoutWrap" class="multi-graph-layout stack"></div>
                 <div class="footer-watermark multi-capture-footer">
@@ -4269,6 +4274,7 @@
             <div class="multi-card-title" style="font-size:${design.titleSize}px;">${escapeHtml(title)}</div>
             <div class="multi-card-sub" style="font-size:${design.subtitleSize}px;">${escapeHtml(subtitle)}</div>
             <div class="multi-card-chart" style="height:${cardHeight}px;"><canvas id="multiChartCanvas${graphIndex}"></canvas></div>
+            <div class="multi-pie-small-list" style="font-size:${Math.max(9, Math.round(design.footnoteSize * 0.95))}px;"></div>
             <div class="multi-card-footnote" style="font-size:${design.footnoteSize}px;">${footnote ? escapeHtml(footnote) : '&nbsp;'}</div>
         `;
         host.appendChild(card);
@@ -4306,6 +4312,39 @@
         let datasets = buildCompositeDatasets(config, palette, type, paletteKeyForRender);
         if (highlightConfigForRender && highlightConfigForRender.enabled) {
             datasets = applyHighlightToDatasets(datasets, labels, type, highlightConfigForRender);
+        }
+        const smallPieListEl = card.querySelector('.multi-pie-small-list');
+        if (smallPieListEl) {
+            if (type === 'pie' && datasets[0] && Array.isArray(datasets[0].data)) {
+                const pieValuesForList = datasets[0].data.map(value => Number(value) || 0);
+                const pieTotalForList = pieValuesForList.reduce((sum, value) => sum + value, 0);
+                const pieColorsForList = datasets[0].backgroundColor;
+                const smallItems = pieTotalForList > 0
+                    ? pieValuesForList.map((value, index) => ({
+                        index,
+                        label: labels[index] || `항목 ${index + 1}`,
+                        value,
+                        ratio: value / pieTotalForList,
+                        color: pickIndexedColor(pieColorsForList, index) || '#9CA3AF'
+                    })).filter(item => item.value > 0 && item.ratio < PIE_SIDE_LIST_THRESHOLD)
+                    : [];
+                if (smallItems.length) {
+                    smallPieListEl.innerHTML = smallItems.map(item => `
+                        <span class="multi-pie-small-item">
+                            <span class="multi-pie-small-dot" style="background:${escapeHtml(item.color)};"></span>
+                            <span class="multi-pie-small-label">${escapeHtml(item.label)}</span>
+                            <span class="multi-pie-small-value">${escapeHtml(formatCompositeNumber(item.value))}</span>
+                        </span>
+                    `).join('');
+                    smallPieListEl.style.display = 'flex';
+                } else {
+                    smallPieListEl.innerHTML = '';
+                    smallPieListEl.style.display = 'none';
+                }
+            } else {
+                smallPieListEl.innerHTML = '';
+                smallPieListEl.style.display = 'none';
+            }
         }
         const isPie = type === 'pie';
         const isHorizontal = type === 'h-bar' || type === 'h-multi-bar' || type === 'h-stacked-bar';
@@ -4443,7 +4482,7 @@
                             if (isPie) {
                                 const total = context.dataset.data.reduce((sum, item) => sum + (Number(item) || 0), 0);
                                 const ratio = total ? numeric / total : 0;
-                                if (ratio < (layoutMode === 'side' ? 0.08 : 0.06)) return '';
+                                if (ratio < PIE_SIDE_LIST_THRESHOLD) return '';
                                 return [labels[context.dataIndex] || '', formattedValue];
                             }
                             return formattedValue;
