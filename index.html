@@ -4202,32 +4202,75 @@
         });
     }
 
-    function getCompositeAxisNumericValues(datasets, axisId = 'y') {
-        return (datasets || [])
-            .filter(ds => (axisId === 'y1' ? ds.yAxisID === 'y1' : (ds.yAxisID || 'y') === 'y'))
+    function getCompositeAxisNumericValues(datasets, axisId = 'y', options = {}) {
+        const axisDatasets = (datasets || [])
+            .filter(ds => (axisId === 'y1' ? ds.yAxisID === 'y1' : (ds.yAxisID || 'y') === 'y'));
+
+        if (options && options.stacked) {
+            const barDatasets = axisDatasets.filter(ds => String(ds.type || '') === 'bar');
+            const nonBarValues = axisDatasets
+                .filter(ds => String(ds.type || '') !== 'bar')
+                .flatMap(ds => Array.isArray(ds.data) ? ds.data : [])
+                .map(value => Number(value))
+                .filter(value => Number.isFinite(value));
+            const maxLength = barDatasets.reduce((max, ds) => Math.max(max, Array.isArray(ds.data) ? ds.data.length : 0), 0);
+            const stackedValues = [];
+            for (let index = 0; index < maxLength; index++) {
+                let positiveTotal = 0;
+                let negativeTotal = 0;
+                barDatasets.forEach(ds => {
+                    const value = Number(Array.isArray(ds.data) ? ds.data[index] : 0);
+                    if (!Number.isFinite(value)) return;
+                    if (value >= 0) positiveTotal += value;
+                    else negativeTotal += value;
+                });
+                if (positiveTotal !== 0) stackedValues.push(positiveTotal);
+                if (negativeTotal !== 0) stackedValues.push(negativeTotal);
+            }
+            return stackedValues.concat(nonBarValues);
+        }
+
+        return axisDatasets
             .flatMap(ds => Array.isArray(ds.data) ? ds.data : [])
             .map(value => Number(value))
             .filter(value => Number.isFinite(value));
     }
 
+    function getCompositeNiceAxisLimit(rawValue, direction = 'ceil') {
+        const numericValue = Number(rawValue);
+        if (!Number.isFinite(numericValue)) return undefined;
+        if (numericValue === 0) return 0;
+        const sign = numericValue < 0 ? -1 : 1;
+        const absValue = Math.abs(numericValue);
+        const magnitude = Math.pow(10, Math.floor(Math.log10(absValue)));
+        const normalized = absValue / magnitude;
+        const steps = [1, 1.2, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10];
+        let step = steps[steps.length - 1];
+        if (direction === 'floor') {
+            step = steps[0];
+            for (const candidate of steps) {
+                if (candidate <= normalized) step = candidate;
+                else break;
+            }
+        } else {
+            step = steps.find(candidate => candidate >= normalized) || steps[steps.length - 1];
+        }
+        return sign * step * magnitude;
+    }
+
     function getCompositeSuggestedMax(values, beginAtZero = false, padRatio = 1.15) {
         if (!Array.isArray(values) || !values.length) return undefined;
-        const maxValue = Math.max(...values);
-        const minValue = Math.min(...values);
+        const numericValues = values.map(value => Number(value)).filter(value => Number.isFinite(value));
+        if (!numericValues.length) return undefined;
+        const maxValue = Math.max(...numericValues);
+        const minValue = Math.min(...numericValues);
         const domainMax = Math.max(maxValue, beginAtZero ? 0 : minValue);
         if (!Number.isFinite(domainMax)) return undefined;
         if (domainMax === 0) return 1;
-        const safePadRatio = Number.isFinite(Number(padRatio)) && Number(padRatio) > 1 ? Number(padRatio) : 1.15;
-        const padded = domainMax * safePadRatio;
-        const magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(padded))));
-        const normalized = padded / magnitude;
-        let step = 1;
-        if (normalized > 7.5) step = 10;
-        else if (normalized > 5) step = 7.5;
-        else if (normalized > 3) step = 5;
-        else if (normalized > 2) step = 2.5;
-        else if (normalized > 1) step = 2;
-        return Math.ceil(padded / (step * magnitude)) * step * magnitude;
+        const safePadRatio = Number.isFinite(Number(padRatio)) && Number(padRatio) > 1 ? Number(padRatio) : 1.12;
+        const padded = domainMax > 0 ? domainMax * safePadRatio : domainMax / safePadRatio;
+        const niceMax = getCompositeNiceAxisLimit(padded, 'ceil');
+        return Number.isFinite(niceMax) ? niceMax : undefined;
     }
 
     function formatCompositeAxisTick(value, shouldApplyKoreanNumber, subText = '') {
@@ -4353,14 +4396,27 @@
         const disableKoreanNumberOnAxes = type === 'combo' || type === 'multi-combo' || type === 'stacked-combo';
         const hasLineSeries = datasets.some(ds => String(ds.type || '').includes('line'));
         const hasBarSeries = datasets.some(ds => String(ds.type || '') === 'bar');
-        const primaryAxisValues = getCompositeAxisNumericValues(datasets, 'y');
+        const primaryAxisValues = getCompositeAxisNumericValues(datasets, 'y', { stacked: isStacked });
         const secondaryAxisValues = getCompositeAxisNumericValues(datasets, 'y1');
         const primaryPadRatio = hasBarSeries && !hasLineSeries
-            ? (isHorizontal ? (isStacked ? 1.03 : 1.04) : (isStacked ? 1.05 : 1.07))
-            : 1.15;
-        const secondaryPadRatio = hasBarSeries && hasLineSeries ? 1.10 : 1.15;
-        const primarySuggestedMax = getCompositeSuggestedMax(primaryAxisValues, !isHorizontal && baseChartType === 'bar', primaryPadRatio);
+            ? (isHorizontal ? (isStacked ? 1.025 : 1.035) : (isStacked ? 1.035 : 1.045))
+            : (hasBarSeries && hasLineSeries ? 1.06 : 1.15);
+        const secondaryPadRatio = hasBarSeries && hasLineSeries ? 1.06 : 1.15;
+        // 이어붙이기 그래프에서 자동 축 상단이 과하게 커지지 않도록 합니다.
+        // 사용자가 수동 축 범위를 입력하면 아래 자동 보정값보다 수동값을 우선 적용합니다.
+        const tightAutoAxisTypes = new Set(['multi-bar', 'h-multi-bar', 'combo', 'stacked-combo']);
+        const shouldForceTightAutoAxis = tightAutoAxisTypes.has(type);
+        const shouldUsePrimarySuggestedMax = hasBarSeries || isHorizontal;
+        const primarySuggestedMax = shouldUsePrimarySuggestedMax
+            ? getCompositeSuggestedMax(primaryAxisValues, !isHorizontal && baseChartType === 'bar', primaryPadRatio)
+            : undefined;
         const secondarySuggestedMax = getCompositeSuggestedMax(secondaryAxisValues, true, secondaryPadRatio);
+        const primaryAutoMax = shouldForceTightAutoAxis ? primarySuggestedMax : undefined;
+        const secondaryAutoMax = shouldForceTightAutoAxis ? secondarySuggestedMax : undefined;
+        const primaryAxisGrace = shouldForceTightAutoAxis
+            ? (isHorizontal ? (isStacked ? '2.5%' : '3%') : (hasBarSeries && hasLineSeries ? '4%' : '3%'))
+            : (hasBarSeries && !hasLineSeries ? (isStacked ? '6%' : '8%') : '15%');
+        const secondaryAxisGrace = shouldForceTightAutoAxis ? '4%' : '15%';
         const showLegend = datasets.length > 1 && !isPie;
         const getCompositeLabelReferenceBackground = (context) => {
             if (!context || !context.dataset) return '';
@@ -4497,7 +4553,7 @@
                         stacked: isStacked,
                         type: isHorizontal ? 'linear' : 'category',
                         offset: !isHorizontal && (hasLineSeries || hasBarSeries),
-                        grace: isHorizontal && axisSettings.yMax === undefined ? (isStacked ? '3.5%' : '4.5%') : undefined,
+                        grace: isHorizontal && axisSettings.yMax === undefined ? primaryAxisGrace : undefined,
                         grid: {
                             display: isHorizontal ? true : false,
                             color: function(context) { return isHorizontal && context.tick && context.tick.value === 0 ? '#000000' : '#e0e0e0'; },
@@ -4515,8 +4571,8 @@
                         },
                         beginAtZero: isHorizontal ? true : false,
                         min: isHorizontal ? axisSettings.yMin : undefined,
-                        max: isHorizontal ? axisSettings.yMax : undefined,
-                        suggestedMax: isHorizontal && axisSettings.yMax === undefined ? primarySuggestedMax : undefined
+                        max: isHorizontal ? (axisSettings.yMax !== undefined ? axisSettings.yMax : primaryAutoMax) : undefined,
+                        suggestedMax: isHorizontal && axisSettings.yMax === undefined && primaryAutoMax === undefined ? primarySuggestedMax : undefined
                     },
                     y: {
                         display: true,
@@ -4525,8 +4581,8 @@
                         offset: isHorizontal && hasBarSeries,
                         beginAtZero: !isHorizontal && (baseChartType === 'bar'),
                         min: !isHorizontal ? axisSettings.yMin : undefined,
-                        max: !isHorizontal ? axisSettings.yMax : undefined,
-                        grace: !isHorizontal ? (hasBarSeries && !hasLineSeries ? (isStacked ? '6%' : '8%') : '15%') : undefined,
+                        max: !isHorizontal ? (axisSettings.yMax !== undefined ? axisSettings.yMax : primaryAutoMax) : undefined,
+                        grace: !isHorizontal && axisSettings.yMax === undefined ? primaryAxisGrace : undefined,
                         grid: {
                             display: isHorizontal ? false : true,
                             color: function(context) { return !isHorizontal && context.tick && context.tick.value === 0 ? '#000000' : '#e0e0e0'; },
@@ -4542,14 +4598,14 @@
                                 return this.getLabelForValue ? this.getLabelForValue(value) : value;
                             }
                         },
-                        suggestedMax: !isHorizontal && axisSettings.yMax === undefined ? primarySuggestedMax : undefined
+                        suggestedMax: !isHorizontal && axisSettings.yMax === undefined && primaryAutoMax === undefined ? primarySuggestedMax : undefined
                     },
                     y1: {
                         display: datasets.some(ds => ds.yAxisID === 'y1'),
                         beginAtZero: true,
                         min: axisSettings.y1Min,
-                        max: axisSettings.y1Max,
-                        grace: '15%',
+                        max: axisSettings.y1Max !== undefined ? axisSettings.y1Max : secondaryAutoMax,
+                        grace: axisSettings.y1Max === undefined ? secondaryAxisGrace : undefined,
                         position: 'right',
                         grid: { drawOnChartArea: false },
                         ticks: {
@@ -4558,7 +4614,7 @@
                             font: { size: Math.max(9, design.axisSize - 1), weight: 'bold' },
                             callback: function(value) { return formatCompositeAxisTick(value, shouldApplyKoreanNumber && !disableKoreanNumberOnAxes, koreanNumberSubText); }
                         },
-                        suggestedMax: axisSettings.y1Max === undefined ? secondarySuggestedMax : undefined
+                        suggestedMax: axisSettings.y1Max === undefined && secondaryAutoMax === undefined ? secondarySuggestedMax : undefined
                     }
                 }
             }
