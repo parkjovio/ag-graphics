@@ -14,7 +14,7 @@
         .control-panel { background: white; padding: 25px; border-radius: 10px; width: 380px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: fit-content; flex-shrink: 0; box-sizing: border-box;}
         .control-panel h2 { margin-top: 0; font-size: 20px; color: #333; border-bottom: 2px solid var(--ak-red); padding-bottom: 10px; margin-bottom: 20px; }
         .control-panel label { font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 5px; margin-top: 15px;}
-        .control-panel select, .control-panel input[type="text"], .control-panel textarea { width: 100%; margin-bottom: 5px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; font-family: var(--main-font); }
+        .control-panel select, .control-panel input[type="text"], .control-panel input[type="number"], .control-panel textarea { width: 100%; margin-bottom: 5px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; font-family: var(--main-font); }
         .control-panel select { background-color: #f9f9f9; font-weight: bold; color: var(--ak-red);}
         
         .ai-input-group { background: #e8f0fe; padding: 15px; border-radius: 8px; border: 1px solid #b6d4fe; margin-bottom: 20px; }
@@ -86,6 +86,17 @@
         .multi-pie-small-label { min-width: 0; }
         .multi-pie-small-value { font-weight: 900; }
         .multi-graph-layout.side .multi-card-chart { height: 262px; }
+        .multi-card-chart.multi-card-table-stage { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+        .multi-card-table-stage { overflow: visible !important; height: auto !important; min-height: 0 !important; }
+        .multi-card-table-fit { position: relative; inset: auto; overflow: visible; display: block; padding: 0; box-sizing: border-box; width: 100%; height: auto; }
+        .multi-card-table-content { position: relative; left: auto; top: auto; width: 100%; height: auto; max-width: 100%; transform-origin: top left; box-sizing: border-box; will-change: auto; overflow: visible; }
+        .multi-card-table-content .asia-table { margin-top: 0 !important; table-layout: auto; width: 100%; min-width: 100%; }
+        .multi-card-table-content .asia-table th,
+        .multi-card-table-content .asia-table td { word-break: keep-all; overflow-wrap: anywhere; }
+        .multi-card-table-content .asia-table th { padding: 10px 4px; }
+        .multi-card-table-content .asia-table td { padding: 10px 4px; }
+        .multi-table-block-header { background-color:#444; color:#fff; padding:6px 12px; font-weight:700; border-radius:5px; margin:6px 0 4px; width:100%; box-sizing:border-box; line-height:1.25; }
+        .multi-card-table-empty { display:flex; align-items:center; justify-content:center; width:100%; height:100%; border:1px dashed #ddd; border-radius:10px; color:#888; font-size:13px; background:#fafafa; }
         .multi-card-footnote { margin-top: 2px; font-size: 12px; line-height: 1.3; color: #666; word-break: keep-all; min-height: 0; }
         .multi-capture-footer { margin-top: 4px; padding-top: 8px; }
         .multi-graph-help { font-size: 11px; color: #777; line-height: 1.45; margin-top: 6px; }
@@ -226,7 +237,21 @@
         .sheet-tool-row .btn-delete-col { background:#b42318; }
         .sheet-tool-row .btn-merge { background:#0056b3; }
         .sheet-tool-row .btn-unmerge { background:#777; }
+        .sheet-tool-row .btn-copy-cells { background:#0f766e; }
+        .sheet-tool-row .btn-paste-cells { background:#1d4ed8; }
+        .sheet-tool-row .btn-clear-cells { background:#b42318; }
+        .sheet-tool-row .btn-fill-cells { background:#7c3aed; }
+        .sheet-tool-row .btn-select-all-cells { background:#475569; }
         .sheet-tool-row .btn-merge:hover { background:#004494; }
+        .sheet-tool-row .btn-copy-cells:hover { background:#0b5d56; }
+        .sheet-tool-row .btn-paste-cells:hover { background:#173ea6; }
+        .sheet-tool-row .btn-clear-cells:hover { background:#8f1c13; }
+        .sheet-tool-row .btn-fill-cells:hover { background:#5b21b6; }
+        .sheet-tool-row .btn-select-all-cells:hover { background:#334155; }
+        .sheet-selection-status { flex:1 1 100%; margin-top:2px; font-size:11px; color:#666; line-height:1.35; font-weight:800; word-break:keep-all; }
+        .modal-table td.sheet-selected-cell { background:#fff6f6; box-shadow: inset 0 0 0 2px rgba(230,30,43,0.24); }
+        .modal-table td.sheet-selected-cell input { border-color: rgba(230,30,43,0.52); background:#fffafa; }
+        .modal-table td.sheet-anchor-cell input { outline: 3px solid rgba(230,30,43,0.35); border-color: var(--ak-red); background:#fffafa; }
         .modal-table td.active-cell input { outline: 3px solid rgba(230,30,43,0.28); border-color: var(--ak-red); background: #fffafa; }
         .modal-table input.merge-token { color: transparent; text-shadow: 0 0 0 #999; background: repeating-linear-gradient(135deg, #fafafa, #fafafa 6px, #f0f0f0 6px, #f0f0f0 12px); }
         .sheet-mode-note { font-size: 12px; color:#666; font-weight: normal; line-height: 1.35; display: block; margin-top: 4px; word-break: keep-all; }
@@ -620,6 +645,42 @@
         }
 
 
+        /* 복수 그래프 2~8개 동적 편집 UI */
+        .graph-editor-tabs { flex-wrap: wrap; gap: 0; align-items: stretch; }
+        .graph-editor-tab-list { display:flex; flex-wrap:wrap; gap:0; width:100%; align-items:stretch; }
+        .multi-editor-count-control { width:100%; max-width:100%; display:grid; grid-template-columns:auto 64px auto minmax(0, 1fr); align-items:start; column-gap:7px; row-gap:2px; padding:5px 8px 4px; border-bottom:1px solid #d7d7d7; background:#f8f8f8; box-sizing:border-box; overflow:hidden; }
+        .multi-editor-count-control label { margin:0; font-size:11px; color:#333; font-weight:900; white-space:nowrap; line-height:30px; }
+        .multi-editor-count-control input#multiEditorGraphCount { width:64px !important; max-width:64px; min-width:0; height:30px; margin:0; padding:3px 4px 3px 8px; border:1px solid #cfcfcf; border-radius:7px; font-weight:900; text-align:center; font-family:var(--main-font); font-size:14px; box-sizing:border-box; background:#fff; appearance:auto; -moz-appearance:auto; }
+        .multi-editor-count-control input#multiEditorGraphCount::-webkit-outer-spin-button,
+        .multi-editor-count-control input#multiEditorGraphCount::-webkit-inner-spin-button { -webkit-appearance:auto; opacity:1; margin:0; }
+        .multi-editor-count-control select#multiSaveJoinDirection { width:100% !important; min-width:0; max-width:100%; height:30px; margin:0; padding:3px 7px; border:1px solid #cfcfcf; border-radius:8px; font-weight:900; font-family:var(--main-font); font-size:12px; color:var(--ak-red); background:#fff; box-sizing:border-box; }
+        .multi-editor-count-control .count-input-stack { display:flex; flex-direction:column; align-items:center; gap:1px; width:64px; min-width:0; }
+        .multi-editor-count-control .count-hint { font-size:9px; color:#888; font-weight:800; line-height:1; letter-spacing:-0.03em; white-space:nowrap; }
+        .graph-editor-tab { flex:1 1 76px; min-width:76px; padding:0 8px; }
+        .graph-tab-swap-btn { flex:0 0 42px; }
+        .multi-graph-layout.side.odd-count .multi-graph-card:last-child { grid-column:1 / -1; width:calc(50% - 8px); justify-self:center; }
+
+        /* 그래프 탭 색상과 1) 입력 메뉴 색상 연동 */
+        .graph-editor-tab { box-sizing:border-box; border-top:4px solid var(--graph-accent, #0056b3) !important; color:#777; background:#eeeeee; }
+        .graph-editor-tab:hover { color:var(--graph-accent, #0056b3) !important; background:#fbfbfb; }
+        .graph-editor-tab.active { color:var(--graph-accent, #0056b3) !important; background:#fff !important; box-shadow:inset 0 -3px 0 var(--graph-accent, #0056b3); }
+        #quickInputBtn:hover { border-color:var(--quick-input-accent, #0056b3) !important; color:var(--quick-input-accent, #0056b3) !important; background:var(--quick-input-hover-bg, #f0f6ff) !important; }
+        #quickInputBtn.active { background:var(--quick-input-accent, #0056b3) !important; }
+        #sectionGemini .ai-input-group { background:var(--input-card-bg, #e8f0fe) !important; border-color:var(--input-card-border, #b6d4fe) !important; }
+        #sectionGemini .ai-input-group h3 { color:var(--section-accent, #0056b3) !important; }
+        #sectionGemini .ai-input-group textarea { border-color:var(--input-card-border, #a3c7fc) !important; }
+        #sectionGemini .btn-ai { background:var(--section-accent, #0056b3) !important; }
+        #sectionGemini .btn-ai:hover { background:var(--section-accent-dark, #004494) !important; }
+        @media screen and (max-width: 768px) {
+            .multi-graph-layout.side.odd-count .multi-graph-card:last-child { width:100%; }
+            .multi-editor-count-control { grid-template-columns:auto 58px auto minmax(0, 1fr); column-gap:5px; padding:5px 7px 4px; }
+            .multi-editor-count-control input#multiEditorGraphCount { width:58px !important; max-width:58px; }
+            .multi-editor-count-control .count-input-stack { width:58px; }
+            .multi-editor-count-control select#multiSaveJoinDirection { min-width:0; }
+            .graph-editor-tab { flex:1 1 90px; }
+        }
+
+
     </style>
 </head>
 <body>
@@ -637,9 +698,19 @@
         <div class="history-status" id="historyStatus">작업 이력이 준비되었습니다.</div>
 
         <div id="graphEditorTabs" class="graph-editor-tabs" aria-hidden="true">
-            <button type="button" class="graph-editor-tab active" id="graphEditorTab1" onclick="switchGraphEditorTab(1, event)">왼쪽 그래프</button>
-            <button type="button" class="graph-tab-swap-btn" id="graphEditorSwapBtn" onclick="toggleMultiGraphOrder()" title="그래프 순서 바꾸기" aria-label="그래프 순서 바꾸기">↔</button>
-            <button type="button" class="graph-editor-tab" id="graphEditorTab2" onclick="switchGraphEditorTab(2, event)">오른쪽 그래프</button>
+            <div class="multi-editor-count-control">
+                <label for="multiEditorGraphCount">그래프 수</label>
+                <span class="count-input-stack">
+                    <input type="number" id="multiEditorGraphCount" min="2" max="8" step="1" value="2" inputmode="numeric" oninput="handleMultiEditorGraphCountInput()" onchange="handleMultiEditorGraphCountCommit()" onblur="handleMultiEditorGraphCountCommit()">
+                    <span class="count-hint">최대 8개</span>
+                </span>
+                <label for="multiSaveJoinDirection">배치</label>
+                <select id="multiSaveJoinDirection" class="multi-editor-layout-select" onchange="syncMultiGraphOrderButton(); renderMultiGraphComposition(); updateExportSizeHint();">
+                    <option value="side" selected>가로 2개씩</option>
+                    <option value="stack">세로 1개씩</option>
+                </select>
+            </div>
+            <div id="graphEditorTabList" class="graph-editor-tab-list"></div>
         </div>
 
         <div class="ai-input-group">
@@ -1156,14 +1227,7 @@
                     <option value="3">3배 고정 출력 (2250px 기준)</option>
                 </select>
             </div>
-            <label style="margin-top:8px; color:var(--ak-red); font-size:14px;">🧩 2개 이어붙이기(가로/세로)</label>
-            <div class="export-option-row">
-                <select id="multiSaveJoinDirection" onchange="syncMultiGraphOrderButton(); renderMultiGraphComposition(); updateExportSizeHint();">
-                    <option value="side" selected>가로로 2개 이어붙이기</option>
-                    <option value="stack">세로로 2개 이어붙이기</option>
-                </select>
-            </div>
-            <span class="export-size-hint">현재 750px 작업 화면을 기준으로 2배/3배 크기로 고정 저장합니다. 복수 그래프를 체크한 경우 저장 시 이 설정대로 2개를 이어붙입니다.</span>
+            <span class="export-size-hint">현재 750px 작업 화면을 기준으로 2배/3배 크기로 고정 저장합니다. 복수 그래프는 상단의 그래프 수·배치 설정대로 저장됩니다.</span>
         </div>
 
         <button onclick="downloadImage()" class="btn-download" id="downloadBtn">📸 고해상도 PNG 저장</button>
@@ -1205,6 +1269,12 @@
                 <button type="button" class="btn-merge" id="mergeUpBtn" onclick="mergeSelectedSheetCell('up')">선택 셀 위와 병합</button>
                 <button type="button" class="btn-merge" id="mergeLeftBtn" onclick="mergeSelectedSheetCell('left')">선택 셀 왼쪽과 병합</button>
                 <button type="button" class="btn-unmerge" id="unmergeBtn" onclick="mergeSelectedSheetCell('clear')">병합 해제</button>
+                <button type="button" class="btn-copy-cells" onclick="copySelectedSheetCells()">선택 복사</button>
+                <button type="button" class="btn-paste-cells" onclick="pasteSelectedSheetCellsFromClipboard()">붙여넣기</button>
+                <button type="button" class="btn-clear-cells" onclick="clearSelectedSheetCells()">선택 지우기</button>
+                <button type="button" class="btn-fill-cells" onclick="fillDownSelectedSheetCells()">아래로 채우기</button>
+                <button type="button" class="btn-select-all-cells" onclick="selectAllSheetCells()">전체 셀 선택</button>
+                <span class="sheet-selection-status" id="sheetSelectionStatus">셀을 드래그하거나 Shift/Ctrl 클릭으로 여러 셀을 선택할 수 있습니다. Ctrl+C / Ctrl+V도 지원합니다.</span>
             </div>
             <div class="modal-btns">
                 <button class="btn-close" onclick="closeDataSheet()" style="background:#888; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">취소</button>
@@ -1402,13 +1472,27 @@
     let undoStack = [];
     let isRestoringState = false;
     let historyDebounceTimer = null;
+
+    const MULTI_EDITOR_GRAPH_COLORS = [
+        { accent: '#0056B3', dark: '#004494', bg: '#F0F6FF', openBg: '#E2EFFF', pillBg: '#DCEBFF', cardBg: '#E8F0FE', border: '#B6D4FE' },
+        { accent: '#E61E2B', dark: '#C51824', bg: '#FFF4F4', openBg: '#FFEAEA', pillBg: '#FFDCDC', cardBg: '#FFF1F2', border: '#FFC9CF' },
+        { accent: '#2E7D32', dark: '#1B5E20', bg: '#F1FBF2', openBg: '#E4F7E7', pillBg: '#D3EFD8', cardBg: '#ECFDF3', border: '#B7E4C7' },
+        { accent: '#F48F1F', dark: '#C96F08', bg: '#FFF7ED', openBg: '#FFEDD5', pillBg: '#FED7AA', cardBg: '#FFF3E2', border: '#FDBA74' },
+        { accent: '#7E22CE', dark: '#581C87', bg: '#F7F0FF', openBg: '#F0E2FF', pillBg: '#E9D5FF', cardBg: '#F5F3FF', border: '#C4B5FD' },
+        { accent: '#0F766E', dark: '#115E59', bg: '#ECFDF5', openBg: '#DDF8EE', pillBg: '#CCFBF1', cardBg: '#E6FFFA', border: '#99F6E4' },
+        { accent: '#1E3A5F', dark: '#102A43', bg: '#F0F6FC', openBg: '#E1EDF8', pillBg: '#D6E6F3', cardBg: '#EAF2FA', border: '#B8D2EA' },
+        { accent: '#475569', dark: '#334155', bg: '#F8FAFC', openBg: '#EEF2F7', pillBg: '#E2E8F0', cardBg: '#F1F5F9', border: '#CBD5E1' }
+    ];
+    const MULTI_EDITOR_MIN_COUNT = 2;
+    const MULTI_EDITOR_MAX_COUNT = 8;
+    const MULTI_EDITOR_DEFAULT_COUNT = 2;
     let graphEditorStates = { 1: null, 2: null };
     let suppressMultiEditorJoinedPreview = false;
     let multiEditorPreviewRenderToken = 0;
     let activeGraphEditorIndex = 1;
     let multiGraphOrderSwapped = false;
     const GRAPH_EDITOR_STATE_EXCLUDE_IDS = new Set([
-        'multiEditorEnabled', 'exportScale', 'multiSaveJoinDirection',
+        'multiEditorEnabled', 'multiEditorGraphCount', 'exportScale', 'multiSaveJoinDirection',
         'multiGraphEnabled', 'multiGraphLayout', 'secondGeminiInput',
         'multiGraphPalette1', 'multiGraphPalette2', 'multiGraphFontSize1', 'multiGraphFontSize2',
         'multiGraphDataFontSize1', 'multiGraphDataFontSize2', 'multiGraphDataFontColor1', 'multiGraphDataFontColor2',
@@ -1419,6 +1503,30 @@
     const NORMAL_CHART_DPR = Math.max(window.devicePixelRatio || 1, 1);
     const EXPORT_CHART_DPR = Math.max(4, NORMAL_CHART_DPR);
 
+
+    function getMultiEditorGraphColor(index = activeGraphEditorIndex) {
+        const safeIndex = Math.max(1, Math.min(MULTI_EDITOR_MAX_COUNT, parseInt(index, 10) || 1));
+        return MULTI_EDITOR_GRAPH_COLORS[(safeIndex - 1) % MULTI_EDITOR_GRAPH_COLORS.length] || MULTI_EDITOR_GRAPH_COLORS[0];
+    }
+
+    function applyActiveGraphEditorInputColor() {
+        const color = getMultiEditorGraphColor(activeGraphEditorIndex);
+        const section = document.getElementById('sectionGemini');
+        if (section) {
+            section.style.setProperty('--section-accent', color.accent);
+            section.style.setProperty('--section-bg', color.bg);
+            section.style.setProperty('--section-open-bg', color.openBg);
+            section.style.setProperty('--section-pill-bg', color.pillBg);
+            section.style.setProperty('--section-accent-dark', color.dark);
+            section.style.setProperty('--input-card-bg', color.cardBg);
+            section.style.setProperty('--input-card-border', color.border);
+        }
+        const quickInputBtn = document.getElementById('quickInputBtn');
+        if (quickInputBtn) {
+            quickInputBtn.style.setProperty('--quick-input-accent', color.accent);
+            quickInputBtn.style.setProperty('--quick-input-hover-bg', color.bg);
+        }
+    }
     function waitForNextPaint() {
         return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
@@ -1833,6 +1941,7 @@
         ]);
 
         [geminiSection.details, dataEditSection.details, designSection.details, exportSection.details].forEach(bindExclusiveMenuBehavior);
+        applyActiveGraphEditorInputColor();
         syncQuickMenuButtons('input');
         updateControlScrollOffset();
         window.addEventListener('resize', updateControlScrollOffset);
@@ -1874,8 +1983,75 @@
         });
     }
 
+    function clampMultiEditorGraphCount(value) {
+        const numeric = parseInt(value, 10);
+        if (!Number.isFinite(numeric)) return MULTI_EDITOR_DEFAULT_COUNT;
+        return Math.max(MULTI_EDITOR_MIN_COUNT, Math.min(MULTI_EDITOR_MAX_COUNT, numeric));
+    }
+
+    function getMultiEditorGraphCount() {
+        const input = document.getElementById('multiEditorGraphCount');
+        if (!input) return MULTI_EDITOR_DEFAULT_COUNT;
+        const rawValue = String(input.value || '').trim();
+        if (rawValue === '') return MULTI_EDITOR_DEFAULT_COUNT;
+        return clampMultiEditorGraphCount(rawValue);
+    }
+
+    function commitMultiEditorGraphCountInput() {
+        const input = document.getElementById('multiEditorGraphCount');
+        if (!input) return MULTI_EDITOR_DEFAULT_COUNT;
+        const rawDigits = String(input.value || '').replace(/[^0-9]/g, '').slice(0, 1);
+        const count = clampMultiEditorGraphCount(rawDigits || MULTI_EDITOR_DEFAULT_COUNT);
+        input.value = String(count);
+        return count;
+    }
+
+    function getMultiEditorGraphIndexes() {
+        const count = getMultiEditorGraphCount();
+        return Array.from({ length: count }, (_, index) => index + 1);
+    }
+
     function getGraphEditorName(index) {
-        return index === 2 ? '오른쪽 그래프' : '왼쪽 그래프';
+        const count = getMultiEditorGraphCount();
+        if (count === 2) return index === 2 ? '오른쪽 그래프' : '왼쪽 그래프';
+        return `${index}번 그래프`;
+    }
+
+    function applyMultiEditorGraphCountChange(count) {
+        if (isMultiEditorEnabled()) {
+            try {
+                graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+                syncReporterNameAcrossMultiEditorStates();
+            } catch (error) {}
+        }
+        const safeCount = clampMultiEditorGraphCount(count);
+        if (activeGraphEditorIndex > safeCount) activeGraphEditorIndex = safeCount;
+        ensureGraphEditorStatesInitialized();
+        syncGraphEditorTabs();
+        updateOutput();
+        scheduleHistoryCheckpoint('복수 그래프 개수 변경');
+    }
+
+    function handleMultiEditorGraphCountInput() {
+        const input = document.getElementById('multiEditorGraphCount');
+        if (!input) return;
+        const digits = String(input.value || '').replace(/[^0-9]/g, '').slice(0, 1);
+        if (input.value !== digits) input.value = digits;
+        if (digits === '') return;
+        const numeric = parseInt(digits, 10);
+        if (numeric >= MULTI_EDITOR_MIN_COUNT && numeric <= MULTI_EDITOR_MAX_COUNT) {
+            applyMultiEditorGraphCountChange(numeric);
+        }
+    }
+
+    function handleMultiEditorGraphCountCommit() {
+        const count = commitMultiEditorGraphCountInput();
+        applyMultiEditorGraphCountChange(count);
+    }
+
+    // 이전 버전의 inline handler가 남아 있더라도 작동하도록 호환 함수를 유지합니다.
+    function handleMultiEditorGraphCountChange() {
+        handleMultiEditorGraphCountCommit();
     }
 
     function syncPaletteTargetHint() {
@@ -1895,10 +2071,14 @@
     function applyPalettePreset(key, options = {}) {
         if (!PALETTE_PRESETS[key]) key = 'asiae';
         const previousKey = activePaletteKey;
-        const inactiveIndex = activeGraphEditorIndex === 1 ? 2 : 1;
-        const preservedInactiveState = isMultiEditorEnabled() && graphEditorStates[inactiveIndex]
-            ? JSON.parse(JSON.stringify(graphEditorStates[inactiveIndex]))
-            : null;
+        const preservedInactiveStates = {};
+        if (isMultiEditorEnabled()) {
+            getMultiEditorGraphIndexes().forEach(index => {
+                if (index !== activeGraphEditorIndex && graphEditorStates[index]) {
+                    preservedInactiveStates[index] = JSON.parse(JSON.stringify(graphEditorStates[index]));
+                }
+            });
+        }
         activePaletteKey = key;
 
         if (options.skipVariationAdvance) {
@@ -1935,11 +2115,11 @@
                 renderMultiGraphComposition();
             }
         }
-        if (preservedInactiveState) {
-            graphEditorStates[inactiveIndex] = JSON.parse(JSON.stringify(preservedInactiveState));
-            const inactiveSelect = document.getElementById(`multiGraphPalette${inactiveIndex}`);
-            if (inactiveSelect) inactiveSelect.value = preservedInactiveState.__activePaletteKey || 'asiae';
-        }
+        Object.entries(preservedInactiveStates).forEach(([index, preservedState]) => {
+            graphEditorStates[index] = JSON.parse(JSON.stringify(preservedState));
+            const inactiveSelect = document.getElementById(`multiGraphPalette${index}`);
+            if (inactiveSelect) inactiveSelect.value = preservedState.__activePaletteKey || 'asiae';
+        });
         if (!options.skipHistory) {
             const historyLabel = previousKey === key && !options.skipVariationAdvance
                 ? `팔레트 톤 변경: ${palette.label}`
@@ -2153,35 +2333,71 @@
 
     function syncGraphEditorTabs() {
         const tabs = document.getElementById('graphEditorTabs');
+        const tabList = document.getElementById('graphEditorTabList');
         const help = document.getElementById('graphEditorModeHelp');
         const enabled = isMultiEditorEnabled();
+        const count = getMultiEditorGraphCount();
         if (tabs) {
             tabs.style.display = enabled ? 'flex' : 'none';
             tabs.setAttribute('aria-hidden', enabled ? 'false' : 'true');
         }
         if (help) help.style.display = enabled ? 'block' : 'none';
-        [1, 2].forEach(index => {
-            const btn = document.getElementById(`graphEditorTab${index}`);
-            if (!btn) return;
-            const isActive = index === activeGraphEditorIndex;
-            btn.classList.toggle('active', isActive);
-            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-            btn.tabIndex = enabled ? 0 : -1;
-        });
+        if (tabList) {
+            tabList.innerHTML = '';
+            for (let index = 1; index <= count; index++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'graph-editor-tab';
+                btn.id = `graphEditorTab${index}`;
+                btn.textContent = count === 2 ? getGraphEditorName(index) : `${index}번 그래프`;
+                btn.addEventListener('click', event => switchGraphEditorTab(index, event));
+                const graphColor = getMultiEditorGraphColor(index);
+                btn.style.setProperty('--graph-accent', graphColor.accent);
+                btn.style.borderTopColor = graphColor.accent;
+                const isActive = index === activeGraphEditorIndex;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                btn.tabIndex = enabled ? 0 : -1;
+                tabList.appendChild(btn);
+                if (count === 2 && index === 1) {
+                    const swapBtn = document.createElement('button');
+                    swapBtn.type = 'button';
+                    swapBtn.className = 'graph-tab-swap-btn';
+                    swapBtn.id = 'graphEditorSwapBtn';
+                    swapBtn.textContent = '↔';
+                    swapBtn.title = '왼쪽/오른쪽 그래프 순서 바꾸기';
+                    swapBtn.setAttribute('aria-label', swapBtn.title);
+                    swapBtn.addEventListener('click', toggleMultiGraphOrder);
+                    tabList.appendChild(swapBtn);
+                }
+            }
+        }
+        applyActiveGraphEditorInputColor();
         syncPaletteTargetHint();
     }
 
     function ensureGraphEditorStatesInitialized() {
-        if (!graphEditorStates[1]) graphEditorStates[1] = serializeGraphEditorState();
-        if (!graphEditorStates[2]) graphEditorStates[2] = JSON.parse(JSON.stringify(graphEditorStates[1]));
+        const count = getMultiEditorGraphCount();
+        const baseState = graphEditorStates[1]
+            ? JSON.parse(JSON.stringify(graphEditorStates[1]))
+            : serializeGraphEditorState();
+        for (let index = 1; index <= count; index++) {
+            if (!graphEditorStates[index]) graphEditorStates[index] = JSON.parse(JSON.stringify(index === 1 ? baseState : (graphEditorStates[index - 1] || baseState)));
+        }
+        Object.keys(graphEditorStates).forEach(key => {
+            const index = parseInt(key, 10);
+            if (Number.isFinite(index) && index > MULTI_EDITOR_MAX_COUNT) delete graphEditorStates[key];
+        });
     }
 
     function handleMultiEditorToggle() {
         if (isMultiEditorEnabled()) {
             ensureGraphEditorStatesInitialized();
             graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+            syncReporterNameAcrossMultiEditorStates();
         } else {
             graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+            syncReporterNameAcrossMultiEditorStates();
             activeGraphEditorIndex = 1;
             if (graphEditorStates[1]) restoreGraphEditorState(graphEditorStates[1], { skipSyncTabs: true });
             const joinedPanel = document.getElementById('joinedPreviewPanel');
@@ -2198,7 +2414,8 @@
     function switchGraphEditorTab(targetIndex, event) {
         if (event && typeof event.preventDefault === 'function') event.preventDefault();
         if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
-        const target = targetIndex === 2 ? 2 : 1;
+        const count = getMultiEditorGraphCount();
+        const target = Math.max(1, Math.min(count, parseInt(targetIndex, 10) || 1));
         if (!isMultiEditorEnabled()) {
             syncGraphEditorTabs();
             return;
@@ -2210,6 +2427,7 @@
         }
         try {
             graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+            syncReporterNameAcrossMultiEditorStates();
         } catch (error) {
             console.error('현재 그래프 상태 저장 오류:', error);
         }
@@ -2246,7 +2464,7 @@
     }
 
     function toggleMultiGraphOrder() {
-        if (!isMultiEditorEnabled()) return;
+        if (!isMultiEditorEnabled() || getMultiEditorGraphCount() !== 2) return;
         ensureGraphEditorStatesInitialized();
         graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
 
@@ -2256,10 +2474,10 @@
         graphEditorStates[2] = leftState;
         multiGraphOrderSwapped = false;
 
-        const leftPaletteSelect = document.getElementById('multiGraphPalette1');
-        const rightPaletteSelect = document.getElementById('multiGraphPalette2');
-        if (leftPaletteSelect && graphEditorStates[1]) leftPaletteSelect.value = graphEditorStates[1].__activePaletteKey || 'asiae';
-        if (rightPaletteSelect && graphEditorStates[2]) rightPaletteSelect.value = graphEditorStates[2].__activePaletteKey || 'asiae';
+        [1, 2].forEach(index => {
+            const paletteSelect = document.getElementById(`multiGraphPalette${index}`);
+            if (paletteSelect && graphEditorStates[index]) paletteSelect.value = graphEditorStates[index].__activePaletteKey || 'asiae';
+        });
 
         const activeState = graphEditorStates[activeGraphEditorIndex];
         if (activeState) {
@@ -2280,8 +2498,9 @@
         const canvases = [];
         suppressMultiEditorJoinedPreview = true;
         try {
-            canvases.push(await captureGraphCanvasForExport(1, exportScale, chartExportDpr));
-            canvases.push(await captureGraphCanvasForExport(2, exportScale, chartExportDpr));
+            for (const graphIndex of getMultiEditorGraphIndexes()) {
+                canvases.push(await captureGraphCanvasForExport(graphIndex, exportScale, chartExportDpr));
+            }
             return canvases;
         } finally {
             graphEditorStates[originalActive] = originalState;
@@ -2341,6 +2560,7 @@
     async function buildMultiEditorExportCanvas(exportScale, chartExportDpr) {
         ensureGraphEditorStatesInitialized();
         graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+        syncReporterNameAcrossMultiEditorStates();
         const joinedPanel = document.getElementById('joinedPreviewPanel');
         const captureDiv = document.getElementById('multi-capture-area');
         const host = document.getElementById('multiGraphLayoutWrap');
@@ -2352,7 +2572,9 @@
             suppressMultiEditorJoinedPreview = true;
             if (joinedPanel) joinedPanel.style.display = 'block';
             captureDiv.style.display = 'flex';
-            const ok = renderMultiEditorJoinedCards(host, graphEditorStates[1], graphEditorStates[2], getMultiSaveJoinDirection());
+            syncJoinedPreviewReporterName();
+            const ok = renderMultiEditorJoinedCards(host, getMultiEditorStateList(), getMultiSaveJoinDirection());
+            syncJoinedPreviewReporterName();
             if (!ok) throw new Error('복수 그래프 데이터가 충분하지 않습니다.');
             await waitForNextPaint();
             if (document.fonts && document.fonts.ready) await document.fonts.ready;
@@ -2486,6 +2708,11 @@
             applyPalettePreset(state.__activePaletteKey, { skipUpdate: true, skipHistory: true, skipVariationAdvance: true });
         }
         isRestoringState = false;
+        if (isMultiEditorEnabled()) {
+            if (activeGraphEditorIndex > getMultiEditorGraphCount()) activeGraphEditorIndex = getMultiEditorGraphCount();
+            ensureGraphEditorStatesInitialized();
+            syncGraphEditorTabs();
+        }
         toggleInputs();
         updateOutput();
         updateHistoryStatus();
@@ -3630,12 +3857,30 @@
     }
 
     function getActiveCaptureElement() {
-        return document.getElementById(isMultiGraphMode() ? 'multi-capture-area' : 'capture-area');
+        return document.getElementById((isMultiEditorEnabled() || isMultiGraphMode()) ? 'multi-capture-area' : 'capture-area');
     }
 
     function getPrimaryPreviewReporterName() {
         const nameInput = document.getElementById('nameInput');
         return nameInput && nameInput.value.trim() ? nameInput.value.trim() : '박조비 기자';
+    }
+
+    function syncReporterNameAcrossMultiEditorStates() {
+        const reporterName = getPrimaryPreviewReporterName();
+        if (!graphEditorStates || typeof graphEditorStates !== 'object') return reporterName;
+        Object.keys(graphEditorStates).forEach(key => {
+            const state = graphEditorStates[key];
+            if (!state || typeof state !== 'object') return;
+            state.nameInput = { type: 'text', value: reporterName };
+        });
+        return reporterName;
+    }
+
+    function syncJoinedPreviewReporterName() {
+        const reporterName = syncReporterNameAcrossMultiEditorStates();
+        const multiName = document.getElementById('multiDisplayName');
+        if (multiName) multiName.textContent = reporterName;
+        return reporterName;
     }
 
     function extractCurrentGraphConfig() {
@@ -3651,6 +3896,9 @@
                 return el ? el.value.trim() : '';
             }),
             datasets: [1, 2, 3, 4].map(index => parseNumericSeries(document.getElementById(`dataInput${index}`) ? document.getElementById(`dataInput${index}`).value : '', expectedCount)).filter(arr => arr.length),
+            tableData: document.getElementById('tableDataInput') ? document.getElementById('tableDataInput').value.trim() : '',
+            tableColumnWidths: document.getElementById('tableColumnWidthsInput') ? document.getElementById('tableColumnWidthsInput').value.trim() : '',
+            tableColumnColors: document.getElementById('tableColumnColorsInput') ? document.getElementById('tableColumnColorsInput').value.trim() : '',
             footnote: document.getElementById('footnoteInput') ? document.getElementById('footnoteInput').value.trim() : '',
             reporter: getPrimaryPreviewReporterName()
         };
@@ -3759,8 +4007,13 @@
 
     function getCompositeCardHeight(type, layoutMode) {
         const normalized = normalizeCompositeGraphType(type);
-        if (layoutMode === 'side') return normalized === 'pie' ? 252 : 268;
+        if (layoutMode === 'side') {
+            if (normalized === 'pie') return 252;
+            if (normalized === 'table') return 268;
+            return 268;
+        }
         if (normalized === 'pie') return 300;
+        if (normalized === 'table') return 296;
         if (normalized.includes('combo') || normalized.includes('multi')) return 316;
         return 296;
     }
@@ -4022,6 +4275,9 @@
             labels,
             datasetNames: [1, 2, 3, 4].map(index => String(getSnapshotControlValue(state, `dataName${index}`, '') || '').trim()),
             datasets: [1, 2, 3, 4].map(index => parseNumericSeries(String(getSnapshotControlValue(state, `dataInput${index}`, '') || ''), expectedCount)).filter(arr => arr.length),
+            tableData: String(getSnapshotControlValue(state, 'tableDataInput', '') || '').trim(),
+            tableColumnWidths: String(getSnapshotControlValue(state, 'tableColumnWidthsInput', '') || '').trim(),
+            tableColumnColors: String(getSnapshotControlValue(state, 'tableColumnColorsInput', '') || '').trim(),
             footnote: String(getSnapshotControlValue(state, 'footnoteInput', '') || '').trim(),
             reporter: String(getSnapshotControlValue(state, 'nameInput', '박조비 기자') || '박조비 기자').trim()
         };
@@ -4130,56 +4386,333 @@
         };
     }
 
-    function renderMultiEditorJoinedCards(host, leftState, rightState, layoutMode) {
-        const leftConfig = extractCompositeConfigFromState(leftState);
-        const rightConfig = extractCompositeConfigFromState(rightState);
-        host.className = `multi-graph-layout ${layoutMode}`;
-        host.style.gridTemplateColumns = layoutMode === 'side' ? 'repeat(2, minmax(0, 1fr))' : '1fr';
-        host.innerHTML = '';
-        const supportedTypes = ['pie', 'line', 'multi-line', 'bar', 'multi-bar', 'stacked-bar', 'h-bar', 'h-multi-bar', 'h-stacked-bar', 'combo', 'multi-combo', 'stacked-combo'];
-        const invalidConfig = [leftConfig, rightConfig].find(cfg => !supportedTypes.includes(normalizeCompositeGraphType(cfg.type)) || !cfg.datasets.length);
-        if (invalidConfig) {
-            host.innerHTML = '<div class="multi-graph-warning">복수 그래프 최종 미리보기는 차트형 그래프 2개 조합을 지원합니다. 왼쪽과 오른쪽 그래프 모두 막대·선·원그래프 계열 데이터로 채워주세요.</div>';
-            return false;
+    function getMultiEditorStateList() {
+        ensureGraphEditorStatesInitialized();
+        return getMultiEditorGraphIndexes()
+            .map(index => ({ graphIndex: index, state: graphEditorStates[index] }))
+            .filter(item => item.state);
+    }
+
+    function getMultiEditorGridLayoutMode(layoutMode, graphCount) {
+        return layoutMode === 'stack' ? 'stack' : 'side';
+    }
+
+    function applyMultiEditorCardLayout(host, layoutMode, graphCount) {
+        if (!host) return;
+        const cards = Array.from(host.children || []).filter(el => el.classList && el.classList.contains('multi-graph-card'));
+        if (layoutMode === 'side') {
+            host.style.display = 'flex';
+            host.style.flexWrap = 'wrap';
+            host.style.gap = '16px';
+            host.style.gridTemplateColumns = '';
+            cards.forEach(card => {
+                card.style.flex = '0 0 calc(50% - 8px)';
+                card.style.width = 'calc(50% - 8px)';
+                card.style.maxWidth = 'calc(50% - 8px)';
+                card.style.gridColumn = '';
+                card.style.justifySelf = '';
+                card.style.marginLeft = '0';
+                card.style.marginRight = '0';
+            });
+            if (graphCount % 2 === 1 && cards.length) {
+                const lastCard = cards[cards.length - 1];
+                lastCard.style.marginLeft = 'auto';
+                lastCard.style.marginRight = 'auto';
+            }
+        } else {
+            host.style.display = 'grid';
+            host.style.flexWrap = '';
+            host.style.gap = '18px';
+            host.style.gridTemplateColumns = '1fr';
+            cards.forEach(card => {
+                card.style.flex = '';
+                card.style.width = '100%';
+                card.style.maxWidth = '';
+                card.style.gridColumn = '';
+                card.style.justifySelf = '';
+                card.style.marginLeft = '0';
+                card.style.marginRight = '0';
+            });
         }
-        const renderSequence = [
-            {
-                config: leftConfig,
-                graphIndex: 1,
-                options: {
-                    palette: getPaletteFromStateSnapshot(leftState),
-                    paletteKey: leftState.__activePaletteKey || 'asiae',
-                    design: getMultiGraphDesignSettingsFromState(leftState, layoutMode),
-                    labelDisplayTypes: getLabelDisplayTypesFromState(leftState),
-                    selectedLabelDisplayTargets: getSelectedLabelDisplayTargetsFromState(leftState),
-                    highlightConfig: getHighlightConfigFromState(leftState, leftConfig.type, leftConfig.labels, leftConfig.datasetNames),
-                    datasetFontColors: getDatasetFontColorsFromState(leftState),
-                    axisSettings: getCompositeAxisSettingsFromState(leftState, leftConfig.type),
-                    koreanNumberApply: getKoreanNumberApplyFromState(leftState),
-                    koreanNumberSubText: leftConfig.subtitle || ''
+    }
+
+    function parseSnapshotTableColumnColors(state) {
+        return parseColorSlots(String(getSnapshotControlValue(state, 'tableColumnColorsInput', '') || ''));
+    }
+
+    function parseSnapshotTableColumnWidths(state, expectedCount) {
+        return String(getSnapshotControlValue(state, 'tableColumnWidthsInput', '') || '')
+            .split(',')
+            .map(part => parseManualWidthValue(part))
+            .slice(0, expectedCount)
+            .map(value => value && value > 0 ? value : null);
+    }
+
+    function getCompositeTableMetrics(tableData, design, layoutMode) {
+        const lines = String(tableData || '').trim() ? String(tableData || '').trim().split(/\n/) : [];
+        const visibleRows = lines.filter(line => String(line || '').trim() && !String(line || '').trim().startsWith('##'));
+        const rowCount = visibleRows.length;
+        const colCount = visibleRows.reduce((max, row) => {
+            const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',');
+            return Math.max(max, cols.length);
+        }, 0);
+        const baseFont = layoutMode === 'side' ? Math.max(10.5, design.axisSize + 0.4) : Math.max(11.5, design.axisSize + 0.9);
+        // 세로 높이 제한을 없앴으므로 행이 많다는 이유로 글자를 줄이지 않습니다.
+        // 다만 열이 너무 많을 때만 가로 폭 안에 들어오도록 약간만 보정합니다.
+        const densityPenalty = Math.max(0, colCount - 4) * 0.7;
+        const sparseBoost = Math.max(0, 4 - colCount) * 0.35;
+        const maxFont = layoutMode === 'side' ? 15.5 : 18;
+        const fontSize = clampCompositeFontSize(baseFont + sparseBoost - densityPenalty, 8.5, maxFont);
+        return {
+            rowCount,
+            colCount,
+            fontSize,
+            headerFontSize: clampCompositeFontSize(fontSize * 1.02, 8.8, maxFont),
+            blockHeaderFontSize: clampCompositeFontSize(fontSize * 0.94, 8.4, maxFont),
+            cellPaddingY: Math.max(4, Math.round(fontSize * 0.5)),
+            cellPaddingX: Math.max(3, Math.round(fontSize * 0.3)),
+            lineHeight: rowCount <= 4 ? 1.28 : 1.22
+        };
+    }
+
+    function buildCompositeTableHTML(config, state, design, layoutMode, tablePalette = null) {
+        const rawText = String(config.tableData || '').trim();
+        if (!rawText) {
+            return { html: '<div class="multi-card-table-empty">텍스트표 데이터를 입력해 주세요.</div>', hasTable: false };
+        }
+
+        const metrics = getCompositeTableMetrics(rawText, design, layoutMode);
+        const isKoreanNumber = String(getSnapshotControlValue(state, 'koreanNumberType', 'apply') || 'apply') === 'apply';
+        const subText = config.subtitle || '';
+        const columnColors = parseSnapshotTableColumnColors(state);
+        const resolvedPalette = tablePalette || getPaletteFromStateSnapshot(state) || getActivePalette();
+        const tableMainColor = normalizePieHexColor(resolvedPalette.main || '#E61E2B') || '#E61E2B';
+        const tableAccentColor = normalizePieHexColor(resolvedPalette.accent || resolvedPalette.gray1 || tableMainColor) || tableMainColor;
+        const tableMainTextColor = getReadableTextColorForBackground(tableMainColor);
+
+        let rows = rawText.split('\n').map((row, rowIndex) => ({ row, rowIndex }));
+        if (rows.length > 2) {
+            const lastLine = rows[rows.length - 1].row;
+            const lastCols = lastLine.indexOf('\t') !== -1 ? lastLine.split('\t') : lastLine.split(',');
+            const firstCols = rows[0].row.indexOf('\t') !== -1 ? rows[0].row.split('\t') : rows[0].row.split(',');
+            if (lastCols.length === 1 && firstCols.length > 1 && !String(lastCols[0] || '').trim().startsWith('##')) {
+                rows = rows.slice(0, -1);
+            }
+        }
+
+        const matrix = rows.map(item => ({
+            sourceRow: item.rowIndex,
+            cols: (item.row.indexOf('\t') !== -1 ? item.row.split('\t') : item.row.split(',')).map(c => c.trim())
+        }));
+        const numCols = matrix.reduce((max, rowObj) => Math.max(max, rowObj.cols.length), 0);
+        const manualWidths = parseSnapshotTableColumnWidths(state, numCols);
+        const cells = matrix.map(rowObj => {
+            const rowCells = [];
+            for (let cIdx = 0; cIdx < numCols; cIdx++) {
+                rowCells.push({ text: rowObj.cols[cIdx] || '', rowspan: 1, colspan: 1, hide: false });
+            }
+            return rowCells;
+        });
+
+        if (cells.length > 0) {
+            cells.forEach(row => {
+                for (let c = 1; c < row.length; c++) {
+                    if (row[c] && row[c].text === '<') {
+                        let mergeTarget = null;
+                        for (let pc = c - 1; pc >= 0; pc--) {
+                            if (row[pc] && !row[pc].hide) { mergeTarget = row[pc]; break; }
+                        }
+                        if (mergeTarget) {
+                            mergeTarget.colspan++;
+                            row[c].hide = true;
+                        }
+                    }
                 }
-            },
-            {
-                config: rightConfig,
-                graphIndex: 2,
-                options: {
-                    palette: getPaletteFromStateSnapshot(rightState),
-                    paletteKey: rightState.__activePaletteKey || 'asiae',
-                    design: getMultiGraphDesignSettingsFromState(rightState, layoutMode),
-                    labelDisplayTypes: getLabelDisplayTypesFromState(rightState),
-                    selectedLabelDisplayTargets: getSelectedLabelDisplayTargetsFromState(rightState),
-                    highlightConfig: getHighlightConfigFromState(rightState, rightConfig.type, rightConfig.labels, rightConfig.datasetNames),
-                    datasetFontColors: getDatasetFontColorsFromState(rightState),
-                    axisSettings: getCompositeAxisSettingsFromState(rightState, rightConfig.type),
-                    koreanNumberApply: getKoreanNumberApplyFromState(rightState),
-                    koreanNumberSubText: rightConfig.subtitle || '',
-                    allowEmptyTitle: true,
-                    allowEmptySubtitle: true
+            });
+
+            for (let c = 0; c < numCols; c++) {
+                let mergeTarget = null;
+                for (let r = 0; r < cells.length; r++) {
+                    if (!cells[r][c] || cells[r][c].hide) continue;
+                    const isBlockHeader = cells[r][0] && cells[r][0].text.startsWith('##');
+                    if (cells[r][c].text === '^') {
+                        if (mergeTarget && !isBlockHeader) {
+                            mergeTarget.rowspan++;
+                            cells[r][c].hide = true;
+                        }
+                    } else {
+                        mergeTarget = isBlockHeader ? null : cells[r][c];
+                    }
                 }
             }
-        ];
-        renderSequence.forEach(item => renderCompositeGraphCard(host, item.config, item.graphIndex, layoutMode, item.options));
+        }
+
+        let html = '';
+        let inTable = false;
+        const cellStyle = (colIndex, isHeader = false, isFirstColumnBody = false) => {
+            const styles = [];
+            const bg = columnColors[colIndex] || '';
+            if (bg) styles.push(`background-color:${bg}`);
+            if (isFirstColumnBody && !bg) {
+                styles.push(`background-color:${tableMainColor}`);
+                styles.push(`color:${tableMainTextColor}`);
+                styles.push('font-weight:700');
+                styles.push('border-bottom:1px solid rgba(255,255,255,0.85)');
+            }
+            styles.push(`padding:${metrics.cellPaddingY}px ${metrics.cellPaddingX}px`);
+            styles.push(`line-height:${metrics.lineHeight}`);
+            if (isHeader) styles.push(`font-size:${metrics.headerFontSize}px`);
+            else styles.push(`font-size:${metrics.fontSize}px`);
+            return styles.length ? ` style="${styles.join(';')}"` : '';
+        };
+
+        cells.forEach((row, rIdx) => {
+            if (!row.length) return;
+            const firstText = String(row[0].text || '');
+            const isBlockHeader = firstText.startsWith('##');
+            if (isBlockHeader) {
+                if (inTable) { html += '</tbody></table>'; inTable = false; }
+                const blockTitle = firstText.replace('##', '').trim();
+                html += `<div class="multi-table-block-header" style="background-color:${tableMainColor}; color:${tableMainTextColor}; border-left:6px solid ${tableAccentColor}; font-size:${metrics.blockHeaderFontSize}px;">■ ${escapeHtml(blockTitle)}</div>`;
+                return;
+            }
+            if (!inTable) {
+                const visibleColumnIndexes = row.map((cell, cIdx) => cell.hide ? null : cIdx).filter(index => index !== null);
+                html += `<table class="asia-table multi-card-table" style="font-size:${metrics.fontSize}px; margin-top:4px;">`;
+                if (visibleColumnIndexes.length) {
+                    html += '<colgroup>';
+                    visibleColumnIndexes.forEach((_, visibleIdx) => {
+                        const widthValue = manualWidths[visibleIdx];
+                        html += `<col${widthValue ? ` style="width:${widthValue}%;"` : ''}>`;
+                    });
+                    html += '</colgroup>';
+                }
+                html += '<thead><tr>';
+                row.forEach((cell, cIdx) => {
+                    if (!cell.hide) {
+                        html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ''}${cellStyle(cIdx, true, false)}>${escapeHtml(cell.text)}</th>`;
+                    }
+                });
+                html += '</tr></thead><tbody>';
+                inTable = true;
+                return;
+            }
+            html += '<tr>';
+            row.forEach((cell, cIdx) => {
+                if (!cell.hide) {
+                    let cellText = cell.text;
+                    const cleanText = String(cellText || '').replace(/,/g, '');
+                    if (isKoreanNumber && cellText !== '' && !isNaN(cleanText)) cellText = formatKoreanNumber(Number(cleanText), subText);
+                    html += `<td${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ''}${cellStyle(cIdx, false, cIdx === 0)}>${escapeHtml(cellText)}</td>`;
+                }
+            });
+            html += '</tr>';
+        });
+
+        if (inTable) html += '</tbody></table>';
+        if (!html) html = '<div class="multi-card-table-empty">표로 표시할 데이터가 없습니다.</div>';
+        return { html, hasTable: true };
+    }
+
+    function fitCompositeTableStage(stageEl) {
+        if (!stageEl) return;
+        const fitEl = stageEl.querySelector('.multi-card-table-fit');
+        const contentEl = stageEl.querySelector('.multi-card-table-content');
+        if (!fitEl || !contentEl) return;
+
+        // 텍스트표는 차트처럼 정해진 높이 안에 억지로 맞추지 않습니다.
+        // 가로는 카드 너비 100%로 꽉 채우고, 세로는 표 내용만큼 자연스럽게 늘어나게 둡니다.
+        // 이렇게 해야 이어붙이기에서 행이 많아져도 하단이 잘리지 않습니다.
+        stageEl.style.height = 'auto';
+        stageEl.style.minHeight = '0';
+        stageEl.style.overflow = 'visible';
+
+        fitEl.style.position = 'relative';
+        fitEl.style.inset = 'auto';
+        fitEl.style.width = '100%';
+        fitEl.style.height = 'auto';
+        fitEl.style.overflow = 'visible';
+        fitEl.style.display = 'block';
+
+        contentEl.style.position = 'relative';
+        contentEl.style.left = 'auto';
+        contentEl.style.top = 'auto';
+        contentEl.style.width = '100%';
+        contentEl.style.maxWidth = '100%';
+        contentEl.style.height = 'auto';
+        contentEl.style.overflow = 'visible';
+        contentEl.style.transform = 'none';
+        contentEl.style.transformOrigin = 'top left';
+        contentEl.dataset.fitScale = '1';
+
+        contentEl.querySelectorAll('.asia-table').forEach(table => {
+            table.style.width = '100%';
+            table.style.minWidth = '100%';
+            table.style.tableLayout = 'auto';
+        });
+    }
+
+    function fitAllCompositeTableStages() {
+        document.querySelectorAll('.multi-card-table-stage').forEach(stage => fitCompositeTableStage(stage));
+    }
+
+    function renderMultiEditorJoinedCards(host, statesOrLeftState, maybeLayoutMode, maybeLegacyLayoutMode) {
+        const isLegacyCall = !Array.isArray(statesOrLeftState);
+        const stateItems = isLegacyCall
+            ? [
+                { graphIndex: 1, state: statesOrLeftState },
+                { graphIndex: 2, state: maybeLayoutMode }
+            ].filter(item => item.state)
+            : statesOrLeftState;
+        const layoutMode = isLegacyCall ? maybeLegacyLayoutMode : maybeLayoutMode;
+        const graphCount = stateItems.length || getMultiEditorGraphCount();
+        const gridLayoutMode = getMultiEditorGridLayoutMode(layoutMode, graphCount);
+        const configs = stateItems.map(item => ({
+            graphIndex: item.graphIndex,
+            state: item.state,
+            config: extractCompositeConfigFromState(item.state)
+        }));
+        host.className = `multi-graph-layout ${gridLayoutMode}${gridLayoutMode === 'side' && graphCount % 2 === 1 ? ' odd-count' : ''}`;
+        host.style.gridTemplateColumns = gridLayoutMode === 'side' ? 'repeat(2, minmax(0, 1fr))' : '1fr';
+        host.innerHTML = '';
+        const supportedTypes = ['pie', 'line', 'multi-line', 'bar', 'multi-bar', 'stacked-bar', 'h-bar', 'h-multi-bar', 'h-stacked-bar', 'combo', 'multi-combo', 'stacked-combo', 'table'];
+        const invalidConfig = configs.find(item => {
+            const type = normalizeCompositeGraphType(item.config.type);
+            if (!supportedTypes.includes(type)) return true;
+            if (type === 'table') return false;
+            return !item.config.datasets.length;
+        });
+        if (invalidConfig || !configs.length) {
+            host.innerHTML = `<div class="multi-graph-warning">복수 그래프 최종 미리보기는 차트형 그래프와 텍스트표 조합을 지원합니다. 그래프 탭에는 그래프 데이터를 채우고, 텍스트표 탭에는 데이터 시트를 입력해 주세요.</div>`;
+            return false;
+        }
+        const renderSequence = configs.map((item, sequenceIndex) => ({
+            config: item.config,
+            graphIndex: item.graphIndex,
+            options: {
+                palette: getPaletteFromStateSnapshot(item.state),
+                paletteKey: item.state.__activePaletteKey || 'asiae',
+                design: getMultiGraphDesignSettingsFromState(item.state, gridLayoutMode),
+                labelDisplayTypes: getLabelDisplayTypesFromState(item.state),
+                selectedLabelDisplayTargets: getSelectedLabelDisplayTargetsFromState(item.state),
+                highlightConfig: getHighlightConfigFromState(item.state, item.config.type, item.config.labels, item.config.datasetNames),
+                datasetFontColors: getDatasetFontColorsFromState(item.state),
+                axisSettings: getCompositeAxisSettingsFromState(item.state, item.config.type),
+                koreanNumberApply: getKoreanNumberApplyFromState(item.state),
+                koreanNumberSubText: item.config.subtitle || '',
+                tableState: item.state,
+                allowEmptyTitle: sequenceIndex > 0,
+                allowEmptySubtitle: sequenceIndex > 0
+            }
+        }));
+        renderSequence.forEach(item => renderCompositeGraphCard(host, item.config, item.graphIndex, gridLayoutMode, item.options));
+        applyMultiEditorCardLayout(host, gridLayoutMode, graphCount);
         matchCompositeTitleHeights(host);
+        fitAllCompositeTableStages();
+        requestAnimationFrame(() => {
+            fitAllCompositeTableStages();
+            requestAnimationFrame(fitAllCompositeTableStages);
+        });
         return true;
     }
 
@@ -4308,16 +4841,25 @@
         };
         const card = document.createElement('div');
         card.className = 'multi-graph-card';
+        // 복수 그래프의 각 카드가 자기 팔레트를 독립적으로 갖도록 CSS 변수를 카드 단위로 고정합니다.
+        // 텍스트표의 첫 열/상단선은 var(--ak-red)를 쓰기 때문에, 부모 영역의 현재 팔레트를 상속하면
+        // 다른 그래프 탭 팔레트를 바꿀 때 모든 텍스트표 색이 함께 바뀌는 문제가 생깁니다.
+        card.style.setProperty('--ak-red', palette.main || '#E61E2B');
+        card.style.setProperty('--ak-orange', palette.accent || '#F48F1F');
         const cardHeight = getCompositeCardHeight(type, layoutMode);
+        const isTable = type === 'table';
         const title = renderOptions.allowEmptyTitle ? (config.title || '') : (config.title || '제목입력');
-        const subtitle = renderOptions.allowEmptySubtitle ? (config.subtitle || '') : (config.subtitle || '(단위 및 출처 입력)');
+        const subtitle = isTable
+            ? (config.subtitle || '')
+            : (renderOptions.allowEmptySubtitle ? (config.subtitle || '') : (config.subtitle || '(단위 및 출처 입력)'));
         const footnote = config.footnote || '';
+        const chartAreaStyle = isTable ? 'height:auto; min-height:0; overflow:visible;' : `height:${cardHeight}px;`;
         card.innerHTML = `
-            <div class="multi-card-topline"></div>
+            <div class="multi-card-topline" style="background:${escapeHtml(palette.main || '#E61E2B')};"></div>
             <div class="multi-card-title" style="font-size:${design.titleSize}px;">${escapeHtml(title)}</div>
             <div class="multi-card-sub" style="font-size:${design.subtitleSize}px;">${escapeHtml(subtitle)}</div>
-            <div class="multi-card-chart" style="height:${cardHeight}px;"><canvas id="multiChartCanvas${graphIndex}"></canvas></div>
-            <div class="multi-pie-small-list" style="font-size:${Math.max(9, Math.round(design.footnoteSize * 0.95))}px;"></div>
+            <div class="multi-card-chart${isTable ? ' multi-card-table-stage' : ''}" style="${chartAreaStyle}">${isTable ? '<div class="multi-card-table-fit"><div class="multi-card-table-content"></div></div>' : `<canvas id="multiChartCanvas${graphIndex}"></canvas>`}</div>
+            <div class="multi-pie-small-list" style="font-size:${Math.max(9, Math.round(design.footnoteSize * 0.95))}px; display:${isTable ? 'none' : 'flex'};"></div>
             <div class="multi-card-footnote" style="font-size:${design.footnoteSize}px;">${footnote ? escapeHtml(footnote) : '&nbsp;'}</div>
         `;
         host.appendChild(card);
@@ -4348,6 +4890,20 @@
                     }
                 });
             });
+        }
+        if (isTable) {
+            const tableContent = card.querySelector('.multi-card-table-content');
+            const builtTable = buildCompositeTableHTML(config, renderOptions.tableState || {}, design, layoutMode, palette);
+            if (tableContent) tableContent.innerHTML = builtTable.html;
+            const pieList = card.querySelector('.multi-pie-small-list');
+            if (pieList) { pieList.innerHTML = ''; pieList.style.display = 'none'; }
+            const tableStage = card.querySelector('.multi-card-table-stage');
+            fitCompositeTableStage(tableStage);
+            requestAnimationFrame(() => fitCompositeTableStage(tableStage));
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(() => fitCompositeTableStage(tableStage)).catch(() => {});
+            }
+            return;
         }
         const canvas = card.querySelector('canvas');
         if (!canvas) return;
@@ -4661,15 +5217,11 @@
         if (footer) footer.style.display = 'flex';
         ensureGraphEditorStatesInitialized();
         graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
-        const leftState = graphEditorStates[1];
-        const rightState = graphEditorStates[2];
-        if (multiName) {
-            const leftConfig = extractCompositeConfigFromState(leftState);
-            const rightConfig = extractCompositeConfigFromState(rightState);
-            multiName.textContent = leftConfig.reporter || rightConfig.reporter || getPrimaryPreviewReporterName();
-        }
+        syncReporterNameAcrossMultiEditorStates();
+        const stateItems = getMultiEditorStateList();
+        syncJoinedPreviewReporterName();
         if (suppressMultiEditorJoinedPreview) return;
-        renderMultiEditorJoinedCards(host, leftState, rightState, getMultiSaveJoinDirection());
+        renderMultiEditorJoinedCards(host, stateItems, getMultiSaveJoinDirection());
     }
 
     function renderMultiGraphComposition() {
@@ -4678,6 +5230,7 @@
         const host = document.getElementById('multiGraphLayoutWrap');
         const multiName = document.getElementById('multiDisplayName');
         if (multiName) multiName.textContent = getPrimaryPreviewReporterName();
+        if (isMultiEditorEnabled()) syncReporterNameAcrossMultiEditorStates();
         if (!host) return;
         if (isMultiEditorEnabled()) {
             renderMultiEditorJoinedPreview();
@@ -4691,9 +5244,14 @@
         host.className = `multi-graph-layout ${layoutMode}`;
         host.style.gridTemplateColumns = layoutMode === 'side' ? 'repeat(2, minmax(0, 1fr))' : '1fr';
         host.innerHTML = '';
-        const supportedTypes = ['pie', 'line', 'multi-line', 'bar', 'multi-bar', 'stacked-bar', 'h-bar', 'h-multi-bar', 'h-stacked-bar', 'combo', 'multi-combo', 'stacked-combo'];
-        const invalidConfig = [firstConfig, secondConfig].find(cfg => !supportedTypes.includes(normalizeCompositeGraphType(cfg.type)) || !cfg.datasets.length);
-        if (invalidConfig) { host.innerHTML = '<div class="multi-graph-warning">멀티 그래프 붙이기는 현재 차트형 그래프 2개 조합을 지원합니다. 첫 번째와 두 번째 그래프 모두 막대·선·원그래프 계열 데이터로 넣어주세요.</div>'; return; }
+        const supportedTypes = ['pie', 'line', 'multi-line', 'bar', 'multi-bar', 'stacked-bar', 'h-bar', 'h-multi-bar', 'h-stacked-bar', 'combo', 'multi-combo', 'stacked-combo', 'table'];
+        const invalidConfig = [firstConfig, secondConfig].find(cfg => {
+            const type = normalizeCompositeGraphType(cfg.type);
+            if (!supportedTypes.includes(type)) return true;
+            if (type === 'table') return false;
+            return !cfg.datasets.length;
+        });
+        if (invalidConfig) { host.innerHTML = '<div class="multi-graph-warning">멀티 그래프 붙이기는 차트형 그래프와 텍스트표 2개 조합을 지원합니다. 그래프 데이터 또는 텍스트표 데이터를 넣어주세요.</div>'; return; }
         renderCompositeGraphCard(host, firstConfig, 1, layoutMode);
         renderCompositeGraphCard(host, secondConfig, 2, layoutMode);
         matchCompositeTitleHeights(host);
@@ -4701,16 +5259,23 @@
 
     async function setAllChartPixelRatios(pixelRatio) {
         await setChartPixelRatio(pixelRatio);
-        if (!Array.isArray(multiChartInstances) || !multiChartInstances.length) return;
+        fitAllCompositeTableStages();
+        if (!Array.isArray(multiChartInstances) || !multiChartInstances.length) {
+            await waitForNextPaint();
+            fitAllCompositeTableStages();
+            return;
+        }
         multiChartInstances.forEach(chart => { try { chart.options.devicePixelRatio = pixelRatio; chart.resize(); chart.update('none'); } catch (error) {} });
         await waitForNextPaint();
+        fitAllCompositeTableStages();
     }
 
     function updateExportSizeHint() {
         const hintEl = document.querySelector('.export-size-hint');
         if (!hintEl) return;
         const sizes = getFixedExportSize();
-        hintEl.innerText = `현재 750px 작업 화면을 기준으로 ${sizes.exportScale}배 크기(${sizes.exportWidth}px × ${sizes.exportHeight}px)로 고정 저장합니다. 2배 저장이 가장 무난합니다.`;
+        const multiText = isMultiEditorEnabled() ? ` 복수 그래프 ${getMultiEditorGraphCount()}개 기준입니다.` : '';
+        hintEl.innerText = `현재 750px 작업 화면을 기준으로 ${sizes.exportScale}배 크기(${sizes.exportWidth}px × ${sizes.exportHeight}px)로 고정 저장합니다.${multiText} 2배 저장이 가장 무난합니다.`;
     }
 
     function hasGeminiInputData() {
@@ -6182,6 +6747,7 @@ function isTextSheetType(type) {
     }
 
     function setSheetModalMode(mode) {
+        resetSheetSelection();
         const modal = document.getElementById('sheetModal');
         if (modal) modal.dataset.sheetMode = mode;
         const addColumnBtn = document.getElementById('addColumnBtn');
@@ -6201,30 +6767,222 @@ function isTextSheetType(type) {
     }
 
     let selectedSheetCell = null;
+    let selectedSheetCells = new Set();
+    let sheetSelectionAnchorKey = '';
+    let sheetSelectionActiveKey = '';
+    let isSheetPointerSelecting = false;
+    let sheetDragBaseSelection = new Set();
+    let sheetDragAdditive = false;
 
-    function setSelectedSheetCell(input) {
-        const previous = document.querySelector('#modalTbody td.active-cell');
-        if (previous) previous.classList.remove('active-cell');
-        selectedSheetCell = input || null;
-        if (selectedSheetCell && selectedSheetCell.closest('td')) selectedSheetCell.closest('td').classList.add('active-cell');
+    function getSheetCellPosition(input) {
+        if (!input) return null;
+        const td = input.closest('td');
+        const tr = input.closest('tr');
+        const tbody = document.getElementById('modalTbody');
+        if (!td || !tr || !tbody) return null;
+        const row = Array.from(tbody.children).indexOf(tr);
+        const col = Array.from(tr.children).indexOf(td);
+        if (row < 0 || col < 0) return null;
+        return { row, col };
+    }
+
+    function getSheetCellKey(inputOrPosition) {
+        if (!inputOrPosition) return '';
+        const pos = inputOrPosition.row !== undefined ? inputOrPosition : getSheetCellPosition(inputOrPosition);
+        return pos ? `${pos.row}|${pos.col}` : '';
+    }
+
+    function getSheetInputAt(row, col) {
+        const tbody = document.getElementById('modalTbody');
+        if (!tbody || !tbody.children[row] || !tbody.children[row].children[col]) return null;
+        return tbody.children[row].children[col].querySelector('input');
+    }
+
+    function getSheetCellFromKey(key) {
+        const [rowRaw, colRaw] = String(key || '').split('|');
+        const row = parseInt(rowRaw, 10);
+        const col = parseInt(colRaw, 10);
+        if (!Number.isFinite(row) || !Number.isFinite(col)) return null;
+        return getSheetInputAt(row, col);
+    }
+
+    function getAllSheetInputs() {
+        return Array.from(document.querySelectorAll('#modalTbody tr td input'));
+    }
+
+    function updateSheetSelectionStatus(message = '') {
+        const status = document.getElementById('sheetSelectionStatus');
+        if (!status) return;
+        const count = selectedSheetCells ? selectedSheetCells.size : 0;
+        if (message) {
+            status.textContent = message;
+            return;
+        }
+        if (!count) {
+            status.textContent = '셀을 드래그하거나 Shift/Ctrl 클릭으로 여러 셀을 선택할 수 있습니다. Ctrl+C / Ctrl+V도 지원합니다.';
+        } else if (count === 1) {
+            status.textContent = '1개 셀 선택 · 드래그 또는 Shift/Ctrl 클릭으로 범위를 넓힐 수 있습니다.';
+        } else {
+            status.textContent = `${count}개 셀 선택 · Ctrl+C 복사, Ctrl+V 붙여넣기, Delete 지우기를 사용할 수 있습니다.`;
+        }
+    }
+
+    function refreshSheetSelectionStyles() {
+        document.querySelectorAll('#modalTbody td.sheet-selected-cell, #modalTbody td.sheet-anchor-cell, #modalTbody td.active-cell').forEach(td => {
+            td.classList.remove('sheet-selected-cell', 'sheet-anchor-cell', 'active-cell');
+        });
+        if (!selectedSheetCells) selectedSheetCells = new Set();
+        selectedSheetCells.forEach(key => {
+            const input = getSheetCellFromKey(key);
+            const td = input ? input.closest('td') : null;
+            if (td) td.classList.add('sheet-selected-cell');
+        });
+        const activeInput = getSheetCellFromKey(sheetSelectionActiveKey) || selectedSheetCell;
+        const activeTd = activeInput ? activeInput.closest('td') : null;
+        if (activeTd) activeTd.classList.add('active-cell', 'sheet-anchor-cell');
+        updateSheetSelectionStatus();
+    }
+
+    function clearSheetSelection() {
+        selectedSheetCells = new Set();
+        sheetSelectionAnchorKey = '';
+        sheetSelectionActiveKey = '';
+        selectedSheetCell = null;
+        refreshSheetSelectionStyles();
+    }
+
+    function resetSheetSelection() {
+        clearSheetSelection();
+    }
+
+    function addSheetCellToSelection(input) {
+        const key = getSheetCellKey(input);
+        if (!key) return;
+        selectedSheetCells.add(key);
+        sheetSelectionActiveKey = key;
+        selectedSheetCell = input;
+    }
+
+    function selectSingleSheetCell(input) {
+        selectedSheetCells = new Set();
+        const key = getSheetCellKey(input);
+        if (!key) {
+            refreshSheetSelectionStyles();
+            return;
+        }
+        selectedSheetCells.add(key);
+        sheetSelectionAnchorKey = key;
+        sheetSelectionActiveKey = key;
+        selectedSheetCell = input;
+        refreshSheetSelectionStyles();
+    }
+
+    function toggleSheetCellSelection(input) {
+        const key = getSheetCellKey(input);
+        if (!key) return;
+        if (selectedSheetCells.has(key) && selectedSheetCells.size > 1) selectedSheetCells.delete(key);
+        else selectedSheetCells.add(key);
+        sheetSelectionAnchorKey = sheetSelectionAnchorKey || key;
+        sheetSelectionActiveKey = key;
+        selectedSheetCell = input;
+        refreshSheetSelectionStyles();
+    }
+
+    function selectSheetCellRange(anchorKey, targetInput, additive = false, baseSelection = null) {
+        const targetPos = getSheetCellPosition(targetInput);
+        const anchorInput = getSheetCellFromKey(anchorKey);
+        const anchorPos = getSheetCellPosition(anchorInput);
+        if (!targetPos || !anchorPos) {
+            selectSingleSheetCell(targetInput);
+            return;
+        }
+        const nextSelection = additive
+            ? new Set(baseSelection ? Array.from(baseSelection) : Array.from(selectedSheetCells))
+            : new Set();
+        const rMin = Math.min(anchorPos.row, targetPos.row);
+        const rMax = Math.max(anchorPos.row, targetPos.row);
+        const cMin = Math.min(anchorPos.col, targetPos.col);
+        const cMax = Math.max(anchorPos.col, targetPos.col);
+        for (let r = rMin; r <= rMax; r++) {
+            for (let c = cMin; c <= cMax; c++) {
+                const input = getSheetInputAt(r, c);
+                if (input) nextSelection.add(`${r}|${c}`);
+            }
+        }
+        selectedSheetCells = nextSelection;
+        sheetSelectionActiveKey = getSheetCellKey(targetInput);
+        selectedSheetCell = targetInput;
+        refreshSheetSelectionStyles();
+    }
+
+    function setSelectedSheetCell(input, options = {}) {
+        if (!input) {
+            clearSheetSelection();
+            return;
+        }
+        const event = options.event || null;
+        const isAdditive = !!(event && (event.ctrlKey || event.metaKey));
+        const isRange = !!(event && event.shiftKey && sheetSelectionAnchorKey);
+        if (isRange) {
+            selectSheetCellRange(sheetSelectionAnchorKey, input, isAdditive);
+        } else if (isAdditive) {
+            toggleSheetCellSelection(input);
+        } else {
+            selectSingleSheetCell(input);
+        }
+    }
+
+    function handleSheetCellPointerDown(input, event) {
+        if (!input) return;
+        isSheetPointerSelecting = true;
+        sheetDragAdditive = !!(event && (event.ctrlKey || event.metaKey));
+        sheetDragBaseSelection = new Set(selectedSheetCells || []);
+        if (event && event.shiftKey && sheetSelectionAnchorKey) {
+            selectSheetCellRange(sheetSelectionAnchorKey, input, sheetDragAdditive, sheetDragBaseSelection);
+        } else if (sheetDragAdditive) {
+            toggleSheetCellSelection(input);
+            sheetSelectionAnchorKey = getSheetCellKey(input) || sheetSelectionAnchorKey;
+        } else {
+            selectSingleSheetCell(input);
+        }
+    }
+
+    function handleSheetCellPointerEnter(input) {
+        if (!isSheetPointerSelecting || !input || !sheetSelectionAnchorKey) return;
+        selectSheetCellRange(sheetSelectionAnchorKey, input, sheetDragAdditive, sheetDragBaseSelection);
+    }
+
+    function refreshSheetInputVisual(input) {
+        if (!input) return;
+        input.classList.toggle('merge-token', input.value.trim() === '^' || input.value.trim() === '<');
+    }
+
+    function bindSheetSelectableInput(input) {
+        if (!input || input.dataset.sheetSelectableBound === 'true') return;
+        input.addEventListener('mousedown', (event) => handleSheetCellPointerDown(input, event));
+        input.addEventListener('mouseenter', () => handleSheetCellPointerEnter(input));
+        input.addEventListener('focus', () => {
+            if (!isSheetPointerSelecting && (!selectedSheetCells || selectedSheetCells.size === 0)) setSelectedSheetCell(input);
+        });
+        input.addEventListener('click', (event) => {
+            if (event.shiftKey || event.ctrlKey || event.metaKey) setSelectedSheetCell(input, { event });
+            selectedSheetCell = input;
+        });
+        input.dataset.sheetSelectableBound = 'true';
     }
 
     function bindTextSheetCell(input) {
         if (!input || input.dataset.textSheetBound === 'true') return;
-        const syncTokenClass = () => {
-            input.classList.toggle('merge-token', input.value.trim() === '^' || input.value.trim() === '<');
-        };
-        input.addEventListener('focus', () => setSelectedSheetCell(input));
-        input.addEventListener('click', () => setSelectedSheetCell(input));
-        input.addEventListener('input', syncTokenClass);
+        input.addEventListener('input', () => refreshSheetInputVisual(input));
         input.addEventListener('keydown', (event) => {
             if (event.key === 'Tab') {
                 event.preventDefault();
                 moveTextSheetFocus(input, event.shiftKey ? -1 : 1);
             }
         });
+        bindSheetSelectableInput(input);
         input.dataset.textSheetBound = 'true';
-        syncTokenClass();
+        refreshSheetInputVisual(input);
     }
 
     function moveTextSheetFocus(input, direction) {
@@ -6310,6 +7068,7 @@ function isTextSheetType(type) {
         if (tbody) tbody.innerHTML = '';
         const rowCount = Math.max(rows.length, type === 'table' ? 6 : 5);
         for (let r = 0; r < rowCount; r++) createTextSheetRow(rows[r] || [], colCount);
+        refreshSheetSelectionStyles();
         const modal = document.getElementById('sheetModal');
         if (modal) modal.style.display = 'flex';
     }
@@ -6382,8 +7141,7 @@ function isTextSheetType(type) {
 
     function bindChartSheetCell(input) {
         if (!input || input.dataset.chartSheetBound === 'true') return;
-        input.addEventListener('focus', () => setSelectedSheetCell(input));
-        input.addEventListener('click', () => setSelectedSheetCell(input));
+        bindSheetSelectableInput(input);
         input.dataset.chartSheetBound = 'true';
     }
 
@@ -6452,6 +7210,7 @@ function isTextSheetType(type) {
             tbody.appendChild(tr);
         }
         bindAllChartSheetCells();
+        refreshSheetSelectionStyles();
     }
 
     function openDataSheet() {
@@ -6612,7 +7371,267 @@ function isTextSheetType(type) {
         }
     }
 
-    function closeDataSheet() { document.getElementById('sheetModal').style.display = 'none'; }
+    function getSheetSelectionBounds() {
+        const positions = Array.from(selectedSheetCells || [])
+            .map(key => {
+                const [rowRaw, colRaw] = key.split('|');
+                return { row: parseInt(rowRaw, 10), col: parseInt(colRaw, 10) };
+            })
+            .filter(pos => Number.isFinite(pos.row) && Number.isFinite(pos.col));
+        if (!positions.length && selectedSheetCell) {
+            const pos = getSheetCellPosition(selectedSheetCell);
+            if (pos) positions.push(pos);
+        }
+        if (!positions.length) return null;
+        return {
+            rowMin: Math.min(...positions.map(pos => pos.row)),
+            rowMax: Math.max(...positions.map(pos => pos.row)),
+            colMin: Math.min(...positions.map(pos => pos.col)),
+            colMax: Math.max(...positions.map(pos => pos.col))
+        };
+    }
+
+    function getOrderedSelectedSheetInputs() {
+        const keys = Array.from(selectedSheetCells || []);
+        return keys
+            .map(key => ({ key, input: getSheetCellFromKey(key), pos: key.split('|').map(Number) }))
+            .filter(item => item.input && item.pos.every(Number.isFinite))
+            .sort((a, b) => (a.pos[0] - b.pos[0]) || (a.pos[1] - b.pos[1]))
+            .map(item => item.input);
+    }
+
+    function getSelectedSheetClipboardText() {
+        const bounds = getSheetSelectionBounds();
+        if (!bounds) return '';
+        const selectedKeys = selectedSheetCells && selectedSheetCells.size ? selectedSheetCells : new Set([getSheetCellKey(selectedSheetCell)]);
+        const rows = [];
+        for (let r = bounds.rowMin; r <= bounds.rowMax; r++) {
+            const cols = [];
+            for (let c = bounds.colMin; c <= bounds.colMax; c++) {
+                const key = `${r}|${c}`;
+                const input = getSheetInputAt(r, c);
+                cols.push(selectedKeys.has(key) && input ? input.value : '');
+            }
+            rows.push(cols.join('\t'));
+        }
+        return rows.join('\n');
+    }
+
+    function copyTextToClipboard(text) {
+        if (!text) return Promise.resolve(false);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
+        }
+        return new Promise(resolve => {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (error) { ok = false; }
+            textarea.remove();
+            resolve(ok);
+        });
+    }
+
+    async function copySelectedSheetCells() {
+        const text = getSelectedSheetClipboardText();
+        if (!text) {
+            updateSheetSelectionStatus('복사할 셀을 먼저 선택해 주세요.');
+            return;
+        }
+        const ok = await copyTextToClipboard(text);
+        updateSheetSelectionStatus(ok ? '선택한 셀을 복사했습니다.' : '브라우저가 클립보드 복사를 막았습니다. Ctrl+C를 사용해 주세요.');
+    }
+
+    function parseClipboardMatrix(text) {
+        const normalized = String(text || '').replace(/\r/g, '');
+        let rows = normalized.split('\n');
+        if (rows.length > 1 && rows[rows.length - 1] === '') rows.pop();
+        return rows.map(row => row.split('\t'));
+    }
+
+    function getCurrentSheetColumnCount() {
+        const rows = Array.from(document.querySelectorAll('#modalTbody tr'));
+        return rows.reduce((max, row) => Math.max(max, row.children.length), 0);
+    }
+
+    function ensureSheetGridSize(requiredRows, requiredCols) {
+        const modal = document.getElementById('sheetModal');
+        const mode = modal ? modal.dataset.sheetMode : '';
+        const tbody = document.getElementById('modalTbody');
+        if (!tbody) return;
+        if (mode === 'text') {
+            while (getCurrentSheetColumnCount() < requiredCols) addColumn();
+            while (tbody.children.length < requiredRows) addTextSheetRow();
+        } else if (mode === 'chart') {
+            while (tbody.children.length < requiredRows) addRow();
+        }
+    }
+
+    function markSheetRangeSelected(startRow, startCol, rowCount, colCount) {
+        selectedSheetCells = new Set();
+        for (let r = startRow; r < startRow + rowCount; r++) {
+            for (let c = startCol; c < startCol + colCount; c++) {
+                if (getSheetInputAt(r, c)) selectedSheetCells.add(`${r}|${c}`);
+            }
+        }
+        const active = getSheetInputAt(startRow, startCol);
+        sheetSelectionAnchorKey = active ? getSheetCellKey(active) : '';
+        sheetSelectionActiveKey = active ? getSheetCellKey(active) : '';
+        selectedSheetCell = active;
+        refreshSheetSelectionStyles();
+    }
+
+    function applySheetPasteText(text) {
+        const matrix = parseClipboardMatrix(text);
+        if (!matrix.length || !matrix[0].length) return false;
+        const selectedInputs = getOrderedSelectedSheetInputs();
+        const singleValue = matrix.length === 1 && matrix[0].length === 1;
+        if (singleValue && selectedInputs.length > 1) {
+            selectedInputs.forEach(input => {
+                input.value = matrix[0][0];
+                refreshSheetInputVisual(input);
+            });
+            refreshSheetSelectionStyles();
+            return true;
+        }
+        const startPos = getSheetCellPosition(selectedSheetCell || selectedInputs[0]);
+        if (!startPos) return false;
+        const rowCount = matrix.length;
+        const colCount = matrix.reduce((max, row) => Math.max(max, row.length), 0);
+        ensureSheetGridSize(startPos.row + rowCount, startPos.col + colCount);
+        for (let r = 0; r < rowCount; r++) {
+            for (let c = 0; c < colCount; c++) {
+                const input = getSheetInputAt(startPos.row + r, startPos.col + c);
+                if (!input) continue;
+                input.value = matrix[r][c] !== undefined ? matrix[r][c] : '';
+                refreshSheetInputVisual(input);
+            }
+        }
+        markSheetRangeSelected(startPos.row, startPos.col, rowCount, colCount);
+        return true;
+    }
+
+    async function pasteSelectedSheetCellsFromClipboard() {
+        if (!selectedSheetCell && !(selectedSheetCells && selectedSheetCells.size)) {
+            updateSheetSelectionStatus('붙여넣을 시작 셀을 먼저 선택해 주세요.');
+            return;
+        }
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+            updateSheetSelectionStatus('브라우저가 붙여넣기 버튼을 막았습니다. Ctrl+V를 사용해 주세요.');
+            return;
+        }
+        try {
+            const text = await navigator.clipboard.readText();
+            if (!text) {
+                updateSheetSelectionStatus('클립보드에 붙여넣을 텍스트가 없습니다.');
+                return;
+            }
+            const ok = applySheetPasteText(text);
+            updateSheetSelectionStatus(ok ? '클립보드 내용을 붙여넣었습니다.' : '붙여넣을 수 있는 셀을 먼저 선택해 주세요.');
+        } catch (error) {
+            updateSheetSelectionStatus('브라우저가 붙여넣기 버튼을 막았습니다. Ctrl+V를 사용해 주세요.');
+        }
+    }
+
+    function clearSelectedSheetCells() {
+        const inputs = getOrderedSelectedSheetInputs();
+        if (!inputs.length && selectedSheetCell) inputs.push(selectedSheetCell);
+        if (!inputs.length) {
+            updateSheetSelectionStatus('지울 셀을 먼저 선택해 주세요.');
+            return;
+        }
+        inputs.forEach(input => {
+            input.value = '';
+            refreshSheetInputVisual(input);
+        });
+        refreshSheetSelectionStyles();
+    }
+
+    function fillDownSelectedSheetCells() {
+        const bounds = getSheetSelectionBounds();
+        if (!bounds || bounds.rowMax <= bounds.rowMin) {
+            updateSheetSelectionStatus('아래로 채우려면 2행 이상 범위를 선택해 주세요.');
+            return;
+        }
+        for (let c = bounds.colMin; c <= bounds.colMax; c++) {
+            const source = getSheetInputAt(bounds.rowMin, c);
+            const sourceValue = source ? source.value : '';
+            for (let r = bounds.rowMin + 1; r <= bounds.rowMax; r++) {
+                const input = getSheetInputAt(r, c);
+                if (input) {
+                    input.value = sourceValue;
+                    refreshSheetInputVisual(input);
+                }
+            }
+        }
+        refreshSheetSelectionStyles();
+        updateSheetSelectionStatus('선택 범위의 첫 행 값을 아래로 채웠습니다.');
+    }
+
+    function selectAllSheetCells() {
+        selectedSheetCells = new Set();
+        getAllSheetInputs().forEach(input => {
+            const key = getSheetCellKey(input);
+            if (key) selectedSheetCells.add(key);
+        });
+        const first = getAllSheetInputs()[0] || null;
+        selectedSheetCell = first;
+        sheetSelectionAnchorKey = first ? getSheetCellKey(first) : '';
+        sheetSelectionActiveKey = sheetSelectionAnchorKey;
+        refreshSheetSelectionStyles();
+    }
+
+    function initSheetSelectionControls() {
+        const modal = document.getElementById('sheetModal');
+        if (!modal || modal.dataset.selectionControlsReady === 'true') return;
+        document.addEventListener('mouseup', () => {
+            isSheetPointerSelecting = false;
+            sheetDragBaseSelection = new Set();
+        });
+        modal.addEventListener('copy', event => {
+            if (!selectedSheetCells || selectedSheetCells.size <= 1) return;
+            const text = getSelectedSheetClipboardText();
+            if (!text) return;
+            event.clipboardData.setData('text/plain', text);
+            event.preventDefault();
+            updateSheetSelectionStatus('선택한 셀을 복사했습니다.');
+        });
+        modal.addEventListener('paste', event => {
+            const text = event.clipboardData ? event.clipboardData.getData('text/plain') : '';
+            if (!text) return;
+            const isSpreadsheetPaste = /\t|\n|\r/.test(text) || (selectedSheetCells && selectedSheetCells.size > 1);
+            if (!isSpreadsheetPaste) return;
+            if (!selectedSheetCell && !(selectedSheetCells && selectedSheetCells.size)) return;
+            event.preventDefault();
+            const ok = applySheetPasteText(text);
+            updateSheetSelectionStatus(ok ? '붙여넣었습니다.' : '붙여넣을 시작 셀을 먼저 선택해 주세요.');
+        });
+        modal.addEventListener('keydown', event => {
+            const isCommand = event.ctrlKey || event.metaKey;
+            if (isCommand && event.key.toLowerCase() === 'a') {
+                event.preventDefault();
+                selectAllSheetCells();
+                return;
+            }
+            if (isCommand && event.key.toLowerCase() === 'c' && selectedSheetCells && selectedSheetCells.size > 1) {
+                event.preventDefault();
+                copySelectedSheetCells();
+                return;
+            }
+            if ((event.key === 'Delete' || event.key === 'Backspace') && selectedSheetCells && selectedSheetCells.size > 1) {
+                event.preventDefault();
+                clearSelectedSheetCells();
+            }
+        });
+        modal.dataset.selectionControlsReady = 'true';
+    }
+
+    function closeDataSheet() { resetSheetSelection(); document.getElementById('sheetModal').style.display = 'none'; }
 
     function saveTextDataSheet() {
         const lines = [];
@@ -6993,6 +8012,7 @@ function isTextSheetType(type) {
             nameInput.value = cleanName;
             const displayName = document.getElementById('displayName');
             if (displayName) displayName.innerText = cleanName;
+            if (isMultiEditorEnabled()) syncReporterNameAcrossMultiEditorStates();
             updateOutput();
             recordHistoryCheckpoint('저장 전 기자 이름 입력');
             return true;
@@ -7029,6 +8049,7 @@ function isTextSheetType(type) {
             displayTitle.style.display = 'inline-block';
         }
         if(document.getElementById('displayName')) document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
+        if (isMultiEditorEnabled()) syncJoinedPreviewReporterName();
 
         const subText = document.getElementById('subInput').value;
         const displaySub = document.getElementById('displaySub');
@@ -7894,6 +8915,7 @@ function isTextSheetType(type) {
         setupChartQuickEditing();
         setupPreviewQuickEditing();
         setupPieSideListQuickEditing();
+        initSheetSelectionControls();
         applyPalettePreset('asiae', { skipUpdate: true, skipHistory: true, skipVariationAdvance: true });
         populateMultiGraphPaletteSelects();
         refreshMultiGraphStyleGroup();
@@ -7937,13 +8959,6 @@ function isTextSheetType(type) {
         ['multiGraphEnabled', 'multiGraphLayout'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', updateOutput); });
         const secondGeminiInput = document.getElementById('secondGeminiInput');
         if (secondGeminiInput) secondGeminiInput.addEventListener('input', updateOutput);
-        [1, 2].forEach(index => {
-            const tabButton = document.getElementById(`graphEditorTab${index}`);
-            if (tabButton && tabButton.dataset.boundClick !== 'true') {
-                tabButton.addEventListener('click', event => switchGraphEditorTab(index, event));
-                tabButton.dataset.boundClick = 'true';
-            }
-        });
         ['multiGraphFontSize1','multiGraphFontSize2','multiGraphDataFontSize1','multiGraphDataFontSize2'].forEach(id => {
             const el = document.getElementById(id);
             const display = document.getElementById(id.replace('Size', 'Display'));
@@ -7954,10 +8969,11 @@ function isTextSheetType(type) {
         renderMultiGraphComposition();
         graphEditorStates[1] = serializeGraphEditorState();
         graphEditorStates[2] = JSON.parse(JSON.stringify(graphEditorStates[1]));
-        const leftPaletteSelect = document.getElementById('multiGraphPalette1');
-        const rightPaletteSelect = document.getElementById('multiGraphPalette2');
-        if (leftPaletteSelect) leftPaletteSelect.value = graphEditorStates[1].__activePaletteKey || 'asiae';
-        if (rightPaletteSelect) rightPaletteSelect.value = graphEditorStates[2].__activePaletteKey || 'asiae';
+        ensureGraphEditorStatesInitialized();
+        getMultiEditorGraphIndexes().forEach(index => {
+            const paletteSelect = document.getElementById(`multiGraphPalette${index}`);
+            if (paletteSelect && graphEditorStates[index]) paletteSelect.value = graphEditorStates[index].__activePaletteKey || 'asiae';
+        });
         syncGraphEditorTabs();
         syncMultiGraphOrderButton();
         recordHistoryCheckpoint('초기 상태');
