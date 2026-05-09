@@ -4049,6 +4049,29 @@
         return source.map((_, index) => `항목 ${index + 1}`);
     }
 
+
+    function isCompositeTextType(type) {
+        return ['table', 'list', 'timeline'].includes(normalizeCompositeGraphType(type));
+    }
+
+    function hasCompositeTextData(config) {
+        return !!(config && String(config.tableData || '').trim());
+    }
+
+    function hasCompositeChartData(config) {
+        return !!(config && Array.isArray(config.datasets) && config.datasets.some(series => Array.isArray(series) && series.length));
+    }
+
+    function isRenderableCompositeConfig(itemOrConfig) {
+        const config = itemOrConfig && itemOrConfig.config ? itemOrConfig.config : itemOrConfig;
+        if (!config) return false;
+        const type = normalizeCompositeGraphType(config.type);
+        const supportedTypes = ['pie', 'line', 'multi-line', 'bar', 'multi-bar', 'stacked-bar', 'h-bar', 'h-multi-bar', 'h-stacked-bar', 'combo', 'multi-combo', 'stacked-combo', 'table', 'list', 'timeline'];
+        if (!supportedTypes.includes(type)) return false;
+        if (['table', 'list', 'timeline'].includes(type)) return hasCompositeTextData(config);
+        return hasCompositeChartData(config);
+    }
+
     function populateMultiGraphPaletteSelects() {
         const options = ['<option value="__follow">공통 팔레트 따름</option>']
             .concat(Object.entries(PALETTE_PRESETS).map(([key, preset]) => `<option value="${escapeHtml(key)}">${escapeHtml(preset.label || key)}</option>`));
@@ -4292,7 +4315,7 @@
     function extractCompositeConfigFromState(state) {
         const labels = parseLabelSeries(String(getSnapshotControlValue(state, 'labelsInput', '') || ''));
         const expectedCount = labels.length || null;
-        return {
+        const config = {
             type: getSnapshotControlValue(state, 'chartType', 'pie'),
             title: String(getSnapshotControlValue(state, 'titleInput', '') || '').trim(),
             subtitle: String(getSnapshotControlValue(state, 'subInput', '') || '').trim(),
@@ -4305,6 +4328,14 @@
             footnote: String(getSnapshotControlValue(state, 'footnoteInput', '') || '').trim(),
             reporter: String(getSnapshotControlValue(state, 'nameInput', '박조비 기자') || '박조비 기자').trim()
         };
+
+        // 7·8번처럼 새로 늘린 탭에서 텍스트표 데이터를 먼저 넣었는데 chartType 상태 저장이 늦는 경우가 있어
+        // 그래프 데이터는 없고 텍스트형 데이터만 있으면 안전하게 텍스트표로 렌더링합니다.
+        const normalizedType = normalizeCompositeGraphType(config.type);
+        if (!['table', 'list', 'timeline'].includes(normalizedType) && !config.datasets.length && config.tableData) {
+            config.type = 'table';
+        }
+        return config;
     }
 
     function getPaletteFromStateSnapshot(state) {
@@ -4795,18 +4826,12 @@
         host.className = `multi-graph-layout ${gridLayoutMode}${gridLayoutMode === 'side' && graphCount % 2 === 1 ? ' odd-count' : ''}`;
         host.style.gridTemplateColumns = gridLayoutMode === 'side' ? 'repeat(2, minmax(0, 1fr))' : '1fr';
         host.innerHTML = '';
-        const supportedTypes = ['pie', 'line', 'multi-line', 'bar', 'multi-bar', 'stacked-bar', 'h-bar', 'h-multi-bar', 'h-stacked-bar', 'combo', 'multi-combo', 'stacked-combo', 'table', 'list', 'timeline'];
-        const invalidConfig = configs.find(item => {
-            const type = normalizeCompositeGraphType(item.config.type);
-            if (!supportedTypes.includes(type)) return true;
-            if (['table', 'list', 'timeline'].includes(type)) return !String(item.config.tableData || '').trim();
-            return !item.config.datasets.length;
-        });
-        if (invalidConfig || !configs.length) {
+        const renderableConfigs = configs.filter(item => isRenderableCompositeConfig(item));
+        if (!renderableConfigs.length) {
             host.innerHTML = `<div class="multi-graph-warning">복수 그래프 최종 미리보기는 차트형 그래프와 텍스트형 요소(텍스트표·리스트형·타임라인형) 조합을 지원합니다. 그래프 탭에는 그래프 데이터를 채우고, 텍스트형 탭에는 데이터 시트를 입력해 주세요.</div>`;
             return false;
         }
-        const renderSequence = configs.map((item, sequenceIndex) => ({
+        const renderSequence = renderableConfigs.map((item, sequenceIndex) => ({
             config: item.config,
             graphIndex: item.graphIndex,
             options: {
@@ -4826,7 +4851,7 @@
             }
         }));
         renderSequence.forEach(item => renderCompositeGraphCard(host, item.config, item.graphIndex, gridLayoutMode, item.options));
-        applyMultiEditorCardLayout(host, gridLayoutMode, graphCount);
+        applyMultiEditorCardLayout(host, gridLayoutMode, renderSequence.length);
         matchCompositeTitleHeights(host);
         fitAllCompositeTableStages();
         requestAnimationFrame(() => {
@@ -5370,16 +5395,12 @@
         host.className = `multi-graph-layout ${layoutMode}`;
         host.style.gridTemplateColumns = layoutMode === 'side' ? 'repeat(2, minmax(0, 1fr))' : '1fr';
         host.innerHTML = '';
-        const supportedTypes = ['pie', 'line', 'multi-line', 'bar', 'multi-bar', 'stacked-bar', 'h-bar', 'h-multi-bar', 'h-stacked-bar', 'combo', 'multi-combo', 'stacked-combo', 'table', 'list', 'timeline'];
-        const invalidConfig = [firstConfig, secondConfig].find(cfg => {
-            const type = normalizeCompositeGraphType(cfg.type);
-            if (!supportedTypes.includes(type)) return true;
-            if (['table', 'list', 'timeline'].includes(type)) return !String(cfg.tableData || '').trim();
-            return !cfg.datasets.length;
-        });
-        if (invalidConfig) { host.innerHTML = '<div class="multi-graph-warning">멀티 그래프 붙이기는 차트형 그래프와 텍스트형 요소(텍스트표·리스트형·타임라인형) 조합을 지원합니다. 그래프 데이터 또는 텍스트형 데이터를 넣어주세요.</div>'; return; }
-        renderCompositeGraphCard(host, firstConfig, 1, layoutMode);
-        renderCompositeGraphCard(host, secondConfig, 2, layoutMode);
+        const renderableConfigs = [firstConfig, secondConfig]
+            .map((config, index) => ({ config, graphIndex: index + 1 }))
+            .filter(item => isRenderableCompositeConfig(item.config));
+        if (!renderableConfigs.length) { host.innerHTML = '<div class="multi-graph-warning">멀티 그래프 붙이기는 차트형 그래프와 텍스트형 요소(텍스트표·리스트형·타임라인형) 조합을 지원합니다. 그래프 데이터 또는 텍스트형 데이터를 넣어주세요.</div>'; return; }
+        renderableConfigs.forEach(item => renderCompositeGraphCard(host, item.config, item.graphIndex, layoutMode));
+        applyMultiEditorCardLayout(host, layoutMode, renderableConfigs.length);
         matchCompositeTitleHeights(host);
     }
 
