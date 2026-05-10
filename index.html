@@ -675,6 +675,17 @@
         .multi-editor-count-control input#multiEditorGraphCount::-webkit-outer-spin-button,
         .multi-editor-count-control input#multiEditorGraphCount::-webkit-inner-spin-button { -webkit-appearance:auto; opacity:1; margin:0; }
         .multi-editor-count-control select#multiSaveJoinDirection { width:100% !important; min-width:0; max-width:100%; height:30px; margin:0; padding:3px 7px; border:1px solid #cfcfcf; border-radius:8px; font-weight:900; font-family:var(--main-font); font-size:12px; color:var(--ak-red); background:#fff; box-sizing:border-box; }
+        .multi-editor-card-width-control { display:none; width:100%; box-sizing:border-box; margin:3px 0 0; padding:3px 8px 4px; border-top:1px solid #d7d7d7; background:#f8f8f8; align-items:center; gap:7px; flex-wrap:nowrap; min-height:34px; }
+        .multi-editor-card-width-control label { margin:0; font-size:12px; font-weight:900; color:var(--ak-red); line-height:28px; white-space:nowrap; }
+        .multi-editor-card-width-control select { flex:1 1 auto; min-width:0; height:28px; margin:0; padding:2px 7px; border:1px solid #cfcfcf; border-radius:8px; font-weight:900; font-family:var(--main-font); font-size:12px; color:var(--ak-red); background:#fff; box-sizing:border-box; }
+        .multi-editor-card-width-help { display:none !important; }
+        .multi-graph-card.mixed-layout-draggable { cursor:grab; transition: box-shadow 0.12s ease, transform 0.12s ease; }
+        .multi-graph-card.mixed-layout-draggable:hover { box-shadow:0 0 0 3px rgba(230,30,43,0.10); }
+        .multi-graph-card.mixed-layout-dragging { opacity:0.55; transform:scale(0.985); }
+        .multi-graph-card.mixed-layout-drop-before { box-shadow:-6px 0 0 var(--ak-red), 0 0 0 3px rgba(230,30,43,0.16); }
+        .multi-graph-card.mixed-layout-drop-after { box-shadow:6px 0 0 var(--ak-red), 0 0 0 3px rgba(230,30,43,0.16); }
+        .multi-graph-card.mixed-layout-drop-full-before { box-shadow:0 -6px 0 var(--ak-red), 0 0 0 3px rgba(230,30,43,0.16); }
+        .multi-graph-card.mixed-layout-drop-full-after { box-shadow:0 6px 0 var(--ak-red), 0 0 0 3px rgba(230,30,43,0.16); }
         .multi-editor-count-control .count-input-stack { display:flex; flex-direction:column; align-items:center; gap:1px; width:64px; min-width:0; }
         .multi-editor-count-control .count-hint { font-size:9px; color:#888; font-weight:800; line-height:1; letter-spacing:-0.03em; white-space:nowrap; }
         .graph-editor-tab { flex:1 1 76px; min-width:76px; padding:0 8px; }
@@ -726,12 +737,20 @@
                     <span class="count-hint">최대 8개</span>
                 </span>
                 <label for="multiSaveJoinDirection">배치</label>
-                <select id="multiSaveJoinDirection" class="multi-editor-layout-select" onchange="syncMultiGraphOrderButton(); renderMultiGraphComposition(); updateExportSizeHint();">
+                <select id="multiSaveJoinDirection" class="multi-editor-layout-select" onchange="syncMultiGraphOrderButton(); refreshMultiCardWidthControlVisibility(); renderMultiGraphComposition(); updateExportSizeHint();">
                     <option value="side" selected>가로 2개씩</option>
                     <option value="stack">세로 1개씩</option>
+                    <option value="mixed">혼합(개별 설정)</option>
                 </select>
             </div>
             <div id="graphEditorTabList" class="graph-editor-tab-list"></div>
+            <div id="multiCardWidthControlGroup" class="multi-editor-card-width-control">
+                <label for="multiCardWidthMode">현재 배치</label>
+                <select id="multiCardWidthMode" onchange="handleMultiCardWidthModeChange()">
+                    <option value="half" selected>가로 2개용</option>
+                    <option value="full">세로 1개용</option>
+                </select>
+            </div>
         </div>
 
         <div class="ai-input-group">
@@ -764,19 +783,24 @@
         </div>
         <select id="chartType" onchange="handleChartTypeChange()">
             <option value="line">📈 단일 꺾은선 그래프</option>
+            <option value="multi-line">📉 다중 선 그래프</option>
+            <option value="area">📈 면적 그래프</option>
+            <option value="stacked-area">📈 누적 면적 그래프</option>
             <option value="bar">📊 (세로) 단일 막대 그래프</option>
             <option value="multi-bar">📊 (세로) 다중 막대 그래프</option>
             <option value="stacked-bar">📊 (세로) 누적 막대 그래프</option>
+            <option value="100-stacked-bar">📊 (세로) 100% 누적 막대 그래프</option>
             <option value="h-bar">▤ (가로) 단일 막대 그래프</option>
             <option value="h-multi-bar">▤ (가로) 다중 막대 그래프</option>
             <option value="h-stacked-bar">▤ (가로) 누적 막대 그래프</option>
-            <option value="multi-line">📉 다중 선 그래프</option>
+            <option value="h-100-stacked-bar">▤ (가로) 100% 누적 막대 그래프</option>
             <option value="combo">📈 선+막대 혼합 (막대 1 + 선 다중)</option>
             <option value="multi-combo">📈 다중막대+선 혼합 (막대 2 + 선 다중)</option>
             <option value="stacked-combo">📉 누적막대+선 혼합</option>
-            <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
+                                    <option value="scatter">🔵 산점도</option>
+                                                <option value="pie" selected>📋 원 그래프 (도넛 차트)</option>
             <option value="table">📋 텍스트 표 (엑셀 연동/이중표 지원)</option>
-            <option value="list">📝 리스트형 인포그래픽 (카드형)</option>
+                        <option value="list">📝 리스트형 인포그래픽 (카드형)</option>
             <option value="timeline">⏳ 타임라인형 표 (흐름 추이)</option>
             <option disabled>──────────</option>
         </select>
@@ -1178,6 +1202,16 @@
                     <input type="text" id="y1Max" placeholder="우측축 최대값">
                 </div>
             </div>
+        </div>
+
+        <div class="data-group" id="areaShapeSettingGroup" style="display:none;">
+            <label style="color:var(--ak-red); font-size:14px; display:block;">📈 면적 그래프 배치</label>
+            <label style="margin-top:8px;">왼쪽/오른쪽 여백 추가</label>
+            <div class="slider-group">
+                <input type="range" id="areaHorizontalPadding" min="0" max="40" step="5" value="5" oninput="updateAreaHorizontalPaddingDisplay(); updateOutput();">
+                <span id="areaHorizontalPaddingDisplay" class="font-size-display">5%</span>
+            </div>
+            <span class="help-text" style="margin-top:6px;">면적 그래프의 시작점과 끝점이 좌우 끝에 붙지 않도록 양쪽에 같은 비율의 빈 여백을 추가합니다.</span>
         </div>
 
 
@@ -1852,14 +1886,15 @@
 
     function getChartUiProfile(typeOverride) {
         const type = typeOverride || (document.getElementById('chartType') ? document.getElementById('chartType').value : '');
-        const isTextOnly = ['table', 'list', 'timeline'].includes(type);
+        const tableBackedCharts = [];
+        const isTextOnly = ['table', 'list', 'timeline'].includes(type) || tableBackedCharts.includes(type);
         const isPie = type === 'pie';
-        const isCombo = type.includes('combo') || type === 'chart-table';
+        const isCombo = type.includes('combo');
         const isStacked = type.includes('stacked');
         const isHorizontal = type.startsWith('h-');
-        const isMulti = type.includes('multi-') || isStacked || isCombo || type === 'chart-table';
-        const isLineOnly = type === 'line' || type === 'multi-line';
-        const isBarLike = type.includes('bar') || isCombo || type === 'chart-table';
+        const isMulti = type.includes('multi-') || isStacked || isCombo || type === 'stacked-area';
+        const isLineOnly = ['line', 'multi-line', 'area', 'stacked-area'].includes(type);
+        const isBarLike = type.includes('bar') || isCombo;
         return { type, isTextOnly, isChart: !isTextOnly, isPie, isCombo, isStacked, isHorizontal, isMulti, isLineOnly, isBarLike };
     }
 
@@ -1874,11 +1909,15 @@
 
     function refreshChartAwareVisibility() {
         const profile = getChartUiProfile();
+        const isAreaType = isAreaChartType(profile.type);
         updateChartTypeTip(profile);
+        refreshAreaShapeControls();
 
         setDisplayById('referenceLabelStyleGroup', profile.isChart, 'block');
         setDisplayById('koreanNumberGroup', profile.isChart, 'block');
-        setDisplayById('highlightSettingGroup', profile.isChart && !profile.isLineOnly, 'block');
+        // 면적/누적면적은 SVG 렌더링에서 수치 라벨을 직접 그리므로
+        // 데이터 글자 크기·색상·수치 표기·강조 메뉴를 다시 노출합니다.
+        setDisplayById('highlightSettingGroup', profile.isChart && (!profile.isLineOnly || isAreaType), 'block');
         setDisplayById('labelSettingGroup', profile.isChart, 'block');
         setDisplayById('datasetLabelSizeGroup', profile.isChart, 'block');
         setDisplayById('datasetLabelColorGroup', profile.isChart, 'block');
@@ -1955,7 +1994,7 @@
         dataEditSection.body.appendChild(createPreviewEditGuideCard());
         appendExisting(designSection.body, [
             '#fontSizeSettingGroup', '#datasetLabelSizeGroup', '#datasetLabelColorGroup',
-            '#labelSettingGroup', '#highlightSettingGroup', '#axisSettingGroup', '#columnWidthSettingGroup', '#tableColorSettingGroup',
+            '#labelSettingGroup', '#highlightSettingGroup', '#axisSettingGroup', '#areaShapeSettingGroup', '#columnWidthSettingGroup', '#tableColorSettingGroup',
             '#referenceLabelStyleGroup', '#palettePresetGroup', '#koreanNumberGroup'
         ]);
         appendExisting(exportSection.body, [
@@ -2411,6 +2450,7 @@
         }
         applyActiveGraphEditorInputColor();
         syncPaletteTargetHint();
+        refreshMultiCardWidthControlVisibility();
     }
 
     function clearGraphTabDragVisuals() {
@@ -2575,7 +2615,40 @@
 
     function getMultiSaveJoinDirection() {
         const el = document.getElementById('multiSaveJoinDirection');
-        return el && el.value === 'stack' ? 'stack' : 'side';
+        if (!el) return 'side';
+        if (el.value === 'stack') return 'stack';
+        if (el.value === 'mixed') return 'mixed';
+        return 'side';
+    }
+
+    function getCurrentMultiCardWidthMode() {
+        const el = document.getElementById('multiCardWidthMode');
+        return el && el.value === 'full' ? 'full' : 'half';
+    }
+
+    function getSnapshotMultiCardWidthMode(state) {
+        const payload = state && state.multiCardWidthMode;
+        if (payload && typeof payload === 'object' && 'value' in payload) {
+            return payload.value === 'full' ? 'full' : 'half';
+        }
+        return 'half';
+    }
+
+    function refreshMultiCardWidthControlVisibility() {
+        const group = document.getElementById('multiCardWidthControlGroup');
+        const select = document.getElementById('multiCardWidthMode');
+        if (!group || !select) return;
+        const isMixed = isMultiEditorEnabled() && getMultiSaveJoinDirection() === 'mixed';
+        group.style.display = isMixed ? 'flex' : 'none';
+        select.disabled = !isMixed;
+        select.title = '현재 선택된 그래프의 이어붙이기 폭을 설정합니다.';
+    }
+
+    function handleMultiCardWidthModeChange() {
+        if (isMultiEditorEnabled() && !isRestoringState) {
+            graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+        }
+        renderMultiGraphComposition();
     }
 
     function isMultiGraphOrderSwapped() {
@@ -3225,6 +3298,25 @@
         };
     }
 
+
+    function buildScatterPointLabelEditState(dataIndex, title = '산점도 데이터명 수정') {
+        const dataset = myChart && myChart.data && Array.isArray(myChart.data.datasets) ? myChart.data.datasets[0] : null;
+        const sourceMap = dataset && Array.isArray(dataset._sourceDataIndexMap) ? dataset._sourceDataIndexMap : null;
+        const sourceIndex = sourceMap && sourceMap[dataIndex] !== undefined && sourceMap[dataIndex] !== null ? sourceMap[dataIndex] : dataIndex;
+        const rows = parseSimpleTableRows(document.getElementById('tableDataInput') ? document.getElementById('tableDataInput').value : '');
+        const row = rows[sourceIndex + 1] || [];
+        const labelFromChart = dataset && Array.isArray(dataset._pointLabels) ? dataset._pointLabels[dataIndex] : '';
+        const currentLabel = String(row[0] || labelFromChart || `항목 ${sourceIndex + 1}`);
+        return {
+            kind: 'scatter-label',
+            dataIndex,
+            sourceIndex,
+            value: currentLabel,
+            title,
+            sub: `산점도 ${sourceIndex + 1}번 · 현재 데이터명`
+        };
+    }
+
     function getChartLegendNameHitFromEvent(event) {
         if (!myChart || !myChart.legend || !myChart.data || !Array.isArray(myChart.data.datasets)) return null;
         const legend = myChart.legend;
@@ -3315,6 +3407,55 @@
         const threshold = Math.max(18, Math.min(90, stepPixels * 0.48));
         if (nearestIndex < 0 || nearestDistance > threshold) return null;
         return buildChartLabelEditState(nearestIndex, 'X축 항목명 수정');
+    }
+
+
+    function getScatterDataLabelHitFromEvent(event) {
+        const chartType = document.getElementById('chartType')?.value || '';
+        if (normalizeCompositeGraphType(chartType) !== 'scatter') return null;
+        if (!myChart || !myChart.data || !Array.isArray(myChart.data.datasets)) return null;
+        const dataset = myChart.data.datasets[0];
+        if (!dataset || !Array.isArray(dataset._pointLabels)) return null;
+        const displayType = getDatasetLabelDisplayType(0);
+        if (displayType === 'none') return null;
+        const selectedTargets = getSelectedLabelDisplayTargets();
+        const meta = myChart.getDatasetMeta ? myChart.getDatasetMeta(0) : null;
+        if (!meta || !Array.isArray(meta.data)) return null;
+        const canvas = myChart.canvas || document.getElementById('myChart');
+        if (!canvas) return null;
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+        const ctx = myChart.ctx;
+
+        for (let dataIndex = 0; dataIndex < meta.data.length; dataIndex++) {
+            if (displayType === 'selected' && !selectedTargets.has(getLabelDisplayTargetValue(0, dataIndex))) continue;
+            const point = meta.data[dataIndex];
+            const label = String(dataset._pointLabels[dataIndex] || '').trim();
+            if (!label || !point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
+            const baseFontSize = getDatasetLabelFontSize(0);
+            const pointRadius = Number(point.options && point.options.radius) || 6;
+            const fontSize = Math.max(10, baseFontSize);
+            let textWidth = label.length * fontSize * 0.62;
+            if (ctx && typeof ctx.measureText === 'function') {
+                ctx.save();
+                ctx.font = `bold ${fontSize}px ${globalFont || 'sans-serif'}`;
+                textWidth = ctx.measureText(label).width;
+                ctx.restore();
+            }
+            const width = Math.max(42, textWidth + 18);
+            const height = Math.max(24, fontSize * 1.45);
+            const centerX = point.x;
+            const bottomY = point.y - pointRadius - 8;
+            const left = centerX - width / 2;
+            const right = centerX + width / 2;
+            const top = bottomY - height;
+            const bottom = bottomY + 8;
+            if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom) {
+                return buildScatterPointLabelEditState(dataIndex);
+            }
+        }
+        return null;
     }
 
     let previewQuickEditState = null;
@@ -3463,6 +3604,39 @@
             targetInput.value = valueText;
             updateOutput();
             recordHistoryCheckpoint('그래프 위 데이터명 직접 수정');
+            hidePreviewQuickEditor(true);
+            hidePreviewHoverHint();
+            return;
+        }
+
+        if (previewQuickEditState.kind === 'scatter-label') {
+            const sourceIndex = Number(previewQuickEditState.sourceIndex ?? previewQuickEditState.dataIndex ?? 0);
+            const ok = updateTableDataCell(sourceIndex + 1, 0, valueText);
+            if (!ok) return;
+            updateOutput();
+            recordHistoryCheckpoint('산점도 데이터명 직접 수정');
+            hidePreviewQuickEditor(true);
+            hidePreviewHoverHint();
+            return;
+        }
+
+        if (previewQuickEditState.kind === 'chart-value') {
+            const numericValue = Number(valueText.replace(/,/g, ''));
+            if (!Number.isFinite(numericValue)) {
+                alert('숫자만 입력해 주세요. 예: 1234 또는 -5.6');
+                input.focus();
+                input.select();
+                return;
+            }
+            const targetInput = document.getElementById('dataInput' + previewQuickEditState.sourceInputIndex);
+            if (!targetInput) return;
+            const values = splitEditableDataSeries(targetInput.value);
+            const targetIndex = Number(previewQuickEditState.dataIndex || 0);
+            while (values.length <= targetIndex) values.push('');
+            values[targetIndex] = String(numericValue);
+            targetInput.value = values.join(', ');
+            updateOutput();
+            recordHistoryCheckpoint('면적 그래프 수치 직접 수정');
             hidePreviewQuickEditor(true);
             hidePreviewHoverHint();
             return;
@@ -3748,14 +3922,44 @@
         if (document.activeElement === input) return;
 
         const dataset = myChart.data.datasets[hit.datasetIndex] || {};
+        const currentChartType = normalizeCompositeGraphType(document.getElementById('chartType')?.value || '');
         const sourceInputIndex = dataset._sourceInputIndex || (hit.datasetIndex + 1);
-        const label = (myChart.data.labels && myChart.data.labels[hit.index]) ? myChart.data.labels[hit.index] : '항목 ' + (hit.index + 1);
+        const sourceDataIndexMap = Array.isArray(dataset._sourceDataIndexMap) ? dataset._sourceDataIndexMap : null;
+        const mappedDataIndex = sourceDataIndexMap ? sourceDataIndexMap[hit.index] : hit.index;
+        if (mappedDataIndex === null || mappedDataIndex === undefined) return;
+        const pointLabels = Array.isArray(dataset._pointLabels) ? dataset._pointLabels : null;
+        const label = pointLabels
+            ? (pointLabels[mappedDataIndex] || `항목 ${mappedDataIndex + 1}`)
+            : ((myChart.data.labels && myChart.data.labels[hit.index]) ? myChart.data.labels[hit.index] : '항목 ' + (mappedDataIndex + 1));
         const nameInput = document.getElementById('dataName' + sourceInputIndex);
         const datasetName = dataset.label || (nameInput ? nameInput.value : '') || '데이터 ' + sourceInputIndex;
         const rawValue = Array.isArray(dataset.data) ? dataset.data[hit.index] : '';
-        const stateKey = sourceInputIndex + '|' + hit.datasetIndex + '|' + hit.index;
 
-        const currentChartType = document.getElementById('chartType')?.value || '';
+        if (currentChartType === 'scatter' && rawValue && typeof rawValue === 'object') {
+            const xValue = Number(rawValue.x);
+            const yValue = Number(rawValue.y);
+            const stateKey = `scatter|${hit.datasetIndex}|${mappedDataIndex}`;
+            title.textContent = '산점도 데이터 수정 · ' + label;
+            sub.textContent = `현재 X ${formatConciseAxisTick(xValue, { koreanNumberApply: false })}, Y ${formatConciseAxisTick(yValue, { koreanNumberApply: false })}`;
+            if (!chartQuickEditState || chartQuickEditState.key !== stateKey) {
+                input.value = `${Number.isFinite(xValue) ? xValue : ''}, ${Number.isFinite(yValue) ? yValue : ''}`;
+            }
+            chartQuickEditState = {
+                key: stateKey,
+                kind: 'scatter-point',
+                datasetIndex: hit.datasetIndex,
+                dataIndex: mappedDataIndex,
+                sourceInputIndex,
+                label,
+                datasetName
+            };
+            editor.style.display = 'block';
+            positionChartQuickEditor(editor, event);
+            clearTimeout(chartQuickEditHideTimer);
+            return;
+        }
+
+        const stateKey = sourceInputIndex + '|' + hit.datasetIndex + '|' + mappedDataIndex;
         title.textContent = (currentChartType === 'pie' ? '원그래프 숫자 수정' : '데이터값 수정') + ' · ' + label;
         sub.textContent = datasetName + ' · 현재 데이터값 ' + formatQuickEditValue(rawValue);
         if (!chartQuickEditState || chartQuickEditState.key !== stateKey) {
@@ -3764,7 +3968,7 @@
         chartQuickEditState = {
             key: stateKey,
             datasetIndex: hit.datasetIndex,
-            dataIndex: hit.index,
+            dataIndex: mappedDataIndex,
             sourceInputIndex,
             label,
             datasetName
@@ -3778,6 +3982,42 @@
         const input = document.getElementById('chartQuickEditInput');
         if (!input || !chartQuickEditState) return;
         const valueText = String(input.value || '').trim();
+
+        if (chartQuickEditState.kind === 'scatter-point') {
+            const parts = valueText.split(/[,\t/ ]+/).map(part => part.trim()).filter(Boolean);
+            if (parts.length < 2) {
+                alert('X값과 Y값을 쉼표로 구분해 입력해 주세요. 예: 36000, 0.72');
+                input.focus();
+                input.select();
+                return;
+            }
+            const xValue = Number(parts[0].replace(/,/g, ''));
+            const yValue = Number(parts[1].replace(/,/g, ''));
+            if (!Number.isFinite(xValue) || !Number.isFinite(yValue)) {
+                alert('X값과 Y값은 숫자로 입력해 주세요. 예: 36000, 0.72');
+                input.focus();
+                input.select();
+                return;
+            }
+            const tableInput = document.getElementById('tableDataInput');
+            if (!tableInput) return;
+            const rows = String(tableInput.value || '').split(/\r?\n/);
+            const rowIndex = chartQuickEditState.dataIndex + 1;
+            while (rows.length <= rowIndex) rows.push('');
+            const delimiter = '\t';
+            let cols = rows[rowIndex] ? rows[rowIndex].split(/\t|,/).map(col => col.trim()) : [];
+            while (cols.length < 3) cols.push('');
+            cols[0] = cols[0] || chartQuickEditState.label || `항목 ${chartQuickEditState.dataIndex + 1}`;
+            cols[1] = String(xValue);
+            cols[2] = String(yValue);
+            rows[rowIndex] = cols.join(delimiter);
+            tableInput.value = rows.join('\n');
+            updateOutput();
+            recordHistoryCheckpoint('산점도 데이터 직접 수정');
+            hideChartQuickEditor(true);
+            return;
+        }
+
         const numericValue = Number(valueText.replace(/,/g, ''));
         if (!Number.isFinite(numericValue)) {
             alert('숫자만 입력해 주세요. 예: 1234 또는 -5.6');
@@ -3864,7 +4104,7 @@
 
         canvas.addEventListener('mousemove', (event) => {
             const type = document.getElementById('chartType')?.value || '';
-            if (type === 'table' || type === 'list' || type === 'timeline') {
+            if (isTextSheetType(type)) {
                 hideChartQuickEditor(true);
                 hidePreviewHoverHint();
                 canvas.style.cursor = '';
@@ -3888,6 +4128,15 @@
 
             const legendHit = getChartLegendNameHitFromEvent(event);
             if (legendHit) {
+                hideChartQuickEditor(true);
+                hidePreviewQuickEditor(true);
+                canvas.style.cursor = 'text';
+                showPreviewHoverHint(event, DATASET_NAME_EDIT_HOVER_MESSAGE);
+                return;
+            }
+
+            const scatterLabelHit = getScatterDataLabelHitFromEvent(event);
+            if (scatterLabelHit) {
                 hideChartQuickEditor(true);
                 hidePreviewQuickEditor(true);
                 canvas.style.cursor = 'text';
@@ -3940,6 +4189,14 @@
             if (legendHit) {
                 hideChartQuickEditor(true);
                 showPreviewQuickEditor(event, legendHit);
+                focusPreviewQuickEditInput();
+                return;
+            }
+
+            const scatterLabelHit = getScatterDataLabelHitFromEvent(event);
+            if (scatterLabelHit) {
+                hideChartQuickEditor(true);
+                showPreviewQuickEditor(event, scatterLabelHit);
                 focusPreviewQuickEditInput();
                 return;
             }
@@ -4049,6 +4306,11 @@
         if (raw === 'list' || raw.includes('list') || raw.includes('리스트')) return 'list';
         if (raw === 'table' || raw.includes('table') || raw.includes('텍스트표') || raw.includes('텍스트 표')) return 'table';
 
+        if (raw.includes('h-100-stacked-bar') || raw.includes('가로형 100') || raw.includes('가로형 비율형 누적')) return 'h-100-stacked-bar';
+        if (raw.includes('100-stacked-bar') || raw.includes('100% 누적') || raw.includes('비율형 누적')) return '100-stacked-bar';
+        if (raw.includes('stacked-area') || raw.includes('누적 면적')) return 'stacked-area';
+        if (raw.includes('area') || raw.includes('면적')) return 'area';
+
         if (raw.includes('stacked-combo') || raw.includes('누적막대+선')) return 'stacked-combo';
         if (raw.includes('multi-combo') || raw.includes('다중막대+선')) return 'multi-combo';
         if (raw.includes('combo') || raw.includes('혼합')) return 'combo';
@@ -4056,7 +4318,7 @@
         if (raw.includes('h-multi-bar') || raw.includes('가로형 다중막대')) return 'h-multi-bar';
         if (raw.includes('stacked-bar') || raw.includes('누적막대')) return 'stacked-bar';
         if (raw.includes('multi-bar') || raw.includes('다중막대')) return 'multi-bar';
-        if (raw.includes('multi-line') || raw.includes('다중선')) return 'multi-line';
+        if (raw.includes('multi-line') || raw.includes('multi line') || raw.includes('multiple-line') || raw.includes('multiple line') || raw.includes('다중선') || raw.includes('다중 선') || raw.includes('복수선') || raw.includes('복수 선') || raw.includes('여러 선')) return 'multi-line';
         if (raw.includes('line') || raw.includes('선')) return 'line';
         if (raw.includes('h-bar') || raw.includes('가로형 막대')) return 'h-bar';
         if (raw.includes('bar') || raw.includes('막대')) return 'bar';
@@ -4074,6 +4336,7 @@
             labels: [],
             datasetNames: ['', '', '', ''],
             datasets: [],
+            tableData: '',
             footnote: '',
             reporter: getPrimaryPreviewReporterName()
         };
@@ -4114,6 +4377,7 @@
         result.title = getBy(/^제목$/i, /title/i);
         result.subtitle = getBy(/^부제목$/i, /^단위/, /출처/, /subtitle/i);
         result.footnote = getBy(/^하단주석$/i, /^주석$/i, /footnote/i);
+        result.tableData = getBy(/^표데이터$/i, /^table\s*data$/i, /^tabledata$/i);
         result.reporter = getBy(/^기자$/i, /바이라인/i) || result.reporter;
 
         const labelsText = getBy(/^X축$/i, /^항목$/i, /라벨/i, /labels?/i);
@@ -4151,13 +4415,17 @@
     function getCompositeCardHeight(type, layoutMode) {
         const normalized = normalizeCompositeGraphType(type);
         if (layoutMode === 'side') {
+            // 면적/누적면적은 SVG viewBox가 실제 카드 폭·높이와 맞아야 축소 여백 없이 보입니다.
+            // 다른 그래프보다 작아 보이지 않도록 사이드 카드 높이를 조금 더 확보합니다.
+            if (normalized === 'area' || normalized === 'stacked-area') return 300;
             if (normalized === 'pie') return 252;
-            if (normalized === 'table') return 268;
+            if (['table'].includes(normalized)) return 268;
             return 268;
         }
+        if (normalized === 'area' || normalized === 'stacked-area') return 330;
         if (normalized === 'pie') return 300;
-        if (normalized === 'table') return 296;
-        if (normalized.includes('combo') || normalized.includes('multi')) return 316;
+        if (['table'].includes(normalized)) return 296;
+        if (normalized.includes('combo') || normalized.includes('multi') || normalized.includes('stacked')) return 316;
         return 296;
     }
 
@@ -4189,9 +4457,18 @@
         const config = itemOrConfig && itemOrConfig.config ? itemOrConfig.config : itemOrConfig;
         if (!config) return false;
         const type = normalizeCompositeGraphType(config.type);
-        const supportedTypes = ['pie', 'line', 'multi-line', 'bar', 'multi-bar', 'stacked-bar', 'h-bar', 'h-multi-bar', 'h-stacked-bar', 'combo', 'multi-combo', 'stacked-combo', 'table', 'list', 'timeline'];
+        const supportedTypes = [
+            'pie', 'line', 'multi-line', 'area', 'stacked-area',
+            'bar', 'multi-bar', 'stacked-bar', '100-stacked-bar',
+            'h-bar', 'h-multi-bar', 'h-stacked-bar', 'h-100-stacked-bar',
+            'combo', 'multi-combo', 'stacked-combo',
+            'scatter',
+            'table', 'list', 'timeline'
+        ];
         if (!supportedTypes.includes(type)) return false;
-        if (['table', 'list', 'timeline'].includes(type)) return true;
+        if (['table', 'list', 'timeline', 'scatter'].includes(type)) {
+            return !!String(config.tableData || '').trim();
+        }
         return hasCompositeChartData(config);
     }
 
@@ -4346,7 +4623,7 @@
     }
 
     function buildCompositeDatasets(config, palette, chartType, paletteKey = activePaletteKey) {
-        const labels = getCompositeDisplayLabels(config);
+        let labels = getCompositeDisplayLabels(config);
         const datasets = Array.isArray(config.datasets) ? config.datasets.filter(arr => Array.isArray(arr) && arr.length) : [];
         const names = Array.isArray(config.datasetNames) ? config.datasetNames : [];
         const type = normalizeCompositeGraphType(chartType);
@@ -4361,7 +4638,7 @@
                 borderWidth: 2
             }];
         }
-        if (type === 'line' || type === 'multi-line') {
+        if (type === 'line' || type === 'multi-line' || type === 'area' || type === 'stacked-area') {
             const lineColors = (palette.line || palette.bar || [palette.main]).slice();
             if (datasets.length === 1) {
                 lineColors[0] = palette.main || lineColors[0];
@@ -4373,7 +4650,7 @@
                     label: names[index] || `데이터 ${index + 1}`,
                     data: series,
                     borderColor: color,
-                    backgroundColor: 'transparent',
+                    backgroundColor: (type === 'area' || type === 'stacked-area') ? mixPieColor(color, '#ffffff', 0.72) : 'transparent',
                     pointBackgroundColor: '#ffffff',
                     pointBorderColor: color,
                     pointBorderWidth: 2,
@@ -4381,7 +4658,8 @@
                     tension: 0.1,
                     pointRadius: 4.5,
                     pointHoverRadius: 4.5,
-                    fill: false
+                    fill: (type === 'area' || type === 'stacked-area'),
+                    stack: type === 'stacked-area' ? 'area-stack' : undefined
                 };
             });
         }
@@ -4409,9 +4687,11 @@
                 };
             });
         }
-        const isHorizontal = type === 'h-bar' || type === 'h-multi-bar' || type === 'h-stacked-bar';
-        const isStacked = type === 'stacked-bar' || type === 'h-stacked-bar';
-        return datasets.map((series, index) => ({
+        const isHundredStacked = type === '100-stacked-bar' || type === 'h-100-stacked-bar';
+        const barDatasets = isHundredStacked ? normalizeToHundredPercent(datasets) : datasets;
+        const isHorizontal = type === 'h-bar' || type === 'h-multi-bar' || type === 'h-stacked-bar' || type === 'h-100-stacked-bar';
+        const isStacked = type === 'stacked-bar' || type === 'h-stacked-bar' || isHundredStacked;
+        return barDatasets.map((series, index) => ({
             type: 'bar',
             label: names[index] || `데이터 ${index + 1}`,
             data: series,
@@ -4575,7 +4855,7 @@
         return layoutMode === 'stack' ? 'stack' : 'side';
     }
 
-    function applyMultiEditorCardLayout(host, layoutMode, graphCount) {
+    function applyMultiEditorCardLayout(host, layoutMode, graphCount, cardWidthModes = []) {
         if (!host) return;
         const cards = Array.from(host.children || []).filter(el => el.classList && el.classList.contains('multi-graph-card'));
         if (layoutMode === 'side') {
@@ -4597,21 +4877,39 @@
                 lastCard.style.marginLeft = 'auto';
                 lastCard.style.marginRight = 'auto';
             }
-        } else {
-            host.style.display = 'grid';
-            host.style.flexWrap = '';
-            host.style.gap = '18px';
-            host.style.gridTemplateColumns = '1fr';
-            cards.forEach(card => {
-                card.style.flex = '';
-                card.style.width = '100%';
-                card.style.maxWidth = '';
+            return;
+        }
+        if (layoutMode === 'mixed') {
+            host.style.display = 'flex';
+            host.style.flexWrap = 'wrap';
+            host.style.gap = '16px';
+            host.style.gridTemplateColumns = '';
+            cards.forEach((card, index) => {
+                const widthMode = cardWidthModes[index] === 'full' ? 'full' : 'half';
+                const isFull = widthMode === 'full';
+                card.style.flex = isFull ? '0 0 100%' : '0 0 calc(50% - 8px)';
+                card.style.width = isFull ? '100%' : 'calc(50% - 8px)';
+                card.style.maxWidth = isFull ? '100%' : 'calc(50% - 8px)';
                 card.style.gridColumn = '';
                 card.style.justifySelf = '';
                 card.style.marginLeft = '0';
                 card.style.marginRight = '0';
             });
+            return;
         }
+        host.style.display = 'grid';
+        host.style.flexWrap = '';
+        host.style.gap = '18px';
+        host.style.gridTemplateColumns = '1fr';
+        cards.forEach(card => {
+            card.style.flex = '';
+            card.style.width = '100%';
+            card.style.maxWidth = '';
+            card.style.gridColumn = '';
+            card.style.justifySelf = '';
+            card.style.marginLeft = '0';
+            card.style.marginRight = '0';
+        });
     }
 
     function parseSnapshotTableColumnColors(state) {
@@ -4930,6 +5228,118 @@
         document.querySelectorAll('.multi-card-table-stage').forEach(stage => fitCompositeTableStage(stage));
     }
 
+    let mixedLayoutDraggingGraphIndex = null;
+
+    function clearMixedLayoutDropClasses(host = null) {
+        const root = host || document.getElementById('multiGraphLayoutWrap') || document;
+        root.querySelectorAll('.mixed-layout-dragging, .mixed-layout-drop-before, .mixed-layout-drop-after, .mixed-layout-drop-full-before, .mixed-layout-drop-full-after').forEach(card => {
+            card.classList.remove('mixed-layout-dragging', 'mixed-layout-drop-before', 'mixed-layout-drop-after', 'mixed-layout-drop-full-before', 'mixed-layout-drop-full-after');
+        });
+    }
+
+    function getMixedLayoutDropPlan(event, card) {
+        const rect = card.getBoundingClientRect();
+        const yRatio = rect.height ? (event.clientY - rect.top) / rect.height : 0.5;
+        const xRatio = rect.width ? (event.clientX - rect.left) / rect.width : 0.5;
+        if (yRatio < 0.28) return { position: 'before', widthMode: 'full', cssClass: 'mixed-layout-drop-full-before' };
+        if (yRatio > 0.72) return { position: 'after', widthMode: 'full', cssClass: 'mixed-layout-drop-full-after' };
+        return { position: xRatio < 0.5 ? 'before' : 'after', widthMode: 'half', cssClass: xRatio < 0.5 ? 'mixed-layout-drop-before' : 'mixed-layout-drop-after' };
+    }
+
+    function setGraphStateCardWidthMode(state, mode) {
+        if (!state || typeof state !== 'object') return;
+        state.multiCardWidthMode = { type: 'select-one', value: mode === 'full' ? 'full' : 'half' };
+    }
+
+    function applyMixedLayoutDrop(sourceIndex, targetIndex, plan) {
+        const count = getMultiEditorGraphCount();
+        const source = Math.max(1, Math.min(count, parseInt(sourceIndex, 10) || 1));
+        const target = Math.max(1, Math.min(count, parseInt(targetIndex, 10) || 1));
+        if (!isMultiEditorEnabled() || getMultiSaveJoinDirection() !== 'mixed') return;
+        ensureGraphEditorStatesInitialized();
+        graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+        syncReporterNameAcrossMultiEditorStates();
+
+        const oldActive = activeGraphEditorIndex;
+        const items = [];
+        for (let index = 1; index <= count; index++) {
+            items.push({ oldIndex: index, state: graphEditorStates[index] ? JSON.parse(JSON.stringify(graphEditorStates[index])) : serializeGraphEditorState() });
+        }
+        const sourcePos = items.findIndex(item => item.oldIndex === source);
+        const targetItem = items.find(item => item.oldIndex === target);
+        if (sourcePos < 0 || !targetItem) return;
+        const moved = items[sourcePos];
+        setGraphStateCardWidthMode(moved.state, plan && plan.widthMode === 'full' ? 'full' : 'half');
+        if (plan && plan.widthMode === 'half' && targetItem) setGraphStateCardWidthMode(targetItem.state, 'half');
+
+        if (source !== target) {
+            items.splice(sourcePos, 1);
+            const targetPosAfterRemoval = items.findIndex(item => item.oldIndex === target);
+            let insertAt = targetPosAfterRemoval < 0 ? items.length : targetPosAfterRemoval;
+            if (plan && plan.position === 'after') insertAt += 1;
+            insertAt = Math.max(0, Math.min(items.length, insertAt));
+            items.splice(insertAt, 0, moved);
+        }
+
+        items.forEach((item, index) => { graphEditorStates[index + 1] = item.state; });
+        const activeItemIndex = items.findIndex(item => item.oldIndex === oldActive);
+        activeGraphEditorIndex = activeItemIndex >= 0 ? activeItemIndex + 1 : Math.min(count, source);
+        const activeState = graphEditorStates[activeGraphEditorIndex];
+        if (activeState) restoreGraphEditorState(activeState, { skipSyncTabs: true });
+        syncGraphEditorTabs();
+        renderMultiGraphComposition();
+        recordHistoryCheckpoint('혼합 배치 드래그 변경');
+    }
+
+    function bindMixedLayoutCardDragging(host) {
+        if (!host) return;
+        const enabled = isMultiEditorEnabled() && getMultiSaveJoinDirection() === 'mixed';
+        const cards = Array.from(host.children || []).filter(el => el.classList && el.classList.contains('multi-graph-card'));
+        cards.forEach(card => {
+            if (!enabled) {
+                card.draggable = false;
+                card.classList.remove('mixed-layout-draggable');
+                return;
+            }
+            card.draggable = true;
+            card.classList.add('mixed-layout-draggable');
+            card.title = (card.title ? card.title + ' · ' : '') + '혼합 배치: 드래그해서 순서와 전폭/반폭을 바꿀 수 있습니다.';
+            card.addEventListener('dragstart', event => {
+                mixedLayoutDraggingGraphIndex = parseInt(card.dataset.graphIndex, 10) || null;
+                if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', String(mixedLayoutDraggingGraphIndex || ''));
+                }
+                card.classList.add('mixed-layout-dragging');
+            });
+            card.addEventListener('dragover', event => {
+                if (!mixedLayoutDraggingGraphIndex) return;
+                event.preventDefault();
+                if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+                clearMixedLayoutDropClasses(host);
+                const plan = getMixedLayoutDropPlan(event, card);
+                card.classList.add(plan.cssClass);
+            });
+            card.addEventListener('dragleave', () => {
+                card.classList.remove('mixed-layout-drop-before', 'mixed-layout-drop-after', 'mixed-layout-drop-full-before', 'mixed-layout-drop-full-after');
+            });
+            card.addEventListener('drop', event => {
+                if (!mixedLayoutDraggingGraphIndex) return;
+                event.preventDefault();
+                const source = parseInt(event.dataTransfer && event.dataTransfer.getData('text/plain'), 10) || mixedLayoutDraggingGraphIndex;
+                const target = parseInt(card.dataset.graphIndex, 10) || source;
+                const plan = getMixedLayoutDropPlan(event, card);
+                clearMixedLayoutDropClasses(host);
+                mixedLayoutDraggingGraphIndex = null;
+                applyMixedLayoutDrop(source, target, plan);
+            });
+            card.addEventListener('dragend', () => {
+                mixedLayoutDraggingGraphIndex = null;
+                clearMixedLayoutDropClasses(host);
+            });
+        });
+    }
+
     function renderMultiEditorJoinedCards(host, statesOrLeftState, maybeLayoutMode, maybeLegacyLayoutMode) {
         const isLegacyCall = !Array.isArray(statesOrLeftState);
         const stateItems = isLegacyCall
@@ -4940,41 +5350,50 @@
             : statesOrLeftState;
         const layoutMode = isLegacyCall ? maybeLegacyLayoutMode : maybeLayoutMode;
         const graphCount = stateItems.length || getMultiEditorGraphCount();
-        const gridLayoutMode = getMultiEditorGridLayoutMode(layoutMode, graphCount);
+        const defaultLayoutMode = getMultiEditorGridLayoutMode(layoutMode === 'mixed' ? 'side' : layoutMode, graphCount);
         const configs = stateItems.map(item => ({
             graphIndex: item.graphIndex,
             state: item.state,
             config: extractCompositeConfigFromState(item.state)
         }));
-        host.className = `multi-graph-layout ${gridLayoutMode}${gridLayoutMode === 'side' && graphCount % 2 === 1 ? ' odd-count' : ''}`;
-        host.style.gridTemplateColumns = gridLayoutMode === 'side' ? 'repeat(2, minmax(0, 1fr))' : '1fr';
+        host.className = `multi-graph-layout ${layoutMode}${layoutMode === 'side' && graphCount % 2 === 1 ? ' odd-count' : ''}`;
+        host.style.gridTemplateColumns = layoutMode === 'stack' ? '1fr' : 'repeat(2, minmax(0, 1fr))';
         host.innerHTML = '';
         const renderableConfigs = configs.filter(item => isRenderableCompositeConfig(item));
         if (!renderableConfigs.length) {
             host.innerHTML = `<div class="multi-graph-warning">복수 그래프 최종 미리보기는 차트형 그래프와 텍스트형 요소(텍스트표·리스트형·타임라인형) 조합을 지원합니다. 그래프 탭에는 그래프 데이터를 채우고, 텍스트형 탭에는 데이터 시트를 입력해 주세요.</div>`;
             return false;
         }
-        const renderSequence = renderableConfigs.map((item, sequenceIndex) => ({
-            config: item.config,
-            graphIndex: item.graphIndex,
-            options: {
-                palette: getPaletteFromStateSnapshot(item.state),
-                paletteKey: item.state.__activePaletteKey || 'asiae',
-                design: getMultiGraphDesignSettingsFromState(item.state, gridLayoutMode),
-                labelDisplayTypes: getLabelDisplayTypesFromState(item.state),
-                selectedLabelDisplayTargets: getSelectedLabelDisplayTargetsFromState(item.state),
-                highlightConfig: getHighlightConfigFromState(item.state, item.config.type, item.config.labels, item.config.datasetNames),
-                datasetFontColors: getDatasetFontColorsFromState(item.state),
-                axisSettings: getCompositeAxisSettingsFromState(item.state, item.config.type),
-                koreanNumberApply: getKoreanNumberApplyFromState(item.state),
-                koreanNumberSubText: item.config.subtitle || '',
-                tableState: item.state,
-                allowEmptyTitle: sequenceIndex > 0,
-                allowEmptySubtitle: sequenceIndex > 0
-            }
-        }));
-        renderSequence.forEach(item => renderCompositeGraphCard(host, item.config, item.graphIndex, gridLayoutMode, item.options));
-        applyMultiEditorCardLayout(host, gridLayoutMode, renderSequence.length);
+        const renderSequence = renderableConfigs.map((item, sequenceIndex) => {
+            const cardWidthMode = layoutMode === 'mixed' ? getSnapshotMultiCardWidthMode(item.state) : (layoutMode === 'stack' ? 'full' : 'half');
+            const cardLayoutMode = layoutMode === 'mixed'
+                ? (cardWidthMode === 'full' ? 'stack' : 'side')
+                : defaultLayoutMode;
+            return {
+                config: item.config,
+                graphIndex: item.graphIndex,
+                cardWidthMode,
+                cardLayoutMode,
+                options: {
+                    palette: getPaletteFromStateSnapshot(item.state),
+                    paletteKey: item.state.__activePaletteKey || 'asiae',
+                    design: getMultiGraphDesignSettingsFromState(item.state, cardLayoutMode),
+                    labelDisplayTypes: getLabelDisplayTypesFromState(item.state),
+                    selectedLabelDisplayTargets: getSelectedLabelDisplayTargetsFromState(item.state),
+                    highlightConfig: getHighlightConfigFromState(item.state, item.config.type, item.config.labels, item.config.datasetNames),
+                    datasetFontColors: getDatasetFontColorsFromState(item.state),
+                    axisSettings: getCompositeAxisSettingsFromState(item.state, item.config.type),
+                    koreanNumberApply: getKoreanNumberApplyFromState(item.state),
+                    koreanNumberSubText: item.config.subtitle || '',
+                    tableState: item.state,
+                    allowEmptyTitle: sequenceIndex > 0,
+                    allowEmptySubtitle: sequenceIndex > 0
+                }
+            };
+        });
+        renderSequence.forEach(item => renderCompositeGraphCardSafe(host, item.config, item.graphIndex, item.cardLayoutMode, item.options));
+        applyMultiEditorCardLayout(host, layoutMode, renderSequence.length, renderSequence.map(item => item.cardWidthMode));
+        bindMixedLayoutCardDragging(host);
         matchCompositeTitleHeights(host);
         fitAllCompositeTableStages();
         requestAnimationFrame(() => {
@@ -5087,7 +5506,7 @@
 
     function renderCompositeGraphCard(host, config, graphIndex, layoutMode, renderOptions = {}) {
         const type = normalizeCompositeGraphType(config.type);
-        const labels = getCompositeDisplayLabels(config);
+        let labels = getCompositeDisplayLabels(config);
         const palette = renderOptions.palette || getActivePalette();
         const paletteKeyForRender = renderOptions.paletteKey || activePaletteKey;
         const design = renderOptions.design || getMultiGraphDesignSettings(layoutMode, graphIndex);
@@ -5109,6 +5528,7 @@
         };
         const card = document.createElement('div');
         card.className = 'multi-graph-card';
+        card.dataset.graphIndex = String(graphIndex);
         // 복수 그래프의 각 카드가 자기 팔레트를 독립적으로 갖도록 CSS 변수를 카드 단위로 고정합니다.
         // 텍스트표의 첫 열/상단선은 var(--ak-red)를 쓰기 때문에, 부모 영역의 현재 팔레트를 상속하면
         // 다른 그래프 탭 팔레트를 바꿀 때 모든 텍스트표 색이 함께 바뀌는 문제가 생깁니다.
@@ -5117,20 +5537,21 @@
         const cardHeight = getCompositeCardHeight(type, layoutMode);
         const isTextBlock = ['table', 'list', 'timeline'].includes(type);
         const isTable = type === 'table';
-        if (isTextBlock) card.classList.add('multi-card-text-block', `multi-card-${type}`);
+        const isAdvancedTableBlock = false;
+        if (isTextBlock || isAdvancedTableBlock) card.classList.add('multi-card-text-block', `multi-card-${type}`);
         const title = renderOptions.allowEmptyTitle ? (config.title || '') : (config.title || '제목입력');
         const subtitle = isTextBlock
             ? (config.subtitle || '')
             : (renderOptions.allowEmptySubtitle ? (config.subtitle || '') : (config.subtitle || '(단위 및 출처 입력)'));
         const footnote = config.footnote || '';
         const footnoteHtml = footnote ? escapeHtml(footnote) : (isTextBlock ? '' : '&nbsp;');
-        const chartAreaStyle = isTextBlock ? 'height:auto; min-height:0; overflow:visible;' : `height:${cardHeight}px;`; 
+        const chartAreaStyle = (isTextBlock || isAdvancedTableBlock) ? 'height:auto; min-height:0; overflow:visible;' : `height:${cardHeight}px;`; 
         card.innerHTML = `
             <div class="multi-card-topline" style="background:${escapeHtml(palette.main || '#E61E2B')};"></div>
             <div class="multi-card-title" style="font-size:${design.titleSize}px;">${escapeHtml(title)}</div>
             <div class="multi-card-sub" style="font-size:${design.subtitleSize}px;">${escapeHtml(subtitle)}</div>
-            <div class="multi-card-chart${isTextBlock ? ' multi-card-table-stage' : ''}" style="${chartAreaStyle}">${isTextBlock ? '<div class="multi-card-table-fit"><div class="multi-card-table-content"></div></div>' : `<canvas id="multiChartCanvas${graphIndex}"></canvas>`}</div>
-            <div class="multi-pie-small-list" style="font-size:${Math.max(9, Math.round(design.footnoteSize * 0.95))}px; display:${isTextBlock ? 'none' : 'flex'};"></div>
+            <div class="multi-card-chart${(isTextBlock || isAdvancedTableBlock) ? ' multi-card-table-stage' : ''}" style="${chartAreaStyle}">${(isTextBlock || isAdvancedTableBlock) ? '<div class="multi-card-table-fit"><div class="multi-card-table-content"></div></div>' : `<canvas id="multiChartCanvas${graphIndex}"></canvas>`}</div>
+            <div class="multi-pie-small-list" style="font-size:${Math.max(9, Math.round(design.footnoteSize * 0.95))}px; display:${(isTextBlock || isAdvancedTableBlock) ? 'none' : 'flex'};"></div>
             <div class="multi-card-footnote" style="font-size:${design.footnoteSize}px;">${footnoteHtml}</div>
         `;
         host.appendChild(card);
@@ -5179,14 +5600,208 @@
             }
             return;
         }
+
+        if (isAdvancedTableBlock) {
+            const tableContent = card.querySelector('.multi-card-table-content');
+            const html = buildAdvancedTableChartHtml(type, config.tableData || '', {
+                palette,
+                fontSize: design.axisSize || 12,
+                compact: layoutMode === 'side',
+                subText: config.subtitle || '',
+                koreanNumberApply: renderOptions.koreanNumberApply
+            });
+            if (tableContent) tableContent.innerHTML = html;
+            const pieList = card.querySelector('.multi-pie-small-list');
+            if (pieList) { pieList.innerHTML = ''; pieList.style.display = 'none'; }
+            const tableStage = card.querySelector('.multi-card-table-stage');
+            fitCompositeTableStage(tableStage);
+            requestAnimationFrame(() => fitCompositeTableStage(tableStage));
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(() => fitCompositeTableStage(tableStage)).catch(() => {});
+            }
+            return;
+        }
+        if (type === 'area' || type === 'stacked-area') {
+            const stage = card.querySelector('.multi-card-chart');
+            const rawDatasets = Array.isArray(config.datasets) ? config.datasets.filter(series => Array.isArray(series) && series.length) : [];
+            const stateForArea = renderOptions.tableState || null;
+            const areaSvgWidth = layoutMode === 'side' ? 327 : 670;
+            const areaGlobalFontRaw = stateForArea
+                ? parseInt(getSnapshotControlValue(stateForArea, 'globalFontSize', '20'), 10)
+                : (document.getElementById('globalFontSize') ? parseInt(document.getElementById('globalFontSize').value, 10) : 20);
+            const areaGlobalFontScale = Number.isFinite(areaGlobalFontRaw) ? Math.max(0.8, Math.min(1.7, areaGlobalFontRaw / 20)) : 1;
+            const areaDatasetFontSizes = [1, 2, 3, 4].map(index => {
+                const raw = stateForArea
+                    ? getSnapshotControlValue(stateForArea, `datasetFontSize${index}`, '18')
+                    : (document.getElementById(`datasetFontSize${index}`) ? document.getElementById(`datasetFontSize${index}`).value : '18');
+                const value = parseInt(raw, 10);
+                return Number.isFinite(value) ? value : 18;
+            });
+            const areaDatasetFontColors = [1, 2, 3, 4].map(index => {
+                const raw = stateForArea
+                    ? String(getSnapshotControlValue(stateForArea, `datasetFontColor${index}`, 'auto') || 'auto')
+                    : (document.getElementById(`datasetFontColor${index}`) ? document.getElementById(`datasetFontColor${index}`).value : 'auto');
+                return raw && raw !== 'auto' ? raw : null;
+            });
+            const cardSvg = buildAreaSvgChartHtml(labels, rawDatasets, config.datasetNames || [], {
+                // 사이드 배치에서는 실제 카드 폭(약 327px)에 맞춘 viewBox를 써야
+                // SVG가 가로 폭 기준으로 축소되어 위아래에 빈 공간이 생기지 않습니다.
+                width: areaSvgWidth,
+                height: cardHeight,
+                compact: false,
+                stacked: type === 'stacked-area',
+                palette,
+                colors: getAdvancedPaletteColors(palette),
+                paddingPercent: getAreaHorizontalPaddingFromState(stateForArea),
+                fontScale: areaGlobalFontScale,
+                yMin: axisSettings.yMin,
+                yMax: axisSettings.yMax,
+                koreanNumberApply: shouldApplyKoreanNumber,
+                subText: koreanNumberSubText,
+                // 단일 미리보기와 동일하게 데이터 글자 크기/색상 원값을 그대로 반영합니다.
+                datasetLabelFontSizes: areaDatasetFontSizes,
+                datasetLabelColors: areaDatasetFontColors,
+                labelDisplayTypes: labelDisplayTypes || [],
+                selectedLabelDisplayTargets,
+                highlightConfig: highlightConfigForRender
+            });
+            if (stage) stage.innerHTML = cardSvg;
+            const pieList = card.querySelector('.multi-pie-small-list');
+            if (pieList) { pieList.innerHTML = ''; pieList.style.display = 'none'; }
+            return;
+        }
+
         const canvas = card.querySelector('canvas');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         let datasets = buildCompositeDatasets(config, palette, type, paletteKeyForRender);
+        if (type === 'area' || type === 'stacked-area') {
+            const compositeAreaPadding = getAreaHorizontalPaddingFromState(renderOptions.tableState || null);
+            const preparedCompositeArea = prepareAreaChartData(labels, datasets.map(dataset => Array.isArray(dataset.data) ? dataset.data : []), compositeAreaPadding);
+            labels = preparedCompositeArea.labels;
+            datasets.forEach((dataset, index) => {
+                dataset.data = preparedCompositeArea.datasets[index] || dataset.data;
+                dataset._sourceInputIndex = index + 1;
+                dataset._sourceDataIndexMap = preparedCompositeArea.sourceIndexMap;
+                dataset.spanGaps = false;
+                dataset.pointRadius = function(context) { return (context.raw === null || context.raw === undefined) ? 0 : 4.5; };
+            });
+        }
         if (highlightConfigForRender && highlightConfigForRender.enabled) {
             datasets = applyHighlightToDatasets(datasets, labels, type, highlightConfigForRender);
         }
+        if (type === 'area' || type === 'stacked-area') {
+            const selectedTargetsForArea = Array.from(selectedLabelDisplayTargets || []);
+            const highlightMapForArea = {};
+            if (highlightConfigForRender && highlightConfigForRender.targetColorMap) {
+                highlightConfigForRender.targetColorMap.forEach((color, key) => { highlightMapForArea[key] = color; });
+            }
+            datasets.forEach((dataset, index) => {
+                dataset._areaValueLabels = true;
+                dataset._areaLabelDisplayType = labelDisplayTypes ? (labelDisplayTypes[index] || 'all') : 'all';
+                dataset._areaSelectedTargets = selectedTargetsForArea;
+                dataset._areaHighlightMap = highlightMapForArea;
+                dataset._areaLabelFontSize = (design.datasetLabelSizes && design.datasetLabelSizes[index]) || design.lineLabelSize || 12;
+                dataset._areaLabelColor = datasetFontColors && datasetFontColors[index] ? datasetFontColors[index] : (Array.isArray(dataset.borderColor) ? '#111111' : (dataset.borderColor || '#111111'));
+            });
+        }
         const smallPieListEl = card.querySelector('.multi-pie-small-list');
+        if (type === 'scatter') {
+            const scatterRows = parseSimpleTableRows(config.tableData || '');
+            const scatterPoints = scatterRows.slice(1).map(row => ({
+                label: row[0] || '',
+                x: advancedToNumber(row[1]),
+                y: advancedToNumber(row[2])
+            })).filter(point => point.label);
+            const scatterLabels = scatterPoints.map(point => point.label);
+            const scatterHighlight = highlightConfigForRender && highlightConfigForRender.enabled ? highlightConfigForRender : { enabled: false, targetColorMap: new Map() };
+            const defaultScatterColor = palette.main || '#E61E2B';
+            const scatterMutedColor = '#BDBDBD';
+            const defaultPointRadius = layoutMode === 'side' ? 5 : 6;
+            const scatterLabelDisplay = labelDisplayTypes ? (labelDisplayTypes[0] || 'all') : 'all';
+            const scatterSelectedTargets = selectedLabelDisplayTargets instanceof Set ? selectedLabelDisplayTargets : new Set();
+            const scatterXVals = scatterPoints.map(point => point.x);
+            const scatterYVals = scatterPoints.map(point => point.y);
+            const rawXMin = scatterXVals.length ? Math.min(...scatterXVals) : 0;
+            const rawXMax = scatterXVals.length ? Math.max(...scatterXVals) : 1;
+            const rawYMin = scatterYVals.length ? Math.min(...scatterYVals) : 0;
+            const rawYMax = scatterYVals.length ? Math.max(...scatterYVals) : 1;
+            const xPad = rawXMax === rawXMin ? Math.max(1, Math.abs(rawXMax || 1) * 0.15) : (rawXMax - rawXMin) * 0.08;
+            const yPad = rawYMax === rawYMin ? Math.max(1, Math.abs(rawYMax || 1) * 0.15) : (rawYMax - rawYMin) * 0.10;
+            const scatterChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: (config.datasetNames && config.datasetNames[0]) || '데이터',
+                        data: scatterPoints.map(point => ({ x: point.x, y: point.y })),
+                        backgroundColor: scatterPoints.map((_, index) => scatterHighlight.enabled ? (getHighlightColorForTarget(scatterHighlight, 0, index) || '#ffffff') : '#ffffff'),
+                        borderColor: scatterPoints.map((_, index) => scatterHighlight.enabled ? (getHighlightColorForTarget(scatterHighlight, 0, index) || defaultScatterColor) : defaultScatterColor),
+                        pointBackgroundColor: scatterPoints.map((_, index) => scatterHighlight.enabled ? (getHighlightColorForTarget(scatterHighlight, 0, index) || '#ffffff') : '#ffffff'),
+                        pointBorderColor: scatterPoints.map((_, index) => scatterHighlight.enabled ? (getHighlightColorForTarget(scatterHighlight, 0, index) || defaultScatterColor) : defaultScatterColor),
+                        pointBorderWidth: scatterPoints.map((_, index) => scatterHighlight.enabled ? (isHighlightedTarget(scatterHighlight, 0, index) ? 4 : 2.5) : 2.5),
+                        pointRadius: scatterPoints.map((_, index) => scatterHighlight.enabled ? (isHighlightedTarget(scatterHighlight, 0, index) ? defaultPointRadius + 2 : defaultPointRadius) : defaultPointRadius),
+                        pointHoverRadius: scatterPoints.map((_, index) => scatterHighlight.enabled ? (isHighlightedTarget(scatterHighlight, 0, index) ? defaultPointRadius + 2 : defaultPointRadius) : defaultPointRadius),
+                        showLine: false
+                    }]
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    devicePixelRatio: NORMAL_CHART_DPR,
+                    layout: { padding: { top: 16, right: 18, bottom: 8, left: 4 } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false },
+                        datalabels: {
+                            display: function(context) {
+                                if (scatterLabelDisplay === 'none') return false;
+                                if (scatterLabelDisplay === 'selected') return scatterSelectedTargets.has(`${context.datasetIndex}|${context.dataIndex}`);
+                                return true;
+                            },
+                            align: 'top',
+                            anchor: 'end',
+                            offset: 6,
+                            color: function(context) {
+                                return getHighlightColorForTarget(scatterHighlight, context.datasetIndex, context.dataIndex) || '#111111';
+                            },
+                            textStrokeColor: '#ffffff',
+                            textStrokeWidth: 4,
+                            font: function(context) {
+                                const highlight = !!getHighlightColorForTarget(scatterHighlight, context.datasetIndex, context.dataIndex);
+                                const base = design.lineLabelSize || 12;
+                                return { size: highlight ? Math.min(base + 4, 24) : base, weight: 'bold' };
+                            },
+                            formatter: function(value, context) {
+                                return scatterLabels[context.dataIndex] || '';
+                            },
+                            clamp: true,
+                            clip: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            min: rawXMin - xPad,
+                            max: rawXMax + xPad,
+                            grid: { color: '#e0e0e0', drawBorder: false },
+                            ticks: { color: '#666', font: { size: design.axisSize, weight: 'normal' }, callback: value => formatConciseAxisTick(value, { koreanNumberApply: shouldApplyKoreanNumber, subText: koreanNumberSubText }) }
+                        },
+                        y: {
+                            type: 'linear',
+                            min: rawYMin - yPad,
+                            max: rawYMax + yPad,
+                            grid: { color: '#e0e0e0', drawBorder: false },
+                            ticks: { color: '#666', font: { size: design.axisSize, weight: 'normal' }, callback: value => formatConciseAxisTick(value, { koreanNumberApply: shouldApplyKoreanNumber, subText: koreanNumberSubText }) }
+                        }
+                    }
+                }
+            });
+            multiChartInstances.push(scatterChart);
+            if (smallPieListEl) { smallPieListEl.innerHTML = ''; smallPieListEl.style.display = 'none'; }
+            return;
+        }
         if (smallPieListEl) {
             if (type === 'pie' && datasets[0] && Array.isArray(datasets[0].data)) {
                 const pieValuesForList = datasets[0].data.map(value => Number(value) || 0);
@@ -5220,9 +5835,12 @@
             }
         }
         const isPie = type === 'pie';
-        const isHorizontal = type === 'h-bar' || type === 'h-multi-bar' || type === 'h-stacked-bar';
-        const isStacked = type === 'stacked-bar' || type === 'h-stacked-bar' || type === 'stacked-combo';
+        const isHorizontal = type === 'h-bar' || type === 'h-multi-bar' || type === 'h-stacked-bar' || type === 'h-100-stacked-bar';
+        const isStacked = type === 'stacked-bar' || type === 'h-stacked-bar' || type === 'stacked-combo' || type === '100-stacked-bar' || type === 'h-100-stacked-bar' || type === 'stacked-area';
         const baseChartType = String(axisSettings.baseChartType || (type.startsWith('h-') ? type.replace('h-', '') : type));
+        const isHundredStackedComposite = type === '100-stacked-bar' || type === 'h-100-stacked-bar';
+        const isAreaComposite = type === 'area' || type === 'stacked-area';
+        const compositeAreaPadding = isAreaComposite ? getAreaHorizontalPaddingFromState(renderOptions.tableState || null) : 0;
         const disableKoreanNumberOnAxes = type === 'combo' || type === 'multi-combo' || type === 'stacked-combo';
         const hasLineSeries = datasets.some(ds => String(ds.type || '').includes('line'));
         const hasBarSeries = datasets.some(ds => String(ds.type || '') === 'bar');
@@ -5289,7 +5907,7 @@
         const chart = new Chart(ctx, {
             type: isPie ? 'doughnut' : ((datasets[0] && datasets[0].type === 'line') ? 'line' : 'bar'),
             data: { labels, datasets },
-            plugins: [ChartDataLabels],
+            plugins: isAreaComposite ? [ChartDataLabels, AreaValueLabelPlugin] : [ChartDataLabels],
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -5320,14 +5938,26 @@
                         }
                     },
                     tooltip: { enabled: false },
+                    areaValueLabels: {
+                        enabled: isAreaComposite,
+                        formatValue: value => formatCompositeNumber(value)
+                    },
                     datalabels: {
                         display: function(context) {
+                            if (isAreaComposite && (context.raw === null || context.raw === undefined)) return false;
                             const forcedType = labelDisplayTypes ? (labelDisplayTypes[context.datasetIndex] || 'all') : 'all';
                             if (forcedType === 'none') return false;
-                            if (forcedType === 'selected') return selectedLabelDisplayTargets.has(`${context.datasetIndex}|${context.dataIndex}`);
+                            const sourceMap = isAreaComposite && context.dataset ? context.dataset._sourceDataIndexMap : null;
+                            const sourceIndex = Array.isArray(sourceMap) && sourceMap[context.dataIndex] !== undefined && sourceMap[context.dataIndex] !== null ? sourceMap[context.dataIndex] : context.dataIndex;
+                            if (forcedType === 'selected') return selectedLabelDisplayTargets.has(`${context.datasetIndex}|${sourceIndex}`);
                             return true;
                         },
                         color: function(context) {
+                            if (isAreaComposite) {
+                                const sourceMap = context.dataset ? context.dataset._sourceDataIndexMap : null;
+                                const sourceIndex = Array.isArray(sourceMap) && sourceMap[context.dataIndex] !== undefined && sourceMap[context.dataIndex] !== null ? sourceMap[context.dataIndex] : context.dataIndex;
+                                return getHighlightColorForTarget(highlightConfigForRender, context.datasetIndex, sourceIndex) || (datasetFontColors && datasetFontColors[context.datasetIndex]) || (Array.isArray(context.dataset.borderColor) ? '#111111' : (context.dataset.borderColor || '#111111'));
+                            }
                             return getLabelFillColor(context);
                         },
                         textStrokeColor: function(context) {
@@ -5341,6 +5971,12 @@
                                 return { size: design.pieLabelSize, weight: 'bold', lineHeight: 1.15 };
                             }
                             const datasetSize = design.datasetLabelSizes[context.datasetIndex] || design.lineLabelSize;
+                            if (isAreaComposite) {
+                                const sourceMap = context.dataset ? context.dataset._sourceDataIndexMap : null;
+                                const sourceIndex = Array.isArray(sourceMap) && sourceMap[context.dataIndex] !== undefined && sourceMap[context.dataIndex] !== null ? sourceMap[context.dataIndex] : context.dataIndex;
+                                const isHighlightedPoint = !!getHighlightColorForTarget(highlightConfigForRender, context.datasetIndex, sourceIndex);
+                                return { size: isHighlightedPoint ? Math.min(datasetSize + 4, 36) : datasetSize, weight: 'bold' };
+                            }
                             return { size: datasetSize, weight: 'bold' };
                         },
                         align: function(context) {
@@ -5382,7 +6018,7 @@
                         display: true,
                         stacked: isStacked,
                         type: isHorizontal ? 'linear' : 'category',
-                        offset: !isHorizontal && (hasLineSeries || hasBarSeries),
+                        offset: !isHorizontal && (hasBarSeries || (!isAreaComposite && hasLineSeries) || (isAreaComposite && compositeAreaPadding > 0)),
                         grace: isHorizontal && axisSettings.yMax === undefined ? primaryAxisGrace : undefined,
                         grid: {
                             display: isHorizontal ? true : false,
@@ -5401,7 +6037,7 @@
                         },
                         beginAtZero: isHorizontal ? true : false,
                         min: isHorizontal ? axisSettings.yMin : undefined,
-                        max: isHorizontal ? (axisSettings.yMax !== undefined ? axisSettings.yMax : primaryAutoMax) : undefined,
+                        max: isHorizontal ? (isHundredStackedComposite ? 100 : (axisSettings.yMax !== undefined ? axisSettings.yMax : primaryAutoMax)) : undefined,
                         suggestedMax: isHorizontal && axisSettings.yMax === undefined && primaryAutoMax === undefined ? primarySuggestedMax : undefined
                     },
                     y: {
@@ -5409,9 +6045,9 @@
                         stacked: isStacked,
                         type: isHorizontal ? 'category' : 'linear',
                         offset: isHorizontal && hasBarSeries,
-                        beginAtZero: !isHorizontal && (baseChartType === 'bar'),
+                        beginAtZero: !isHorizontal && (baseChartType === 'bar' || isAreaComposite),
                         min: !isHorizontal ? axisSettings.yMin : undefined,
-                        max: !isHorizontal ? (axisSettings.yMax !== undefined ? axisSettings.yMax : primaryAutoMax) : undefined,
+                        max: !isHorizontal ? (isHundredStackedComposite ? 100 : (axisSettings.yMax !== undefined ? axisSettings.yMax : primaryAutoMax)) : undefined,
                         grace: !isHorizontal && axisSettings.yMax === undefined ? primaryAxisGrace : undefined,
                         grid: {
                             display: isHorizontal ? false : true,
@@ -5450,6 +6086,32 @@
             }
         });
         multiChartInstances.push(chart);
+    }
+
+    function renderCompositeGraphCardSafe(host, config, graphIndex, layoutMode, renderOptions = {}) {
+        if (!host) return;
+        const childCountBefore = host.children.length;
+        try {
+            renderCompositeGraphCard(host, config, graphIndex, layoutMode, renderOptions);
+        } catch (error) {
+            console.error('이어붙이기 카드 렌더링 오류:', error, config);
+            while (host.children.length > childCountBefore) {
+                host.removeChild(host.lastChild);
+            }
+            const palette = (renderOptions && renderOptions.palette) || getActivePalette();
+            const card = document.createElement('div');
+            card.className = 'multi-graph-card';
+            card.style.setProperty('--ak-red', palette.main || '#E61E2B');
+            card.style.setProperty('--ak-orange', palette.accent || '#F48F1F');
+            card.innerHTML = `
+                <div class="multi-card-topline" style="background:${escapeHtml(palette.main || '#E61E2B')};"></div>
+                <div class="multi-card-title">${escapeHtml((config && config.title) || `그래프 ${graphIndex}`)}</div>
+                <div class="multi-card-sub">렌더링 오류가 발생했습니다. 이 카드만 건너뛰고 나머지 그래프는 계속 표시합니다.</div>
+                <div class="multi-card-chart multi-card-table-stage"><div class="multi-card-table-empty">(그래프 데이터를 다시 확인해 주세요)</div></div>
+                <div class="multi-card-footnote">&nbsp;</div>
+            `;
+            host.appendChild(card);
+        }
     }
 
     function syncMultiCaptureVisibility() {
@@ -5522,8 +6184,9 @@
             .map((config, index) => ({ config, graphIndex: index + 1 }))
             .filter(item => isRenderableCompositeConfig(item.config));
         if (!renderableConfigs.length) { host.innerHTML = '<div class="multi-graph-warning">멀티 그래프 붙이기는 차트형 그래프와 텍스트형 요소(텍스트표·리스트형·타임라인형) 조합을 지원합니다. 그래프 데이터 또는 텍스트형 데이터를 넣어주세요.</div>'; return; }
-        renderableConfigs.forEach(item => renderCompositeGraphCard(host, item.config, item.graphIndex, layoutMode));
+        renderableConfigs.forEach(item => renderCompositeGraphCardSafe(host, item.config, item.graphIndex, layoutMode));
         applyMultiEditorCardLayout(host, layoutMode, renderableConfigs.length);
+        bindMixedLayoutCardDragging(host);
         matchCompositeTitleHeights(host);
     }
 
@@ -6087,6 +6750,13 @@
 
 
     function getCurrentLabels() {
+        const chartTypeEl = document.getElementById('chartType');
+        const normalizedType = chartTypeEl ? normalizeCompositeGraphType(chartTypeEl.value) : '';
+        if (normalizedType === 'scatter') {
+            const rows = parseSimpleTableRows(document.getElementById('tableDataInput') ? document.getElementById('tableDataInput').value : '');
+            if (rows.length > 1) return rows.slice(1).map(row => (row[0] || '').trim()).filter(Boolean);
+            return [];
+        }
         const labelsInput = document.getElementById('labelsInput');
         if (!labelsInput) return [];
         return parseLabelSeries(labelsInput.value);
@@ -6102,7 +6772,7 @@
 
         names.push(name1 || '데이터 1');
 
-        if (type.includes('multi-') || type.includes('stacked') || type.includes('combo') || type === 'chart-table') {
+        if (type.includes('multi-') || type.includes('stacked') || type.includes('combo')) {
             if ((document.getElementById('dataInput2')?.value || '').trim() !== '') names.push(name2 || '데이터 2');
             if ((document.getElementById('dataInput3')?.value || '').trim() !== '') names.push(name3 || '데이터 3');
             if ((document.getElementById('dataInput4')?.value || '').trim() !== '') names.push(name4 || '데이터 4');
@@ -6409,7 +7079,7 @@
         syncReferenceEditorSummary();
         const type = document.getElementById('chartType') ? document.getElementById('chartType').value : '';
         const group = document.getElementById('referenceLabelStyleGroup');
-        const shouldShow = !(type === 'table' || type === 'list' || type === 'timeline');
+        const shouldShow = !isTextSheetType(type);
         if (group) group.style.display = shouldShow ? 'block' : 'none';
     }
 
@@ -6507,7 +7177,7 @@
     function refreshTableColorControls() {
         const type = document.getElementById('chartType') ? document.getElementById('chartType').value : '';
         const group = document.getElementById('tableColorSettingGroup');
-        const shouldShow = (type === 'table' || type === 'chart-table');
+        const shouldShow = (type === 'table');
         if (group) group.style.display = shouldShow ? 'block' : 'none';
         if (!shouldShow) return;
 
@@ -6517,7 +7187,7 @@
 
     function chartUsesMultipleDatasets(typeOverride) {
         const type = typeOverride || document.getElementById('chartType').value;
-        return type.includes('multi-') || type.includes('stacked') || type.includes('combo') || type === 'chart-table';
+        return type.includes('multi-') || type.includes('stacked') || type.includes('combo');
     }
 
     function updateDatasetFontDisplays() {
@@ -6658,7 +7328,7 @@
         const group = document.getElementById('labelSettingGroup');
         if (!group) return;
 
-        if (type === 'table' || type === 'list' || type === 'timeline') {
+        if (isTextSheetType(type)) {
             group.style.display = 'none';
             return;
         }
@@ -6761,7 +7431,7 @@
         const group = document.getElementById('datasetLabelSizeGroup');
         if (!group) return;
 
-        if (type === 'table' || type === 'list' || type === 'timeline') {
+        if (isTextSheetType(type)) {
             group.style.display = 'none';
             return;
         }
@@ -6797,7 +7467,7 @@
         const group = document.getElementById('datasetLabelColorGroup');
         if (!group) return;
 
-        if (type === 'table' || type === 'list' || type === 'timeline') {
+        if (isTextSheetType(type)) {
             group.style.display = 'none';
             return;
         }
@@ -6886,7 +7556,7 @@
 
         if (!group || !modeEl || targetSelectors.some(select => !select) || targetWraps.some(wrap => !wrap)) return;
 
-        if (type === 'table' || type === 'list' || type === 'timeline') {
+        if (isTextSheetType(type)) {
             group.style.display = 'none';
             return;
         }
@@ -7014,12 +7684,19 @@
         return datasets;
     }
 
-function isTextSheetType(type) {
-        return type === 'table' || type === 'list' || type === 'timeline';
+function isAreaChartType(type) {
+        const normalizedType = normalizeCompositeGraphType(type);
+        return normalizedType === 'area' || normalizedType === 'stacked-area';
+    }
+
+    function isTextSheetType(type) {
+        const normalizedType = normalizeCompositeGraphType(type);
+        return ['table', 'list', 'timeline'].includes(normalizedType);
     }
 
     function isMultiDatasetType(type) {
-        return (type === 'multi-line' || type === 'multi-bar' || type === 'h-multi-bar' || type === 'combo' || type === 'multi-combo' || type === 'stacked-combo' || type === 'stacked-bar' || type === 'h-stacked-bar' || type === 'chart-table');
+        const normalizedType = normalizeCompositeGraphType(type);
+        return normalizedType.includes('multi-') || normalizedType.includes('stacked') || normalizedType.includes('combo');
     }
 
     function setSheetModalMode(mode) {
@@ -7279,9 +7956,11 @@ function isTextSheetType(type) {
     function refreshTextSheetHeaders(colCount, type) {
         const header = document.getElementById('modalTh');
         if (!header) return;
-        const names = type === 'timeline'
-            ? ['왼쪽 열', '오른쪽 열']
-            : (type === 'list' ? ['구분', '내용'] : []);
+        const normalizedType = normalizeCompositeGraphType(type);
+        const headerMap = {
+            scatter: ['항목', 'X값', 'Y값']
+        };
+        const names = headerMap[normalizedType] || [];
         header.innerHTML = '';
         for (let c = 0; c < colCount; c++) {
             const th = document.createElement('th');
@@ -7331,13 +8010,16 @@ function isTextSheetType(type) {
         selectedSheetCell = null;
         const title = document.getElementById('sheetModalTitle');
         const note = document.getElementById('sheetModalNote');
-        if (title) title.textContent = type === 'timeline' ? '⏳ 타임라인 데이터 시트 편집' : (type === 'list' ? '📝 리스트 데이터 시트 편집' : '📋 텍스트표 데이터 시트 편집');
+        const normalizedSheetType = normalizeCompositeGraphType(type);
+        if (title) title.textContent = normalizedSheetType === 'scatter' ? '🔵 산점도 데이터 시트 편집' : (type === 'timeline' ? '⏳ 타임라인 데이터 시트 편집' : (type === 'list' ? '📝 리스트 데이터 시트 편집' : '📋 텍스트표 데이터 시트 편집'));
         if (note) note.textContent = type === 'table'
             ? '셀을 클릭한 뒤 “위와 병합” 또는 “왼쪽과 병합”을 누르면 간이 엑셀처럼 병합됩니다. 빈 행은 저장 시 제거됩니다.'
             : '셀을 직접 편집합니다. 빈 행은 저장 시 제거됩니다.';
 
         const rows = parseTextSheetRows();
-        const minCols = type === 'table' ? 4 : 2;
+        const normalizedTypeForSheet = normalizeCompositeGraphType(type);
+        const minColsMap = { table: 4, list: 2, timeline: 2, scatter: 3 };
+        const minCols = minColsMap[normalizedTypeForSheet] || 2;
         const colCount = Math.max(minCols, rows.reduce((max, row) => Math.max(max, row.length), 0));
         refreshTextSheetHeaders(colCount, type);
         const tbody = document.getElementById('modalTbody');
@@ -7491,7 +8173,7 @@ function isTextSheetType(type) {
 
     function openDataSheet() {
         const type = document.getElementById('chartType').value;
-        if (isTextSheetType(type)) {
+        if (isTextSheetType(type) || normalizeCompositeGraphType(type) === 'scatter') {
             openTextDataSheet(type);
             return;
         }
@@ -7995,16 +8677,11 @@ function isTextSheetType(type) {
         document.getElementById('y1Min').value = ''; document.getElementById('y1Max').value = '';
         document.getElementById('footnoteInput').value = ''; document.getElementById('nameInput').value = '박조비 기자';
 
-        if (type === 'table' || type === 'chart-table') {
+        if (type === 'table') {
             document.getElementById('titleInput').value = '주요 지역별 부동산 시장 동향';
             document.getElementById('subInput').value = '';
             document.getElementById('tableDataInput').value = `## 강남구 순매수\n종목명\t순매수액\t현재가\t대비율\n삼성전자\t323억\t8만2000\t-16.7\nSK하이닉스\t312억\t12만3000\t-6.2\n## 강북구 순매수\n종목명\t순매수액\t현재가\t대비율\n카카오\t285억\t5만8950\t-25.6\n네이버\t236억\t18만3600\t-19.7`;
             document.getElementById('footnoteInput').value = '*자료: 한국부동산원';
-            if (type === 'chart-table') {
-                document.getElementById('labelsInput').value = 'A, B, C';
-                document.getElementById('dataName1').value = '항목1'; document.getElementById('dataInput1').value = '10, 20, 30';
-                document.getElementById('dataName2').value = '항목2'; document.getElementById('dataInput2').value = '15, 25, 35';
-            }
         } else if (type === 'timeline') {
             document.getElementById('titleInput').value = '코스피 지수 추이';
             document.getElementById('subInput').value = '';
@@ -8088,6 +8765,54 @@ function isTextSheetType(type) {
             document.getElementById('dataName2').value = '금융행위'; document.getElementById('dataInput2').value = '65.8, 64.7, 61.6';
             document.getElementById('dataName3').value = '금융태도'; document.getElementById('dataInput3').value = '52.4, 53.7, 58.0';
             document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === '100-stacked-bar' || type === 'h-100-stacked-bar') {
+            document.getElementById('titleInput').value = type === 'h-100-stacked-bar' ? '연령대별 소비 구성비' : '지역별 응답 구성비';
+            document.getElementById('subInput').value = '(단위: %, 예시 데이터)';
+            document.getElementById('labelsInput').value = type === 'h-100-stacked-bar' ? '20대, 30대, 40대, 50대' : '서울, 부산, 대구, 광주';
+            document.getElementById('dataName1').value = '찬성'; document.getElementById('dataInput1').value = '40, 35, 30, 25';
+            document.getElementById('dataName2').value = '반대'; document.getElementById('dataInput2').value = '30, 40, 35, 45';
+            document.getElementById('dataName3').value = '모름'; document.getElementById('dataInput3').value = '30, 25, 35, 30';
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'area' || type === 'stacked-area') {
+            document.getElementById('titleInput').value = type === 'stacked-area' ? '에너지 공급원별 누적 추이' : '월별 거래액 추이';
+            document.getElementById('subInput').value = '(단위: 억원, 예시 데이터)';
+            document.getElementById('labelsInput').value = '1월, 2월, 3월, 4월, 5월, 6월';
+            document.getElementById('dataName1').value = type === 'stacked-area' ? '석유' : '거래액'; document.getElementById('dataInput1').value = '120, 135, 150, 165, 180, 210';
+            if (type === 'stacked-area') {
+                document.getElementById('dataName2').value = '가스'; document.getElementById('dataInput2').value = '80, 90, 95, 105, 115, 125';
+                document.getElementById('dataName3').value = '재생'; document.getElementById('dataInput3').value = '30, 40, 55, 70, 90, 110';
+            }
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'slope') {
+            document.getElementById('titleInput').value = '주요 기업 영업이익률 변화';
+            document.getElementById('subInput').value = '(단위: %, 예시 데이터)';
+            document.getElementById('tableDataInput').value = `항목\t2020년\t2025년\nA기업\t10\t22\nB기업\t18\t14\nC기업\t7\t16\nD기업\t24\t19`;
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'dumbbell') {
+            document.getElementById('titleInput').value = '수도권·비수도권 지표 비교';
+            document.getElementById('subInput').value = '(단위: %, 예시 데이터)';
+            document.getElementById('tableDataInput').value = `항목\t수도권\t비수도권\n고용률\t68\t61\n소비심리\t72\t58\n주거비부담\t84\t63\n교육비부담\t77\t69`;
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'scatter') {
+            document.getElementById('titleInput').value = '국가별 소득과 출산율';
+            document.getElementById('subInput').value = '(X축: 1인당 GDP, Y축: 합계출산율)';
+            document.getElementById('tableDataInput').value = `국가\tX값\tY값\n한국\t36000\t0.72\n일본\t42000\t1.2\n미국\t76000\t1.6\n프랑스\t45000\t1.8\n독일\t52000\t1.5`;
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'heatmap') {
+            document.getElementById('titleInput').value = '지역·연령별 응답률';
+            document.getElementById('subInput').value = '(단위: %, 예시 데이터)';
+            document.getElementById('tableDataInput').value = `구분\t20대\t30대\t40대\t50대\n서울\t12\t18\t22\t19\n부산\t9\t14\t17\t21\n대구\t7\t13\t16\t18\n광주\t11\t15\t20\t23`;
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'treemap') {
+            document.getElementById('titleInput').value = '수출 품목별 비중';
+            document.getElementById('subInput').value = '(단위: %, 예시 데이터)';
+            document.getElementById('tableDataInput').value = `항목\t값\n반도체\t35\n자동차\t22\n석유제품\t14\n선박\t8\n기타\t21`;
+            document.getElementById('labelDisplayType').value = 'all';
+        } else if (type === 'waterfall') {
+            document.getElementById('titleInput').value = '영업이익 증감 요인';
+            document.getElementById('subInput').value = '(단위: 억원, 예시 데이터)';
+            document.getElementById('tableDataInput').value = `항목\t값\t구분\n전년 영업이익\t100\tstart\n매출 증가\t25\tdelta\n원가 상승\t-10\tdelta\n환율 효과\t8\tdelta\n올해 영업이익\t123\ttotal`;
+            document.getElementById('labelDisplayType').value = 'all';
         } else if (type === 'stacked-bar' || type === 'h-multi-bar') {
             document.getElementById('titleInput').value = '가로/세로 막대 그래프 예시';
             document.getElementById('labelsInput').value = 'A, B, C';
@@ -8143,30 +8868,16 @@ function isTextSheetType(type) {
         const extract = (tag) => parsedData[tag] ? parsedData[tag].trim() : '';
 
         let rawType = extract('[종류]').toLowerCase();
-        let mappedType = 'line';
-
-        if (rawType.includes('chart-table') || rawType.includes('그래프+표')) mappedType = 'chart-table';
-        else if (rawType.includes('timeline') || rawType.includes('타임라인')) mappedType = 'timeline';
-        else if (rawType.includes('stacked-combo') || rawType.includes('누적막대+선')) mappedType = 'stacked-combo';
-        else if (rawType.includes('multi-combo') || rawType.includes('다중막대+선')) mappedType = 'multi-combo';
-        else if (rawType.includes('h-stacked-bar') || rawType.includes('가로형 누적')) mappedType = 'h-stacked-bar';
-        else if (rawType.includes('h-multi-bar') || rawType.includes('가로형 다중막대')) mappedType = 'h-multi-bar';
-        else if (rawType.includes('h-bar') || rawType.includes('가로형 단일막대') || rawType.includes('가로막대')) mappedType = 'h-bar';
-        else if (rawType.includes('stacked-bar') || rawType.includes('누적막대')) mappedType = 'stacked-bar';
-        else if (rawType.includes('multi-bar') || rawType.includes('다중막대')) mappedType = 'multi-bar';
-        else if (rawType.includes('multi-line') || rawType.includes('다중선')) mappedType = 'multi-line';
-        else if (rawType.includes('combo') || rawType.includes('혼합')) mappedType = 'combo';
-        else if (rawType.includes('pie') || rawType.includes('원')) mappedType = 'pie';
-        else if (rawType.includes('list') || rawType.includes('리스트')) mappedType = 'list';
-        else if (rawType.includes('table') || rawType.includes('표')) mappedType = 'table';
-        else if (rawType.includes('bar') || rawType.includes('막대')) mappedType = 'bar';
-        else if (rawType.includes('line') || rawType.includes('선')) mappedType = 'line';
+        let mappedType = normalizeCompositeGraphType(rawType || 'line');
+        const allowedMappedTypes = new Set(['pie','bar','multi-bar','stacked-bar','100-stacked-bar','h-bar','h-multi-bar','h-stacked-bar','h-100-stacked-bar','line','multi-line','area','stacked-area','combo','multi-combo','stacked-combo','scatter','table','list','timeline']);
+        if (!allowedMappedTypes.has(mappedType)) mappedType = 'table';
 
         let data2 = extract('[데이터2수치]');
         if (data2 !== '') {
             if (mappedType === 'line') mappedType = 'multi-line';
             else if (mappedType === 'bar') mappedType = 'multi-bar';
             else if (mappedType === 'h-bar') mappedType = 'h-multi-bar';
+            else if (mappedType === 'area') mappedType = 'stacked-area';
         }
 
         document.getElementById('chartType').value = preserveSelectedType ? currentSelectedType : mappedType;
@@ -8214,7 +8925,7 @@ function isTextSheetType(type) {
         const labelSettingGroup = document.getElementById('labelSettingGroup');
         const openSheetBtn = document.getElementById('openSheetBtn');
 
-        if (type === 'table' || type === 'list' || type === 'timeline') {
+        if (isTextSheetType(type)) {
             if(document.getElementById('chartInputs')) document.getElementById('chartInputs').style.display = 'none';
             if(document.getElementById('tableInputs')) document.getElementById('tableInputs').style.display = 'block';
             if(labelSettingGroup) labelSettingGroup.style.display = 'none';
@@ -8253,6 +8964,12 @@ function isTextSheetType(type) {
             if (type === 'table') openSheetBtn.textContent = '📋 데이터 시트 편집 (텍스트표)';
             else if (type === 'list') openSheetBtn.textContent = '📝 데이터 시트 편집 (리스트)';
             else if (type === 'timeline') openSheetBtn.textContent = '⏳ 데이터 시트 편집 (타임라인)';
+            else if (type === 'heatmap') openSheetBtn.textContent = '🟥 데이터 시트 편집 (히트맵)';
+            else if (type === 'treemap') openSheetBtn.textContent = '🧩 데이터 시트 편집 (트리맵)';
+            else if (type === 'scatter') openSheetBtn.textContent = '🔵 데이터 시트 편집 (산점도)';
+            else if (type === 'slope') openSheetBtn.textContent = '↗ 데이터 시트 편집 (슬로프 차트)';
+            else if (type === 'dumbbell') openSheetBtn.textContent = '🎯 데이터 시트 편집 (덤벨 차트)';
+            else if (type === 'waterfall') openSheetBtn.textContent = '💧 데이터 시트 편집 (워터폴 차트)';
             else openSheetBtn.textContent = '📊 데이터 시트 편집 (수치·추가 텍스트)';
         }
 
@@ -8261,6 +8978,7 @@ function isTextSheetType(type) {
         refreshDatasetFontControls();
         refreshDatasetColorControls();
         refreshColumnWidthControls();
+        refreshAreaShapeControls();
         refreshTableColorControls();
         refreshReferenceStyleControls();
         refreshChartAwareVisibility();
@@ -8307,6 +9025,7 @@ function isTextSheetType(type) {
         refreshDatasetFontControls();
         refreshDatasetColorControls();
         refreshColumnWidthControls();
+        refreshAreaShapeControls();
         refreshTableColorControls();
         refreshReferenceStyleControls();
 
@@ -8370,7 +9089,35 @@ function isTextSheetType(type) {
             if(document.getElementById('chart-container')) document.getElementById('chart-container').style.display = 'block';
             if(document.getElementById('table-container')) document.getElementById('table-container').style.display = 'none';
             if(document.getElementById('topLine')) document.getElementById('topLine').style.display = 'block';
-            renderChart(type);
+            try {
+                renderChart(type);
+            } catch (error) {
+                console.error('차트 렌더링 오류:', error);
+                if (isAreaChartType(type)) {
+                    const { labels, datasetNames, datasets } = getInputDatasetsFromMainForm();
+                    const palette = getActivePalette();
+                    showAreaSvgChartMode(buildAreaSvgChartHtml(labels, datasets, datasetNames, {
+                        width: 670,
+                        height: 420,
+                        stacked: normalizeCompositeGraphType(type) === 'stacked-area',
+                        palette,
+                        colors: getAdvancedPaletteColors(palette),
+                        paddingPercent: getAreaHorizontalPaddingFromState(),
+                        fontScale: 1,
+                        yMin: document.getElementById('yMin') ? document.getElementById('yMin').value : '',
+                        yMax: document.getElementById('yMax') ? document.getElementById('yMax').value : '',
+                        koreanNumberApply: document.getElementById('koreanNumberType') ? document.getElementById('koreanNumberType').value === 'apply' : false,
+                        subText: document.getElementById('subInput') ? document.getElementById('subInput').value : '',
+                        datasetLabelFontSizes: [0,1,2,3].map(index => getDatasetLabelFontSize(index)),
+                        datasetLabelColors: [0,1,2,3].map(index => getDatasetLabelColor(index)),
+                        labelDisplayTypes: [0,1,2,3].map(index => getDatasetLabelDisplayType(index)),
+                        selectedLabelDisplayTargets: getSelectedLabelDisplayTargets(),
+                        highlightConfig: getHighlightConfig(normalizeCompositeGraphType(type), labels)
+                    }));
+                } else {
+                    throw error;
+                }
+            }
         }
 
         const displayFootnote = document.getElementById('displayFootnote');
@@ -8581,6 +9328,1085 @@ function isTextSheetType(type) {
         return autoFootnote;
     }
 
+
+    function isAdvancedChartType(type) {
+        const normalizedType = normalizeCompositeGraphType(type);
+        return ['100-stacked-bar', 'h-100-stacked-bar', 'area', 'stacked-area', 'scatter'].includes(normalizedType);
+    }
+
+    function isAdvancedTableBackedChartType(type) {
+        const normalizedType = normalizeCompositeGraphType(type);
+        return false;
+    }
+
+    function advancedToNumber(value) {
+        if (value === null || value === undefined) return 0;
+        const cleaned = String(value).replace(/,/g, '').trim();
+        if (cleaned === '') return 0;
+        const numericValue = Number(cleaned);
+        return Number.isFinite(numericValue) ? numericValue : 0;
+    }
+
+    function parseSimpleTableRows(rawText) {
+        const raw = String(rawText || '').trim();
+        if (!raw) return [];
+        return raw.split(/\r?\n/)
+            .map(line => line.trim())
+            .filter(Boolean)
+            .map(line => (line.indexOf('\t') !== -1 ? line.split('\t') : line.split(',')).map(value => String(value || '').trim()))
+            .filter(cols => cols.length && !(cols[0] || '').startsWith('##'));
+    }
+
+    function getInputDatasetsFromMainForm() {
+        const labels = parseLabelSeries(document.getElementById('labelsInput') ? document.getElementById('labelsInput').value : '');
+        const expectedCount = labels.length || null;
+        const datasetNames = [1, 2, 3, 4].map(index => (document.getElementById(`dataName${index}`)?.value || '').trim());
+        const datasets = [1, 2, 3, 4]
+            .map(index => parseNumericSeries(document.getElementById(`dataInput${index}`)?.value || '', expectedCount))
+            .filter(series => series.length);
+        return { labels, datasetNames, datasets };
+    }
+
+    function getAdvancedPaletteColors(paletteOverride = null) {
+        const palette = paletteOverride || getActivePalette();
+        const source = []
+            .concat(palette.bar || [])
+            .concat(palette.line || [])
+            .concat(palette.pie || [])
+            .concat([palette.main, palette.accent, palette.gray1, palette.gray2, palette.light])
+            .map(normalizePieHexColor)
+            .filter(Boolean);
+        const deduped = [];
+        const seen = new Set();
+        source.forEach(color => {
+            const key = color.toLowerCase();
+            if (!seen.has(key)) {
+                seen.add(key);
+                deduped.push(color);
+            }
+        });
+        return deduped.length ? deduped : ['#E61E2B', '#F48F1F', '#2F6BFF', '#2E8B57', '#8A2BE2', '#00B4D8', '#7F5539', '#6B7280'];
+    }
+
+    function clearAreaSvgPreview() {
+        const areaSvgPreview = document.getElementById('areaSvgPreview');
+        if (areaSvgPreview) areaSvgPreview.remove();
+    }
+
+    function showCanvasAdvancedChartMode() {
+        const chartContainer = document.getElementById('chart-container');
+        const canvas = document.getElementById('myChart');
+        const tableContainer = document.getElementById('table-container');
+        clearAreaSvgPreview();
+        if (chartContainer) chartContainer.style.display = 'block';
+        if (canvas) canvas.style.display = 'block';
+        if (tableContainer) {
+            tableContainer.style.display = 'none';
+            tableContainer.innerHTML = '';
+        }
+    }
+
+    function showAreaSvgChartMode(svgHtml) {
+        const chartContainer = document.getElementById('chart-container');
+        const canvas = document.getElementById('myChart');
+        const tableContainer = document.getElementById('table-container');
+        if (chartContainer) {
+            chartContainer.style.display = 'block';
+            chartContainer.style.height = '420px';
+        }
+        if (canvas) canvas.style.display = 'none';
+        if (tableContainer) {
+            tableContainer.style.display = 'none';
+            tableContainer.innerHTML = '';
+        }
+        if (!chartContainer) return;
+        let host = document.getElementById('areaSvgPreview');
+        if (!host) {
+            host = document.createElement('div');
+            host.id = 'areaSvgPreview';
+            host.className = 'area-svg-preview';
+            host.setAttribute('data-html2canvas-ignore', 'false');
+            host.style.position = 'absolute';
+            host.style.left = '0';
+            host.style.right = '0';
+            host.style.top = '0';
+            host.style.bottom = '0';
+            host.style.width = '100%';
+            host.style.height = '100%';
+            host.style.zIndex = '2';
+            const pieSideList = document.getElementById('pie-side-list');
+            if (pieSideList && pieSideList.parentNode === chartContainer) chartContainer.insertBefore(host, pieSideList);
+            else chartContainer.appendChild(host);
+        }
+        host.style.display = 'block';
+        host.innerHTML = svgHtml || '';
+    }
+
+    function showHtmlAdvancedChartMode(html) {
+        const chartContainer = document.getElementById('chart-container');
+        const canvas = document.getElementById('myChart');
+        const tableContainer = document.getElementById('table-container');
+        if (chartContainer) chartContainer.style.display = 'none';
+        if (canvas) canvas.style.display = 'none';
+        if (tableContainer) {
+            tableContainer.style.display = 'block';
+            tableContainer.innerHTML = html;
+        }
+    }
+
+    function normalizeToHundredPercent(datasets) {
+        if (!Array.isArray(datasets) || !datasets.length) return [];
+        const length = Math.max(...datasets.map(series => Array.isArray(series) ? series.length : 0));
+        const result = datasets.map(series => Array.isArray(series) ? series.slice() : []);
+        for (let dataIndex = 0; dataIndex < length; dataIndex++) {
+            const total = result.reduce((sum, series) => sum + (Number(series[dataIndex]) || 0), 0);
+            for (let datasetIndex = 0; datasetIndex < result.length; datasetIndex++) {
+                const value = Number(result[datasetIndex][dataIndex]) || 0;
+                result[datasetIndex][dataIndex] = total > 0 ? +(value / total * 100).toFixed(1) : 0;
+            }
+        }
+        return result;
+    }
+
+
+    function getAreaHorizontalPaddingFromState(state = null) {
+        const raw = state
+            ? getSnapshotControlValue(state, 'areaHorizontalPadding', '5')
+            : (document.getElementById('areaHorizontalPadding') ? document.getElementById('areaHorizontalPadding').value : '5');
+        const value = parseInt(raw, 10);
+        return Number.isFinite(value) ? Math.max(0, Math.min(40, value)) : 0;
+    }
+
+    function updateAreaHorizontalPaddingDisplay() {
+        const display = document.getElementById('areaHorizontalPaddingDisplay');
+        if (display) display.innerText = `${getAreaHorizontalPaddingFromState()}%`;
+    }
+
+    function prepareAreaChartData(labels, datasets, paddingPercent = 0) {
+        const safeLabels = Array.isArray(labels) ? labels.slice() : [];
+        const safeDatasets = (Array.isArray(datasets) ? datasets : []).map(series => Array.isArray(series) ? series.slice() : []);
+        const baseIndexMap = safeLabels.map((_, index) => index);
+        const padding = Math.max(0, Math.min(40, parseInt(paddingPercent, 10) || 0));
+        if (!padding || safeLabels.length < 2 || !safeDatasets.length) {
+            return { labels: safeLabels, datasets: safeDatasets, sourceIndexMap: baseIndexMap };
+        }
+        const extraSlots = Math.max(1, Math.min(8, Math.ceil(safeLabels.length * padding / 100)));
+        const blankLabels = Array.from({ length: extraSlots }, () => '');
+        const paddedLabels = blankLabels.concat(safeLabels, blankLabels);
+        const paddedDatasets = safeDatasets.map(series => {
+            const blanks = Array.from({ length: extraSlots }, () => null);
+            return blanks.concat(series, blanks);
+        });
+        const sourceIndexMap = Array.from({ length: extraSlots }, () => null)
+            .concat(baseIndexMap)
+            .concat(Array.from({ length: extraSlots }, () => null));
+        return { labels: paddedLabels, datasets: paddedDatasets, sourceIndexMap };
+    }
+
+    function refreshAreaShapeControls() {
+        const type = document.getElementById('chartType') ? normalizeCompositeGraphType(document.getElementById('chartType').value) : '';
+        const group = document.getElementById('areaShapeSettingGroup');
+        if (group) group.style.display = (type === 'area' || type === 'stacked-area') ? 'block' : 'none';
+        updateAreaHorizontalPaddingDisplay();
+    }
+
+    function scaleValue(value, domainMin, domainMax, rangeMin, rangeMax) {
+        const safeMin = Number.isFinite(domainMin) ? domainMin : 0;
+        const safeMax = Number.isFinite(domainMax) ? domainMax : 1;
+        if (safeMax === safeMin) return (rangeMin + rangeMax) / 2;
+        const ratio = (value - safeMin) / (safeMax - safeMin);
+        return rangeMin + ratio * (rangeMax - rangeMin);
+    }
+
+    function formatAdvancedNumber(value, options = {}) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) return escapeHtml(value);
+        const shouldApplyKoreanNumber = options.koreanNumberApply !== undefined
+            ? !!options.koreanNumberApply
+            : (document.getElementById('koreanNumberType') ? document.getElementById('koreanNumberType').value === 'apply' : false);
+        const subText = options.subText || (document.getElementById('subInput') ? document.getElementById('subInput').value : '');
+        const outputValue = shouldApplyKoreanNumber ? formatKoreanNumber(numericValue, subText) : (Number.isInteger(numericValue) ? numericValue.toLocaleString('ko-KR') : String(numericValue));
+        return escapeHtml(outputValue);
+    }
+
+    function formatConciseAxisTick(value, options = {}) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) return '';
+        const shouldApplyKoreanNumber = options.koreanNumberApply !== undefined
+            ? !!options.koreanNumberApply
+            : (document.getElementById('koreanNumberType') ? document.getElementById('koreanNumberType').value === 'apply' : false);
+        const subText = options.subText || (document.getElementById('subInput') ? document.getElementById('subInput').value : '');
+        const absValue = Math.abs(numericValue);
+        // 1.4000000000000001 같은 부동소수 오차가 축에 그대로 나오지 않도록
+        // 작은 값은 반드시 소수 자릿수를 제한합니다. 한글 변환은 큰 숫자에만 적용합니다.
+        if (shouldApplyKoreanNumber && absValue >= 10000) return formatKoreanNumber(Math.round(numericValue), subText);
+        if (absValue >= 10000) return Math.round(numericValue).toLocaleString('ko-KR');
+        if (absValue >= 100) return Number(numericValue.toFixed(0)).toLocaleString('ko-KR');
+        if (absValue >= 10) return Number(numericValue.toFixed(1)).toString();
+        if (absValue >= 1) return Number(numericValue.toFixed(2)).toString();
+        if (absValue === 0) return '0';
+        return Number(numericValue.toFixed(3)).toString();
+    }
+
+
+    const AreaValueLabelPlugin = {
+        id: 'areaValueLabelPlugin',
+        afterDatasetsDraw(chart) {
+            const pluginOptions = chart.options && chart.options.plugins ? chart.options.plugins.areaValueLabels : null;
+            if (!pluginOptions || pluginOptions.enabled === false) return;
+            const ctx = chart.ctx;
+            const formatValue = typeof pluginOptions.formatValue === 'function'
+                ? pluginOptions.formatValue
+                : (value) => formatConciseAxisTick(value, { koreanNumberApply: false });
+            (chart.data.datasets || []).forEach((dataset, datasetIndex) => {
+                if (!dataset || !dataset._areaValueLabels) return;
+                const meta = chart.getDatasetMeta(datasetIndex);
+                if (!meta || !Array.isArray(meta.data)) return;
+                const displayType = dataset._areaLabelDisplayType || 'all';
+                const selectedTargets = new Set(Array.isArray(dataset._areaSelectedTargets) ? dataset._areaSelectedTargets : []);
+                const highlightMap = dataset._areaHighlightMap || {};
+                const sourceMap = Array.isArray(dataset._sourceDataIndexMap) ? dataset._sourceDataIndexMap : null;
+                const baseFontSize = Number(dataset._areaLabelFontSize) || 13;
+                const baseColor = dataset._areaLabelColor || (Array.isArray(dataset.borderColor) ? '#111111' : (dataset.borderColor || '#111111'));
+                meta.data.forEach((point, dataIndex) => {
+                    const raw = Array.isArray(dataset.data) ? dataset.data[dataIndex] : undefined;
+                    if (raw === null || raw === undefined || !Number.isFinite(Number(raw))) return;
+                    if (!point || point.skip || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return;
+                    const sourceIndex = sourceMap ? sourceMap[dataIndex] : dataIndex;
+                    if (sourceIndex === null || sourceIndex === undefined || !Number.isFinite(Number(sourceIndex))) return;
+                    const targetKey = `${datasetIndex}|${sourceIndex}`;
+                    if (displayType === 'none') return;
+                    if (displayType === 'selected' && !selectedTargets.has(targetKey)) return;
+                    const highlightColor = highlightMap[targetKey] || '';
+                    const fontSize = highlightColor ? Math.min(baseFontSize + 4, 36) : baseFontSize;
+                    const textColor = highlightColor || baseColor;
+                    const text = String(formatValue(raw));
+                    if (!text) return;
+                    ctx.save();
+                    ctx.font = `bold ${fontSize}px ${globalFont || 'sans-serif'}`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.fillStyle = textColor;
+                    const x = point.x;
+                    const y = point.y - 7;
+                    ctx.strokeText(text, x, y);
+                    ctx.fillText(text, x, y);
+                    ctx.restore();
+                });
+            });
+        }
+    };
+
+
+    function sanitizeAreaSvgDatasets(datasets) {
+        return (Array.isArray(datasets) ? datasets : [])
+            .map(series => (Array.isArray(series) ? series : [])
+                .map(value => {
+                    const numericValue = Number(value);
+                    return Number.isFinite(numericValue) ? numericValue : 0;
+                }))
+            .filter(series => series.length);
+    }
+
+    function buildAreaSvgChartHtml(labels, rawDatasets, datasetNames, options = {}) {
+        const safeLabels = Array.isArray(labels) ? labels.map(label => String(label ?? '')) : [];
+        const safeDatasets = sanitizeAreaSvgDatasets(rawDatasets);
+        const maxLen = Math.max(safeLabels.length, ...safeDatasets.map(series => series.length), 0);
+        const displayLabels = Array.from({ length: maxLen }, (_, index) => safeLabels[index] || `항목 ${index + 1}`);
+        const normalizedDatasets = safeDatasets.map(series => Array.from({ length: maxLen }, (_, index) => Number(series[index]) || 0));
+        if (!maxLen || !normalizedDatasets.length) {
+            return '<div class="multi-card-table-empty">(면적 그래프 데이터가 없습니다)</div>';
+        }
+
+        const width = Number(options.width) || 670;
+        const height = Number(options.height) || 420;
+        const compact = !!options.compact;
+        const isStacked = !!options.stacked;
+        const palette = options.palette || getActivePalette();
+        const colors = (options.colors && options.colors.length ? options.colors : getAdvancedPaletteColors(palette));
+        const paddingPercent = Math.max(0, Math.min(40, Number(options.paddingPercent ?? getAreaHorizontalPaddingFromState()) || 0));
+        const fontScale = Number(options.fontScale) || 1;
+        const baseFont = Math.max(10, Math.round((compact ? 10.5 : 13) * fontScale));
+        const axisFont = Math.max(9, Math.round((compact ? 9.5 : 12) * fontScale));
+        const valueFont = Math.max(9, Math.round((compact ? 9.5 : 12.5) * fontScale));
+        const legendFont = Math.max(9, Math.round((compact ? 9.5 : 12) * fontScale));
+        const margin = {
+            left: compact ? 38 : 54,
+            right: compact ? 22 : 34,
+            top: (normalizedDatasets.length > 1 ? (compact ? 38 : 42) : (compact ? 24 : 30)),
+            bottom: compact ? 38 : 50
+        };
+        const plotLeft = margin.left;
+        const plotRight = width - margin.right;
+        const plotTop = margin.top;
+        const plotBottom = height - margin.bottom;
+        const plotWidth = Math.max(1, plotRight - plotLeft);
+        const plotHeight = Math.max(1, plotBottom - plotTop);
+        const innerPad = Math.min(plotWidth * 0.42, plotWidth * (paddingPercent / 100));
+        const pointSpan = maxLen <= 1 ? 0 : Math.max(1, plotWidth - innerPad * 2);
+        const getX = index => maxLen <= 1 ? (plotLeft + plotRight) / 2 : plotLeft + innerPad + (pointSpan * index / (maxLen - 1));
+
+        const cumulative = Array.from({ length: maxLen }, () => 0);
+        const stackedSeries = normalizedDatasets.map(series => series.map((value, index) => {
+            cumulative[index] += value;
+            return cumulative[index];
+        }));
+        const allValues = isStacked
+            ? [0].concat(stackedSeries.flat())
+            : [0].concat(normalizedDatasets.flat());
+        const minValueAuto = Math.min(...allValues);
+        const maxValueAuto = Math.max(...allValues);
+        const manualMin = options.yMin !== undefined && options.yMin !== '' ? Number(options.yMin) : NaN;
+        const manualMax = options.yMax !== undefined && options.yMax !== '' ? Number(options.yMax) : NaN;
+        let yMin = Number.isFinite(manualMin) ? manualMin : Math.min(0, minValueAuto);
+        let yMax = Number.isFinite(manualMax) ? manualMax : Math.max(1, maxValueAuto);
+        if (yMax === yMin) yMax = yMin + 1;
+        if (!Number.isFinite(manualMax)) {
+            const pad = Math.abs(yMax - yMin) * 0.10;
+            yMax += pad;
+        }
+        if (!Number.isFinite(manualMin) && yMin < 0) {
+            const pad = Math.abs(yMax - yMin) * 0.05;
+            yMin -= pad;
+        }
+        if (yMax === yMin) yMax = yMin + 1;
+        const zeroY = scaleValue(0, yMin, yMax, plotBottom, plotTop);
+        const yFor = value => scaleValue(value, yMin, yMax, plotBottom, plotTop);
+        const shouldApplyKoreanNumber = options.koreanNumberApply !== undefined
+            ? !!options.koreanNumberApply
+            : (document.getElementById('koreanNumberType') ? document.getElementById('koreanNumberType').value === 'apply' : false);
+        const subText = options.subText || (document.getElementById('subInput') ? document.getElementById('subInput').value : '');
+        const formatValue = value => formatConciseAxisTick(value, { koreanNumberApply: shouldApplyKoreanNumber, subText });
+        const optionDatasetFontSizes = Array.isArray(options.datasetLabelFontSizes) ? options.datasetLabelFontSizes : null;
+        const optionDatasetFontColors = Array.isArray(options.datasetLabelColors) ? options.datasetLabelColors : null;
+        const optionLabelDisplayTypes = Array.isArray(options.labelDisplayTypes) ? options.labelDisplayTypes : null;
+        const rawSelectedTargets = options.selectedLabelDisplayTargets;
+        const selectedAreaLabelTargets = rawSelectedTargets instanceof Set
+            ? rawSelectedTargets
+            : new Set(Array.isArray(rawSelectedTargets) ? rawSelectedTargets : []);
+        const rawHighlightMap = options.highlightConfig && options.highlightConfig.targetColorMap;
+        const areaHighlightTargetColorMap = rawHighlightMap instanceof Map
+            ? rawHighlightMap
+            : new Map(rawHighlightMap && typeof rawHighlightMap === 'object' ? Object.entries(rawHighlightMap) : []);
+        const getAreaPointKey = (datasetIndex, dataIndex) => `${datasetIndex}|${dataIndex}`;
+        const getAreaHighlightColor = (datasetIndex, dataIndex) => areaHighlightTargetColorMap.get(getAreaPointKey(datasetIndex, dataIndex)) || null;
+        const getAreaDatasetLabelDisplayType = (datasetIndex) => {
+            const fromOption = optionLabelDisplayTypes && optionLabelDisplayTypes[datasetIndex];
+            if (fromOption) return normalizeLabelDisplayType(fromOption);
+            return typeof getDatasetLabelDisplayType === 'function' ? getDatasetLabelDisplayType(datasetIndex) : 'all';
+        };
+        const shouldShowAreaValueLabel = (datasetIndex, dataIndex) => {
+            const displayType = getAreaDatasetLabelDisplayType(datasetIndex);
+            if (displayType === 'none') return false;
+            if (displayType === 'selected') return selectedAreaLabelTargets.has(getAreaPointKey(datasetIndex, dataIndex));
+            return true;
+        };
+        const getAreaDatasetValueFont = (datasetIndex) => {
+            const optionValue = optionDatasetFontSizes && Number(optionDatasetFontSizes[datasetIndex]);
+            if (Number.isFinite(optionValue) && optionValue > 0) return Math.max(8, Math.round(optionValue));
+            if (typeof getDatasetLabelFontSize === 'function') return Math.max(8, Math.round(getDatasetLabelFontSize(datasetIndex)));
+            return valueFont;
+        };
+        const getAreaValueLabelColor = (datasetIndex, dataIndex, fallbackColor) => {
+            const highlightColor = getAreaHighlightColor(datasetIndex, dataIndex);
+            if (highlightColor) return highlightColor;
+            const optionColor = optionDatasetFontColors && optionDatasetFontColors[datasetIndex];
+            if (optionColor) return optionColor;
+            if (typeof getDatasetLabelColor === 'function') {
+                const domColor = getDatasetLabelColor(datasetIndex);
+                if (domColor) return domColor;
+            }
+            return fallbackColor;
+        };
+        const safeText = value => escapeHtml(String(value ?? ''));
+        const linePath = points => points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
+        const areaPathToBaseline = points => {
+            if (!points.length) return '';
+            const firstX = points[0].x;
+            const lastX = points[points.length - 1].x;
+            return `${linePath(points)} L ${lastX.toFixed(2)} ${zeroY.toFixed(2)} L ${firstX.toFixed(2)} ${zeroY.toFixed(2)} Z`;
+        };
+        const areaPathBetween = (topPoints, bottomPoints) => {
+            if (!topPoints.length) return '';
+            const reverseBottom = bottomPoints.slice().reverse();
+            return `${linePath(topPoints)} ${reverseBottom.map(point => `L ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ')} Z`;
+        };
+
+        let html = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" style="display:block; width:100%; height:100%; font-family:'Noto Sans KR','Pretendard','Malgun Gothic',Arial,sans-serif; overflow:visible;">`;
+        html += `<rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff"></rect>`;
+        const tickCount = compact ? 4 : 5;
+        for (let i = 0; i <= tickCount; i++) {
+            const t = i / tickCount;
+            const value = yMin + (yMax - yMin) * (1 - t);
+            const y = plotTop + plotHeight * t;
+            html += `<line x1="${plotLeft}" y1="${y.toFixed(2)}" x2="${plotRight}" y2="${y.toFixed(2)}" stroke="#E5E7EB" stroke-width="1"></line>`;
+            html += `<text x="${plotLeft - 8}" y="${(y + 4).toFixed(2)}" text-anchor="end" fill="#666" font-size="${axisFont}" font-weight="700">${safeText(formatValue(value))}</text>`;
+        }
+        html += `<line x1="${plotLeft}" y1="${zeroY.toFixed(2)}" x2="${plotRight}" y2="${zeroY.toFixed(2)}" stroke="#111" stroke-width="${Math.abs(zeroY - plotBottom) < 1 ? 1 : 1.5}" opacity="0.72"></line>`;
+
+        const sourceForRender = isStacked ? stackedSeries : normalizedDatasets;
+        sourceForRender.forEach((series, datasetIndex) => {
+            const color = colors[datasetIndex % colors.length] || (palette.main || '#E61E2B');
+            const topPoints = series.map((value, index) => ({ x: getX(index), y: yFor(value), value }));
+            const bottomValues = isStacked && datasetIndex > 0 ? stackedSeries[datasetIndex - 1] : Array.from({ length: maxLen }, () => 0);
+            const bottomPoints = bottomValues.map((value, index) => ({ x: getX(index), y: yFor(value), value }));
+            const fillPath = isStacked ? areaPathBetween(topPoints, bottomPoints) : areaPathToBaseline(topPoints);
+            html += `<path d="${fillPath}" fill="${escapeHtml(mixPieColor(color, '#ffffff', 0.58))}" stroke="none" opacity="0.86"></path>`;
+        });
+
+        const areaValueLabelEntriesByColumn = Array.from({ length: maxLen }, () => []);
+        sourceForRender.forEach((series, datasetIndex) => {
+            const color = colors[datasetIndex % colors.length] || (palette.main || '#E61E2B');
+            const points = series.map((value, index) => ({ x: getX(index), y: yFor(value), value }));
+            html += `<path d="${linePath(points)}" fill="none" stroke="${escapeHtml(color)}" stroke-width="${compact ? 2.4 : 3.2}" stroke-linejoin="round" stroke-linecap="round"></path>`;
+            points.forEach((point, dataIndex) => {
+                const rawValue = normalizedDatasets[datasetIndex][dataIndex];
+                const valueText = formatValue(rawValue);
+                const valueLabelFont = getAreaDatasetValueFont(datasetIndex);
+                const highlightColor = getAreaHighlightColor(datasetIndex, dataIndex);
+                const valueLabelColor = getAreaValueLabelColor(datasetIndex, dataIndex, color);
+                const labelY = Math.max(plotTop + valueLabelFont + 2, point.y - (compact ? 7 : 9));
+                const pointRadius = highlightColor ? (compact ? 5.4 : 7.1) : (compact ? 3.5 : 4.6);
+                const pointStrokeWidth = highlightColor ? (compact ? 3 : 3.6) : 2;
+                html += `<circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="${pointRadius}" fill="#ffffff" stroke="${escapeHtml(valueLabelColor)}" stroke-width="${pointStrokeWidth}" data-area-edit-kind="value" data-dataset-index="${datasetIndex}" data-data-index="${dataIndex}"></circle>`;
+                if (valueText && shouldShowAreaValueLabel(datasetIndex, dataIndex)) {
+                    areaValueLabelEntriesByColumn[dataIndex].push({
+                        x: point.x,
+                        desiredY: labelY,
+                        minY: plotTop + valueLabelFont + 2,
+                        maxY: plotBottom - 6,
+                        fontSize: valueLabelFont,
+                        color: valueLabelColor,
+                        text: valueText,
+                        datasetIndex,
+                        dataIndex
+                    });
+                }
+            });
+        });
+
+        areaValueLabelEntriesByColumn.forEach(entries => {
+            if (!entries || !entries.length) return;
+            const sorted = entries.slice().sort((a, b) => a.desiredY - b.desiredY);
+            let previousY = null;
+            sorted.forEach(entry => {
+                const minGap = Math.max(11, Math.round(entry.fontSize * 0.9));
+                let y = Math.max(entry.minY, entry.desiredY);
+                if (previousY !== null && y < previousY + minGap) y = previousY + minGap;
+                entry.finalY = Math.min(entry.maxY, y);
+                previousY = entry.finalY;
+            });
+            for (let i = sorted.length - 2; i >= 0; i--) {
+                const next = sorted[i + 1];
+                const current = sorted[i];
+                const minGap = Math.max(11, Math.round(Math.max(current.fontSize, next.fontSize) * 0.9));
+                const maxAllowed = Math.min(current.maxY, next.finalY - minGap);
+                current.finalY = Math.max(current.minY, Math.min(current.finalY, maxAllowed));
+            }
+            sorted.forEach(entry => {
+                html += `<text x="${entry.x.toFixed(2)}" y="${entry.finalY.toFixed(2)}" text-anchor="middle" fill="${escapeHtml(entry.color)}" stroke="#ffffff" stroke-width="4" paint-order="stroke" font-size="${entry.fontSize}" font-weight="900" data-area-edit-kind="value" data-dataset-index="${entry.datasetIndex}" data-data-index="${entry.dataIndex}">${safeText(entry.text)}</text>`;
+            });
+        });
+
+        displayLabels.forEach((label, index) => {
+            const x = getX(index);
+            const y = plotBottom + (compact ? 18 : 23);
+            html += `<text x="${x.toFixed(2)}" y="${y}" text-anchor="middle" fill="#333" font-size="${axisFont}" font-weight="800" data-area-edit-kind="label" data-data-index="${index}">${safeText(label)}</text>`;
+        });
+
+        if (normalizedDatasets.length > 1) {
+            let legendX = plotRight;
+            const legendY = compact ? 16 : 19;
+            const names = Array.isArray(datasetNames) ? datasetNames : [];
+            for (let i = normalizedDatasets.length - 1; i >= 0; i--) {
+                const name = names[i] || `데이터 ${i + 1}`;
+                const approxWidth = Math.max(48, name.length * legendFont * 0.64 + 22);
+                const x = legendX - approxWidth;
+                const color = colors[i % colors.length] || palette.main || '#E61E2B';
+                html += `<circle cx="${x + 6}" cy="${legendY - 4}" r="4.5" fill="${escapeHtml(color)}"></circle>`;
+                html += `<text x="${x + 15}" y="${legendY}" fill="#333" font-size="${legendFont}" font-weight="900" data-area-edit-kind="dataset-name" data-dataset-index="${i}">${safeText(name)}</text>`;
+                legendX = x - 10;
+            }
+        }
+        html += '</svg>';
+        return html;
+    }
+
+    function buildRawChartLabelEditState(labelIndex, title = 'X축 항목명 수정') {
+        const labelsInput = document.getElementById('labelsInput');
+        const labels = splitLabelInputPreservingEmpty(labelsInput ? labelsInput.value : '');
+        if (labelIndex < 0) return null;
+        return {
+            kind: 'chart-label',
+            labelIndex,
+            value: labels[labelIndex] || '',
+            title,
+            sub: `항목 ${labelIndex + 1} · 현재 항목명`
+        };
+    }
+
+    function buildRawDatasetNameEditState(datasetIndex, title = '데이터명 수정') {
+        const sourceInputIndex = datasetIndex + 1;
+        const nameInput = document.getElementById('dataName' + sourceInputIndex);
+        const currentName = (nameInput ? nameInput.value : '') || `데이터 ${sourceInputIndex}`;
+        return {
+            kind: 'dataset-name',
+            datasetIndex,
+            sourceInputIndex,
+            value: currentName,
+            title,
+            sub: `데이터 ${sourceInputIndex} 이름 · 현재 데이터명`
+        };
+    }
+
+    function buildAreaValueEditState(datasetIndex, dataIndex) {
+        const sourceInputIndex = Number(datasetIndex) + 1;
+        const targetInput = document.getElementById('dataInput' + sourceInputIndex);
+        if (!targetInput) return null;
+        const values = splitEditableDataSeries(targetInput.value);
+        return {
+            kind: 'chart-value',
+            sourceInputIndex,
+            datasetIndex: Number(datasetIndex),
+            dataIndex: Number(dataIndex),
+            value: values[dataIndex] !== undefined ? values[dataIndex] : '',
+            title: '면적 그래프 수치 수정',
+            sub: `데이터 ${sourceInputIndex} · ${Number(dataIndex) + 1}번째 값`
+        };
+    }
+
+    function setupAreaSvgQuickEditing() {
+        const chartContainer = document.getElementById('chart-container');
+        if (!chartContainer || chartContainer.dataset.areaSvgEditReady === 'true') return;
+        const getAreaTarget = event => {
+            const target = event.target && event.target.closest ? event.target.closest('[data-area-edit-kind]') : null;
+            return target && chartContainer.contains(target) ? target : null;
+        };
+        chartContainer.addEventListener('mousemove', event => {
+            const target = getAreaTarget(event);
+            if (!target) return;
+            const kind = target.dataset.areaEditKind || '';
+            const message = kind === 'value' ? VALUE_EDIT_HOVER_MESSAGE : (kind === 'dataset-name' ? DATASET_NAME_EDIT_HOVER_MESSAGE : ITEM_EDIT_HOVER_MESSAGE);
+            showPreviewHoverHint(event, message);
+        });
+        chartContainer.addEventListener('mouseleave', () => schedulePreviewHoverHintHide(80));
+        chartContainer.addEventListener('dblclick', event => {
+            const target = getAreaTarget(event);
+            if (!target) return;
+            const kind = target.dataset.areaEditKind || '';
+            let state = null;
+            if (kind === 'value') {
+                state = buildAreaValueEditState(Number(target.dataset.datasetIndex || 0), Number(target.dataset.dataIndex || 0));
+            } else if (kind === 'dataset-name') {
+                state = buildRawDatasetNameEditState(Number(target.dataset.datasetIndex || 0), '데이터명 수정');
+            } else if (kind === 'label') {
+                state = buildRawChartLabelEditState(Number(target.dataset.dataIndex || 0), 'X축 항목명 수정');
+            }
+            if (!state) return;
+            hideChartQuickEditor(true);
+            hidePreviewHoverHint();
+            showPreviewQuickEditor(event, state);
+            focusPreviewQuickEditInput();
+        });
+        chartContainer.dataset.areaSvgEditReady = 'true';
+    }
+
+    function buildAdvancedTableChartHtml(type, rawText, options = {}) {
+        const normalizedType = normalizeCompositeGraphType(type);
+        const rows = parseSimpleTableRows(rawText);
+        const palette = options.palette || getActivePalette();
+        const colors = getAdvancedPaletteColors(palette);
+        const baseFontSize = Number(options.fontSize) || (document.getElementById('globalFontSize') ? parseInt(document.getElementById('globalFontSize').value, 10) : 20) || 20;
+        const compact = !!options.compact;
+        const width = 670;
+        const height = compact ? 300 : 420;
+        const fontSize = Math.max(10, Math.round(baseFontSize * (compact ? 0.62 : 0.76)));
+        const labelFontSize = Math.max(10, Math.round(baseFontSize * (compact ? 0.58 : 0.72)));
+        const axisColor = '#666666';
+        const gridColor = '#E5E7EB';
+        const mainColor = normalizePieHexColor(palette.main || colors[0] || '#E61E2B') || '#E61E2B';
+        const subtitle = options.subText || '';
+        const numberOptions = { koreanNumberApply: options.koreanNumberApply, subText: subtitle };
+
+        if (!rows.length || rows.length < 2) {
+            return '<div class="multi-card-table-empty">(표데이터를 기입해주세요)</div>';
+        }
+
+        const svgOpen = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" style="display:block; width:100%; height:auto; margin-top:8px; font-family:'Noto Sans KR','Pretendard','Malgun Gothic',Arial,sans-serif;">`;
+        const safeText = value => escapeHtml(String(value ?? ''));
+
+        if (normalizedType === 'heatmap') {
+            const headers = rows[0].slice(1);
+            const bodyRows = rows.slice(1);
+            const values = [];
+            bodyRows.forEach(row => row.slice(1).forEach(value => {
+                const numericValue = advancedToNumber(value);
+                if (Number.isFinite(numericValue)) values.push(numericValue);
+            }));
+            const minValue = values.length ? Math.min(...values) : 0;
+            const maxValue = values.length ? Math.max(...values) : 1;
+            const tableFontSize = Math.max(10, Math.round(baseFontSize * (compact ? 0.58 : 0.82)));
+            const getCellColor = value => {
+                const numericValue = advancedToNumber(value);
+                const ratio = maxValue === minValue ? 0.55 : Math.max(0, Math.min(1, (numericValue - minValue) / (maxValue - minValue)));
+                return `rgba(230,30,43,${(0.14 + ratio * 0.76).toFixed(2)})`;
+            };
+            let html = `<table class="asia-table advanced-heatmap-table" style="font-size:${tableFontSize}px; margin-top:8px;">`;
+            html += `<thead><tr><th></th>${headers.map(header => `<th>${safeText(header)}</th>`).join('')}</tr></thead><tbody>`;
+            bodyRows.forEach(row => {
+                html += `<tr><td class="col-0">${safeText(row[0] || '')}</td>`;
+                row.slice(1).forEach(value => {
+                    const bg = getCellColor(value);
+                    const textColor = advancedToNumber(value) > (minValue + maxValue) / 2 ? '#ffffff' : '#111111';
+                    html += `<td style="background:${bg}; color:${textColor}; font-weight:800;">${formatAdvancedNumber(advancedToNumber(value), numberOptions)}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            return html;
+        }
+
+        if (normalizedType === 'treemap') {
+            const items = rows.slice(1).map(row => ({
+                label: row[0] || '',
+                value: Math.max(0, advancedToNumber(row[1]))
+            })).filter(item => item.label && item.value > 0);
+            if (!items.length) return '<div class="multi-card-table-empty">(트리맵용 값이 없습니다)</div>';
+            const total = items.reduce((sum, item) => sum + item.value, 0) || 1;
+            const topPadding = 6;
+            const gap = 3;
+            let x = 0;
+            let svg = svgOpen;
+            items.forEach((item, index) => {
+                const rectWidth = Math.max(2, (item.value / total) * width);
+                const fill = colors[index % colors.length];
+                const textColor = getReadableTextColorForBackground(fill);
+                const percent = ((item.value / total) * 100).toFixed(1);
+                const label = rectWidth > 55 ? safeText(item.label) : '';
+                const valueText = rectWidth > 70 ? `${formatAdvancedNumber(item.value, numberOptions)} (${percent}%)` : '';
+                svg += `<rect x="${x}" y="${topPadding}" width="${Math.max(0, rectWidth - gap)}" height="${height - topPadding}" rx="6" fill="${fill}" stroke="#ffffff" stroke-width="2"></rect>`;
+                if (label) svg += `<text x="${x + 10}" y="${topPadding + 24}" fill="${textColor}" font-size="${fontSize}" font-weight="900">${label}</text>`;
+                if (valueText) svg += `<text x="${x + 10}" y="${topPadding + 48}" fill="${textColor}" font-size="${Math.max(10, fontSize - 2)}" font-weight="800">${valueText}</text>`;
+                x += rectWidth;
+            });
+            svg += '</svg>';
+            return svg;
+        }
+
+        if (normalizedType === 'scatter') {
+            const points = rows.slice(1).map(row => ({
+                label: row[0] || '',
+                x: advancedToNumber(row[1]),
+                y: advancedToNumber(row[2])
+            })).filter(point => point.label);
+            if (!points.length) return '<div class="multi-card-table-empty">(산점도용 값이 없습니다)</div>';
+            const margin = { left: 58, right: 34, top: 22, bottom: 46 };
+            const xValues = points.map(point => point.x);
+            const yValues = points.map(point => point.y);
+            const xMin = Math.min(0, Math.min(...xValues));
+            const xMax = Math.max(...xValues) * 1.08 || 1;
+            const yMin = Math.min(0, Math.min(...yValues));
+            const yMax = Math.max(...yValues) * 1.10 || 1;
+            let svg = svgOpen;
+            svg += `<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="${axisColor}" stroke-width="1.5"></line>`;
+            svg += `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${height - margin.bottom}" stroke="${axisColor}" stroke-width="1.5"></line>`;
+            [0, 0.25, 0.5, 0.75, 1].forEach(tick => {
+                const y = margin.top + tick * (height - margin.top - margin.bottom);
+                const yValue = yMax - (yMax - yMin) * tick;
+                svg += `<line x1="${margin.left}" y1="${y}" x2="${width - margin.right}" y2="${y}" stroke="${gridColor}" stroke-width="1"></line>`;
+                svg += `<text x="${margin.left - 8}" y="${y + 4}" text-anchor="end" fill="${axisColor}" font-size="${Math.max(10, labelFontSize - 1)}" font-weight="700">${safeText(formatAdvancedNumber(yValue, numberOptions))}</text>`;
+            });
+            [0, 0.25, 0.5, 0.75, 1].forEach(tick => {
+                const x = margin.left + tick * (width - margin.left - margin.right);
+                const xValue = xMin + (xMax - xMin) * tick;
+                svg += `<line x1="${x}" y1="${height - margin.bottom}" x2="${x}" y2="${height - margin.bottom + 5}" stroke="${axisColor}" stroke-width="1"></line>`;
+                svg += `<text x="${x}" y="${height - margin.bottom + 21}" text-anchor="middle" fill="${axisColor}" font-size="${Math.max(10, labelFontSize - 1)}" font-weight="700">${safeText(formatAdvancedNumber(xValue, numberOptions))}</text>`;
+            });
+            points.forEach((point, index) => {
+                const cx = scaleValue(point.x, xMin, xMax, margin.left, width - margin.right);
+                const cy = scaleValue(point.y, yMin, yMax, height - margin.bottom, margin.top);
+                const fill = colors[index % colors.length];
+                svg += `<circle cx="${cx}" cy="${cy}" r="${compact ? 5 : 7}" fill="${fill}" stroke="#ffffff" stroke-width="2"></circle>`;
+                svg += `<text x="${cx + 8}" y="${cy - 8}" fill="#111111" font-size="${labelFontSize}" font-weight="800">${safeText(point.label)}</text>`;
+            });
+            svg += '</svg>';
+            return svg;
+        }
+
+        if (normalizedType === 'slope') {
+            const header = rows[0];
+            const items = rows.slice(1).map(row => ({
+                label: row[0] || '',
+                before: advancedToNumber(row[1]),
+                after: advancedToNumber(row[2])
+            })).filter(item => item.label);
+            if (!items.length) return '<div class="multi-card-table-empty">(슬로프 차트용 값이 없습니다)</div>';
+            const values = items.flatMap(item => [item.before, item.after]);
+            const minValue = Math.min(0, Math.min(...values));
+            const maxValue = Math.max(...values) * 1.08 || 1;
+            const x1 = compact ? 160 : 190;
+            const x2 = width - (compact ? 160 : 190);
+            const yTop = 30;
+            const yBottom = height - 36;
+            let svg = svgOpen;
+            svg += `<text x="${x1}" y="18" text-anchor="middle" fill="#111" font-size="${fontSize}" font-weight="900">${safeText(header[1] || '시점1')}</text>`;
+            svg += `<text x="${x2}" y="18" text-anchor="middle" fill="#111" font-size="${fontSize}" font-weight="900">${safeText(header[2] || '시점2')}</text>`;
+            items.forEach((item, index) => {
+                const y1 = scaleValue(item.before, minValue, maxValue, yBottom, yTop);
+                const y2 = scaleValue(item.after, minValue, maxValue, yBottom, yTop);
+                const color = colors[index % colors.length];
+                svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="3" opacity="0.88"></line>`;
+                svg += `<circle cx="${x1}" cy="${y1}" r="5" fill="${color}" stroke="#fff" stroke-width="2"></circle>`;
+                svg += `<circle cx="${x2}" cy="${y2}" r="5" fill="${color}" stroke="#fff" stroke-width="2"></circle>`;
+                svg += `<text x="${x1 - 10}" y="${y1 + 4}" text-anchor="end" fill="#333" font-size="${labelFontSize}" font-weight="800">${safeText(item.label)} ${formatAdvancedNumber(item.before, numberOptions)}</text>`;
+                svg += `<text x="${x2 + 10}" y="${y2 + 4}" fill="#333" font-size="${labelFontSize}" font-weight="800">${formatAdvancedNumber(item.after, numberOptions)}</text>`;
+            });
+            svg += '</svg>';
+            return svg;
+        }
+
+        if (normalizedType === 'dumbbell') {
+            const header = rows[0];
+            const items = rows.slice(1).map(row => ({
+                label: row[0] || '',
+                a: advancedToNumber(row[1]),
+                b: advancedToNumber(row[2])
+            })).filter(item => item.label);
+            if (!items.length) return '<div class="multi-card-table-empty">(덤벨 차트용 값이 없습니다)</div>';
+            const values = items.flatMap(item => [item.a, item.b]);
+            const minValue = Math.min(0, Math.min(...values));
+            const maxValue = Math.max(...values) * 1.10 || 1;
+            const margin = { left: compact ? 96 : 130, right: 54, top: 34, bottom: 34 };
+            const rowGap = (height - margin.top - margin.bottom) / Math.max(1, items.length - 1);
+            let svg = svgOpen;
+            svg += `<text x="${width - margin.right - 130}" y="18" fill="${colors[0]}" font-size="${labelFontSize}" font-weight="900">● ${safeText(header[1] || '값1')}</text>`;
+            svg += `<text x="${width - margin.right - 40}" y="18" fill="${colors[2] || colors[1]}" font-size="${labelFontSize}" font-weight="900">● ${safeText(header[2] || '값2')}</text>`;
+            svg += `<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="${gridColor}" stroke-width="1"></line>`;
+            items.forEach((item, index) => {
+                const y = margin.top + index * rowGap;
+                const xA = scaleValue(item.a, minValue, maxValue, margin.left, width - margin.right);
+                const xB = scaleValue(item.b, minValue, maxValue, margin.left, width - margin.right);
+                svg += `<text x="${margin.left - 10}" y="${y + 5}" text-anchor="end" fill="#111" font-size="${labelFontSize}" font-weight="800">${safeText(item.label)}</text>`;
+                svg += `<line x1="${xA}" y1="${y}" x2="${xB}" y2="${y}" stroke="#B8B8B8" stroke-width="4" stroke-linecap="round"></line>`;
+                svg += `<circle cx="${xA}" cy="${y}" r="7" fill="${colors[0]}" stroke="#ffffff" stroke-width="2"></circle>`;
+                svg += `<circle cx="${xB}" cy="${y}" r="7" fill="${colors[2] || colors[1]}" stroke="#ffffff" stroke-width="2"></circle>`;
+                svg += `<text x="${Math.min(xA, xB) - 8}" y="${y - 10}" text-anchor="end" fill="#555" font-size="${Math.max(10, labelFontSize - 1)}">${formatAdvancedNumber(Math.min(item.a, item.b), numberOptions)}</text>`;
+                svg += `<text x="${Math.max(xA, xB) + 8}" y="${y - 10}" fill="#555" font-size="${Math.max(10, labelFontSize - 1)}">${formatAdvancedNumber(Math.max(item.a, item.b), numberOptions)}</text>`;
+            });
+            svg += '</svg>';
+            return svg;
+        }
+
+        if (normalizedType === 'waterfall') {
+            const items = rows.slice(1).map((row, index) => ({
+                label: row[0] || `항목 ${index + 1}`,
+                value: advancedToNumber(row[1]),
+                kind: String(row[2] || (index === 0 ? 'start' : 'delta')).toLowerCase()
+            })).filter(item => item.label);
+            if (!items.length) return '<div class="multi-card-table-empty">(워터폴 차트용 값이 없습니다)</div>';
+            let running = 0;
+            const bars = items.map((item, index) => {
+                if (item.kind === 'start') {
+                    running = item.value;
+                    return { ...item, start: 0, end: item.value, display: item.value, color: colors[0] };
+                }
+                if (item.kind === 'total') {
+                    return { ...item, start: 0, end: running, display: running, color: colors[3] || mainColor };
+                }
+                const start = running;
+                running += item.value;
+                return { ...item, start, end: running, display: item.value, color: item.value >= 0 ? (colors[1] || mainColor) : '#6B7280' };
+            });
+            const values = bars.flatMap(bar => [bar.start, bar.end]);
+            const minValue = Math.min(0, Math.min(...values));
+            const maxValue = Math.max(...values) * 1.12 || 1;
+            const margin = { left: 58, right: 22, top: 24, bottom: compact ? 54 : 70 };
+            const plotWidth = width - margin.left - margin.right;
+            const plotHeight = height - margin.top - margin.bottom;
+            const slot = plotWidth / Math.max(1, bars.length);
+            const barWidth = Math.max(12, slot * 0.62);
+            let svg = svgOpen;
+            [0, 0.25, 0.5, 0.75, 1].forEach(tick => {
+                const y = margin.top + tick * plotHeight;
+                svg += `<line x1="${margin.left}" y1="${y}" x2="${width - margin.right}" y2="${y}" stroke="${gridColor}" stroke-width="1"></line>`;
+            });
+            const zeroY = scaleValue(0, minValue, maxValue, margin.top + plotHeight, margin.top);
+            svg += `<line x1="${margin.left}" y1="${zeroY}" x2="${width - margin.right}" y2="${zeroY}" stroke="#111" stroke-width="1.4"></line>`;
+            bars.forEach((bar, index) => {
+                const x = margin.left + slot * index + (slot - barWidth) / 2;
+                const yStart = scaleValue(bar.start, minValue, maxValue, margin.top + plotHeight, margin.top);
+                const yEnd = scaleValue(bar.end, minValue, maxValue, margin.top + plotHeight, margin.top);
+                const y = Math.min(yStart, yEnd);
+                const rectHeight = Math.max(2, Math.abs(yEnd - yStart));
+                svg += `<rect x="${x}" y="${y}" width="${barWidth}" height="${rectHeight}" rx="4" fill="${bar.color}"></rect>`;
+                svg += `<text x="${x + barWidth / 2}" y="${y - 7}" text-anchor="middle" fill="#333" font-size="${Math.max(10, labelFontSize - 1)}" font-weight="800">${formatAdvancedNumber(bar.display, numberOptions)}</text>`;
+                svg += `<text x="${x + barWidth / 2}" y="${height - margin.bottom + 20}" text-anchor="middle" fill="#333" font-size="${Math.max(9, labelFontSize - 2)}" font-weight="800">${safeText(bar.label).slice(0, compact ? 8 : 12)}</text>`;
+            });
+            svg += '</svg>';
+            return svg;
+        }
+
+        return '<div class="multi-card-table-empty">(지원하지 않는 특수형 차트입니다)</div>';
+    }
+
+    function renderAdvancedChart(type) {
+        const normalizedType = normalizeCompositeGraphType(type);
+        if (!isAdvancedChartType(normalizedType)) return false;
+
+        if (myChart != null) {
+            try { myChart.destroy(); } catch (error) {}
+            myChart = null;
+        }
+
+        const chartContainer = document.getElementById('chart-container');
+        const pieSideList = document.getElementById('pie-side-list');
+        if (chartContainer) chartContainer.style.height = '420px';
+        syncPieTightLayout(normalizedType);
+        if (pieSideList) {
+            pieSideList.style.display = 'none';
+            pieSideList.innerHTML = '';
+        }
+
+        if (normalizedType === 'scatter') {
+            showCanvasAdvancedChartMode();
+            const rows = parseSimpleTableRows(document.getElementById('tableDataInput') ? document.getElementById('tableDataInput').value : '');
+            const points = rows.slice(1).map(row => ({
+                label: row[0] || '',
+                x: advancedToNumber(row[1]),
+                y: advancedToNumber(row[2])
+            })).filter(point => point.label);
+            if (!points.length) return true;
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const palette = getActivePalette();
+            const colors = getAdvancedPaletteColors(palette);
+            const baseSize = document.getElementById('globalFontSize') ? parseInt(document.getElementById('globalFontSize').value, 10) : 20;
+            const scale = baseSize / 20;
+            const isKoreanNumber = document.getElementById('koreanNumberType') ? document.getElementById('koreanNumberType').value === 'apply' : false;
+            const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
+            const formatAxis = value => formatConciseAxisTick(value, { koreanNumberApply: isKoreanNumber, subText });
+            const labelDisplayTypeElem = document.getElementById('labelDisplayType');
+            const labelDisplayType = normalizeLabelDisplayType(labelDisplayTypeElem ? labelDisplayTypeElem.value : 'all');
+            const datasetLabelDisplayTypes = [getDatasetLabelDisplayType(0)];
+            const selectedLabelDisplayTargets = getSelectedLabelDisplayTargets();
+            const pointLabels = points.map(point => point.label);
+            const highlightConfig = getHighlightConfig('scatter', pointLabels);
+            const defaultColor = colors[0] || '#E61E2B';
+            const xValues = points.map(point => point.x);
+            const yValues = points.map(point => point.y);
+            const rawXMin = xValues.length ? Math.min(...xValues) : 0;
+            const rawXMax = xValues.length ? Math.max(...xValues) : 1;
+            const rawYMin = yValues.length ? Math.min(...yValues) : 0;
+            const rawYMax = yValues.length ? Math.max(...yValues) : 1;
+            const xPad = rawXMax === rawXMin ? Math.max(1, Math.abs(rawXMax || 1) * 0.15) : (rawXMax - rawXMin) * 0.08;
+            const yPad = rawYMax === rawYMin ? Math.max(1, Math.abs(rawYMax || 1) * 0.15) : (rawYMax - rawYMin) * 0.10;
+            myChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: (document.getElementById('dataName1') ? document.getElementById('dataName1').value.trim() : '') || '데이터',
+                        data: points.map(point => ({ x: point.x, y: point.y })),
+                        _sourceInputIndex: 1,
+                        _sourceDataIndexMap: points.map((_, index) => index),
+                        _pointLabels: pointLabels,
+                        backgroundColor: pointLabels.map((_, index) => highlightConfig.enabled ? (getHighlightColorForTarget(highlightConfig, 0, index) || '#ffffff') : '#ffffff'),
+                        borderColor: pointLabels.map((_, index) => highlightConfig.enabled ? (getHighlightColorForTarget(highlightConfig, 0, index) || defaultColor) : defaultColor),
+                        pointBackgroundColor: pointLabels.map((_, index) => highlightConfig.enabled ? (getHighlightColorForTarget(highlightConfig, 0, index) || '#ffffff') : '#ffffff'),
+                        pointBorderColor: pointLabels.map((_, index) => highlightConfig.enabled ? (getHighlightColorForTarget(highlightConfig, 0, index) || defaultColor) : defaultColor),
+                        pointBorderWidth: pointLabels.map((_, index) => highlightConfig.enabled ? (isHighlightedTarget(highlightConfig, 0, index) ? 4 : 2.5) : 2.5),
+                        pointRadius: pointLabels.map((_, index) => highlightConfig.enabled ? (isHighlightedTarget(highlightConfig, 0, index) ? 8 : 6) : 6),
+                        pointHoverRadius: pointLabels.map((_, index) => highlightConfig.enabled ? (isHighlightedTarget(highlightConfig, 0, index) ? 8 : 6) : 6),
+                        showLine: false
+                    }]
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    devicePixelRatio: NORMAL_CHART_DPR,
+                    animation: false,
+                    layout: { padding: { top: 28, right: 28, bottom: 18, left: 10 } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false },
+                        datalabels: {
+                            display: function(context) {
+                                const datasetDisplayType = datasetLabelDisplayTypes[context.datasetIndex] || labelDisplayType;
+                                if (datasetDisplayType === 'none') return false;
+                                if (datasetDisplayType === 'selected') return selectedLabelDisplayTargets.has(getLabelDisplayTargetValue(context.datasetIndex, context.dataIndex));
+                                return true;
+                            },
+                            align: 'top',
+                            anchor: 'end',
+                            offset: 6,
+                            color: function(context) {
+                                return getHighlightColorForTarget(highlightConfig, context.datasetIndex, context.dataIndex) || '#111111';
+                            },
+                            font: function(context) {
+                                const sourceMap = context.dataset ? context.dataset._sourceDataIndexMap : null;
+                                const sourceIndex = Array.isArray(sourceMap) && sourceMap[context.dataIndex] !== undefined && sourceMap[context.dataIndex] !== null ? sourceMap[context.dataIndex] : context.dataIndex;
+                                const isHighlightedPoint = !!getHighlightColorForTarget(highlightConfig, context.datasetIndex, sourceIndex);
+                                const datasetFontSize = getDatasetLabelFontSize(context.datasetIndex);
+                                return { size: isHighlightedPoint ? Math.min(datasetFontSize + 4, 36) : datasetFontSize, weight: 'bold' };
+                            },
+                            textStrokeColor: '#ffffff',
+                            textStrokeWidth: 4,
+                            formatter: function(value, context) {
+                                return pointLabels[context.dataIndex] || '';
+                            },
+                            clamp: true,
+                            clip: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            min: rawXMin - xPad,
+                            max: rawXMax + xPad,
+                            grid: { color: '#e0e0e0', drawBorder: false },
+                            ticks: { color: '#666', font: { size: Math.round(15 * scale) }, callback: value => formatAxis(value) }
+                        },
+                        y: {
+                            type: 'linear',
+                            min: rawYMin - yPad,
+                            max: rawYMax + yPad,
+                            grid: { color: '#e0e0e0', drawBorder: false },
+                            ticks: { color: '#666', font: { size: Math.round(15 * scale) }, callback: value => formatAxis(value) }
+                        }
+                    }
+                }
+            });
+            stabilizeChartLayout();
+            return true;
+        }
+
+        showCanvasAdvancedChartMode();
+
+        const { labels, datasetNames, datasets } = getInputDatasetsFromMainForm();
+        if (!labels.length || !datasets.length) return true;
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const palette = getActivePalette();
+        const colors = getAdvancedPaletteColors(palette);
+        const baseSize = document.getElementById('globalFontSize') ? parseInt(document.getElementById('globalFontSize').value, 10) : 20;
+        const scale = baseSize / 20;
+        const yMin = document.getElementById('yMin') ? document.getElementById('yMin').value : '';
+        const yMax = document.getElementById('yMax') ? document.getElementById('yMax').value : '';
+        const isKoreanNumber = document.getElementById('koreanNumberType') ? document.getElementById('koreanNumberType').value === 'apply' : false;
+        const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
+        const formatAxis = value => formatConciseAxisTick(value, { koreanNumberApply: isKoreanNumber, subText });
+        const labelDisplayTypeElem = document.getElementById('labelDisplayType');
+        const labelDisplayType = normalizeLabelDisplayType(labelDisplayTypeElem ? labelDisplayTypeElem.value : 'all');
+        const datasetLabelDisplayTypes = datasets.map((_, index) => getDatasetLabelDisplayType(index));
+        const selectedLabelDisplayTargets = getSelectedLabelDisplayTargets();
+        const highlightConfig = getHighlightConfig(normalizedType, labels);
+
+        if (normalizedType === '100-stacked-bar' || normalizedType === 'h-100-stacked-bar') {
+            const isHorizontal = normalizedType === 'h-100-stacked-bar';
+            const normalizedDatasets = normalizeToHundredPercent(datasets);
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: normalizedDatasets.map((series, index) => ({
+                        type: 'bar',
+                        label: datasetNames[index] || `데이터 ${index + 1}`,
+                        data: series,
+                        backgroundColor: colors[index % colors.length],
+                        borderSkipped: false,
+                        borderRadius: 4,
+                        stack: 'stack-0'
+                    }))
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    devicePixelRatio: NORMAL_CHART_DPR,
+                    animation: false,
+                    indexAxis: isHorizontal ? 'y' : 'x',
+                    layout: { padding: { top: 28, right: 34, bottom: 22, left: 10 } },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            align: 'end',
+                            labels: { font: { size: Math.round(15 * scale), weight: 'bold' }, color: '#111' },
+                            onClick: function() {}
+                        },
+                        tooltip: { enabled: false },
+                        datalabels: {
+                            color: '#ffffff',
+                            font: { size: Math.round(13 * scale), weight: '900' },
+                            formatter: value => value >= 4 ? `${value}%` : '',
+                            textStrokeColor: 'rgba(0,0,0,0.12)',
+                            textStrokeWidth: 1,
+                            clamp: true,
+                            clip: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            min: isHorizontal ? 0 : undefined,
+                            max: isHorizontal ? 100 : undefined,
+                            grid: { display: isHorizontal },
+                            ticks: {
+                                color: isHorizontal ? '#666' : '#333',
+                                font: { size: Math.round(15 * scale), weight: isHorizontal ? 'normal' : 'bold' },
+                                callback: function(value) { return isHorizontal ? `${value}%` : this.getLabelForValue(value); }
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            min: !isHorizontal ? 0 : undefined,
+                            max: !isHorizontal ? 100 : undefined,
+                            grid: { display: !isHorizontal },
+                            ticks: {
+                                color: isHorizontal ? '#333' : '#666',
+                                font: { size: Math.round(15 * scale), weight: isHorizontal ? 'bold' : 'normal' },
+                                callback: function(value) { return !isHorizontal ? `${value}%` : this.getLabelForValue(value); }
+                            }
+                        }
+                    }
+                }
+            });
+            stabilizeChartLayout();
+            return true;
+        }
+
+        if (normalizedType === 'area' || normalizedType === 'stacked-area') {
+            const areaSvgHtml = buildAreaSvgChartHtml(labels, datasets, datasetNames, {
+                width: 670,
+                height: 420,
+                stacked: normalizedType === 'stacked-area',
+                palette,
+                colors,
+                paddingPercent: getAreaHorizontalPaddingFromState(),
+                fontScale: scale,
+                yMin,
+                yMax,
+                koreanNumberApply: isKoreanNumber,
+                subText,
+                datasetLabelFontSizes: [0,1,2,3].map(index => getDatasetLabelFontSize(index)),
+                datasetLabelColors: [0,1,2,3].map(index => getDatasetLabelColor(index)),
+                labelDisplayTypes: [0,1,2,3].map(index => getDatasetLabelDisplayType(index)),
+                selectedLabelDisplayTargets: getSelectedLabelDisplayTargets(),
+                highlightConfig: getHighlightConfig(normalizedType, labels)
+            });
+            if (myChart != null) {
+                try { myChart.destroy(); } catch (error) {}
+                myChart = null;
+            }
+            showAreaSvgChartMode(areaSvgHtml);
+            return true;
+        }
+
+        return false;
+    }
+
+
     function renderChart(chartType) {
         const chartContainer = document.getElementById('chart-container');
         const pieSideList = document.getElementById('pie-side-list');
@@ -8591,6 +10417,12 @@ function isTextSheetType(type) {
             myChart = null;
         }
         
+        const normalizedChartType = normalizeCompositeGraphType(chartType);
+        if (renderAdvancedChart(normalizedChartType)) {
+            return;
+        }
+        showCanvasAdvancedChartMode();
+
         const labels = parseLabelSeries(document.getElementById('labelsInput').value);
         const highlightConfig = getHighlightConfig(chartType, labels);
         const dataVals1 = parseNumericSeries(document.getElementById('dataInput1').value, labels.length);
@@ -9190,6 +11022,7 @@ function isTextSheetType(type) {
         setupInlineEditing();
         setupChartQuickEditing();
         setupPreviewQuickEditing();
+        setupAreaSvgQuickEditing();
         setupPieSideListQuickEditing();
         initSheetSelectionControls();
         applyPalettePreset('asiae', { skipUpdate: true, skipHistory: true, skipVariationAdvance: true });
