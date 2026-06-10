@@ -283,6 +283,9 @@
         .image-overlay-preset-row button:hover { border-color: #0ea5e9; background: #effaff; }
         .image-overlay-file-input { display: none; }
         .image-overlay-source-status { margin-top: 4px; color: #0369a1; }
+        .image-overlay-url-textarea { min-height: 74px; resize: vertical; }
+        .image-overlay-count-badge { display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; background:#dff4ff; color:#0369a1; font-size:11px; font-weight:900; vertical-align:1px; }
+        .image-overlay-item { position:absolute; background-repeat:no-repeat; background-position:center center; pointer-events:none; user-select:none; transform:translate(-50%, -50%); transform-origin:center center; }
         .multi-card-image-overlay {
             position: absolute;
             left: 50%;
@@ -413,8 +416,58 @@
             background: #fff;
         }
 
-        .footer-watermark { display: flex; justify-content: flex-end; align-items: center; margin-top: 20px; font-size: 18px; font-weight: bold; color: #111; flex-shrink: 0; font-family: var(--main-font); border-top: 1px solid #eee; padding-top: 15px;}
-        .as_logo_img { height: 32px; margin-left: 8px; width: auto; }
+        .footer-watermark {
+            --footer-logo-h: 100px;
+            --footer-logo-space: calc(var(--footer-logo-h) * 3.8676470588);
+            --footer-byline-gap: -230px;
+            position: relative;
+            display: block;
+            margin-top: 26px;
+            min-height: var(--footer-logo-h);
+            color: #111;
+            flex-shrink: 0;
+            font-family: var(--main-font);
+            border-top: 2px solid #e2e2e2;
+            padding-top: 0;
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+        .footer-watermark > span {
+            position: absolute;
+            right: calc(var(--footer-logo-space) + var(--footer-byline-gap));
+            top: calc((var(--footer-logo-h) - 14px) / 2 - 31px);
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 14px;
+        }
+        .footer-watermark #displayBylineText, .footer-watermark #multiDisplayBylineText {
+            margin-right: 0;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 14px;
+        }
+        .footer-watermark #displayName, .footer-watermark #multiDisplayName {
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 14px;
+        }
+        .as_logo_img {
+            position: absolute;
+            right: 20px;
+            top: -30px;
+            width: auto;
+            height: var(--footer-logo-h);
+            max-width: var(--footer-logo-space);
+            margin: 0;
+            flex-shrink: 0;
+            display: block;
+            object-fit: contain;
+            object-position: right top;
+        }
 
 
         /* 사용자 친화형 단계 메뉴 + 신규 기능 UI */
@@ -1073,6 +1126,27 @@
                     </div>
                 </div>
             </div>
+            <div class="emoji-overlay-row">
+                <div>
+                    <label for="imageOverlayGrayscale">흑백</label>
+                    <div class="slider-group">
+                        <input type="range" id="imageOverlayGrayscale" min="0" max="100" value="0" oninput="updateImageOverlayDisplays(); updateImageOverlay();">
+                        <span id="imageOverlayGrayscaleDisplay" class="font-size-display">0%</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="imageOverlayBrightness">밝기</label>
+                    <div class="slider-group">
+                        <input type="range" id="imageOverlayBrightness" min="20" max="200" value="100" oninput="updateImageOverlayDisplays(); updateImageOverlay();">
+                        <span id="imageOverlayBrightnessDisplay" class="font-size-display">100%</span>
+                    </div>
+                </div>
+            </div>
+            <label for="imageOverlayBlur">블러</label>
+            <div class="slider-group">
+                <input type="range" id="imageOverlayBlur" min="0" max="20" value="0" step="0.5" oninput="updateImageOverlayDisplays(); updateImageOverlay();">
+                <span id="imageOverlayBlurDisplay" class="font-size-display">0px</span>
+            </div>
             <label for="imageOverlayFit">표시 방식</label>
             <select id="imageOverlayFit" onchange="updateImageOverlay(); scheduleHistoryCheckpoint('배경 이미지 변경');">
                 <option value="contain" selected>비율 유지 · 크기 조절</option>
@@ -1083,7 +1157,7 @@
                 <option value="behind" selected>그래프 뒤에 깔기</option>
                 <option value="front">그래프 위에 반투명으로 올리기</option>
             </select>
-            <span class="help-text" style="margin-top:8px; margin-bottom:0;">‘가득 채우기’는 크기 110~120%, 표시 방식 ‘창 가득 채우기’ 조합을 씁니다. 로고·아이콘처럼 작게 넣으려면 ‘비율 유지’와 크기 10~30%가 좋습니다.</span>
+            <span class="help-text" style="margin-top:8px; margin-bottom:0;">‘가득 채우기’는 크기 110~120%, 표시 방식 ‘창 가득 채우기’ 조합을 씁니다. 로고·아이콘처럼 작게 넣으려면 ‘비율 유지’와 크기 10~30%가 좋습니다. 흑백·블러·밝기 조절은 배경 이미지 전체에 적용됩니다.</span>
         </div>
 
         
@@ -9440,43 +9514,62 @@ function isAreaChartType(type) {
         return `<div class="${className}${frontClass}" style="left:${settings.x}%; top:${settings.y}%; font-size:${fontSize}px; opacity:${opacity}; transform:translate(-50%, -50%) rotate(${settings.rotate}deg); z-index:${settings.layer === 'front' ? 12 : 1};">${safeText}</div>`;
     }
 
+
+
+
+    function splitOverlayLineList(value) {
+        return String(value || '')
+            .split(/\r?\n/)
+            .map(item => String(item || '').trim())
+            .filter(Boolean);
+    }
+
     function getImageOverlaySettingsFromControls() {
         const enabledEl = document.getElementById('imageOverlayEnabled');
         const urlEl = document.getElementById('imageOverlayUrl');
         const dataUrlEl = document.getElementById('imageOverlayDataUrl');
-        const sizeEl = document.getElementById('imageOverlaySize');
         const xEl = document.getElementById('imageOverlayX');
         const yEl = document.getElementById('imageOverlayY');
+        const sizeEl = document.getElementById('imageOverlaySize');
         const opacityEl = document.getElementById('imageOverlayOpacity');
         const rotateEl = document.getElementById('imageOverlayRotate');
+        const grayscaleEl = document.getElementById('imageOverlayGrayscale');
+        const blurEl = document.getElementById('imageOverlayBlur');
+        const brightnessEl = document.getElementById('imageOverlayBrightness');
         const fitEl = document.getElementById('imageOverlayFit');
         const layerEl = document.getElementById('imageOverlayLayer');
-        const dataUrl = dataUrlEl ? String(dataUrlEl.value || '').trim() : '';
         const directUrl = urlEl ? String(urlEl.value || '').trim() : '';
+        const uploadedUrl = dataUrlEl ? String(dataUrlEl.value || '').trim() : '';
         return {
             enabled: enabledEl ? enabledEl.value === 'on' : false,
-            url: dataUrl || directUrl,
-            size: clampNumber(sizeEl ? sizeEl.value : 110, 5, 180, 110),
+            url: uploadedUrl || directUrl,
             x: clampNumber(xEl ? xEl.value : 50, -50, 150, 50),
             y: clampNumber(yEl ? yEl.value : 50, -50, 150, 50),
+            size: clampNumber(sizeEl ? sizeEl.value : 110, 5, 180, 110),
             opacity: clampNumber(opacityEl ? opacityEl.value : 14, 0, 80, 14),
             rotate: clampNumber(rotateEl ? rotateEl.value : 0, -45, 45, 0),
+            grayscale: clampNumber(grayscaleEl ? grayscaleEl.value : 0, 0, 100, 0),
+            blur: clampNumber(blurEl ? blurEl.value : 0, 0, 20, 0),
+            brightness: clampNumber(brightnessEl ? brightnessEl.value : 100, 20, 200, 100),
             fit: fitEl && fitEl.value === 'cover' ? 'cover' : 'contain',
             layer: layerEl && layerEl.value === 'front' ? 'front' : 'behind'
         };
     }
 
     function getImageOverlaySettingsFromState(state) {
-        const dataUrl = String(getSnapshotControlValue(state, 'imageOverlayDataUrl', '') || '').trim();
         const directUrl = String(getSnapshotControlValue(state, 'imageOverlayUrl', '') || '').trim();
+        const uploadedUrl = String(getSnapshotControlValue(state, 'imageOverlayDataUrl', '') || '').trim();
         return {
             enabled: String(getSnapshotControlValue(state, 'imageOverlayEnabled', 'off')) === 'on',
-            url: dataUrl || directUrl,
-            size: clampNumber(getSnapshotControlValue(state, 'imageOverlaySize', 110), 5, 180, 110),
+            url: uploadedUrl || directUrl,
             x: clampNumber(getSnapshotControlValue(state, 'imageOverlayX', 50), -50, 150, 50),
             y: clampNumber(getSnapshotControlValue(state, 'imageOverlayY', 50), -50, 150, 50),
+            size: clampNumber(getSnapshotControlValue(state, 'imageOverlaySize', 110), 5, 180, 110),
             opacity: clampNumber(getSnapshotControlValue(state, 'imageOverlayOpacity', 14), 0, 80, 14),
             rotate: clampNumber(getSnapshotControlValue(state, 'imageOverlayRotate', 0), -45, 45, 0),
+            grayscale: clampNumber(getSnapshotControlValue(state, 'imageOverlayGrayscale', 0), 0, 100, 0),
+            blur: clampNumber(getSnapshotControlValue(state, 'imageOverlayBlur', 0), 0, 20, 0),
+            brightness: clampNumber(getSnapshotControlValue(state, 'imageOverlayBrightness', 100), 20, 200, 100),
             fit: String(getSnapshotControlValue(state, 'imageOverlayFit', 'contain')) === 'cover' ? 'cover' : 'contain',
             layer: String(getSnapshotControlValue(state, 'imageOverlayLayer', 'behind')) === 'front' ? 'front' : 'behind'
         };
@@ -9502,9 +9595,9 @@ function isAreaChartType(type) {
 
     function handleImageOverlayUrlInput() {
         const urlEl = document.getElementById('imageOverlayUrl');
-        const enabledEl = document.getElementById('imageOverlayEnabled');
         const dataUrlEl = document.getElementById('imageOverlayDataUrl');
         const uploadNameEl = document.getElementById('imageOverlayUploadName');
+        const enabledEl = document.getElementById('imageOverlayEnabled');
         const typedUrl = urlEl ? String(urlEl.value || '').trim() : '';
         if (dataUrlEl) dataUrlEl.value = '';
         if (uploadNameEl) uploadNameEl.value = '';
@@ -9550,7 +9643,10 @@ function isAreaChartType(type) {
             imageOverlayYDisplay: `${Math.round(settings.y)}%`,
             imageOverlaySizeDisplay: `${Math.round(settings.size)}%`,
             imageOverlayOpacityDisplay: `${Math.round(settings.opacity)}%`,
-            imageOverlayRotateDisplay: `${Math.round(settings.rotate)}°`
+            imageOverlayRotateDisplay: `${Math.round(settings.rotate)}°`,
+            imageOverlayGrayscaleDisplay: `${Math.round(settings.grayscale)}%`,
+            imageOverlayBlurDisplay: `${Math.round(settings.blur * 10) / 10}px`,
+            imageOverlayBrightnessDisplay: `${Math.round(settings.brightness)}%`
         };
         Object.entries(displayMap).forEach(([id, value]) => {
             const el = document.getElementById(id);
@@ -9568,21 +9664,25 @@ function isAreaChartType(type) {
         const safeUrl = String(settings.url || '').trim();
         const shouldShow = !!(settings.enabled && safeUrl);
         target.style.display = shouldShow ? 'block' : 'none';
-        target.style.backgroundImage = shouldShow ? `url("${toCssUrlValue(safeUrl)}")` : 'none';
         target.style.left = `${settings.x}%`;
         target.style.top = `${settings.y}%`;
         target.style.width = `${settings.size}%`;
         target.style.height = `${settings.size}%`;
+        target.style.backgroundImage = shouldShow ? `url("${toCssUrlValue(safeUrl)}")` : 'none';
         target.style.backgroundSize = settings.fit === 'cover' ? 'cover' : 'contain';
+        target.style.backgroundPosition = 'center center';
+        target.style.backgroundRepeat = 'no-repeat';
         target.style.opacity = String(settings.opacity / 100);
+        target.style.filter = `grayscale(${settings.grayscale}%) blur(${settings.blur}px) brightness(${settings.brightness}%)`;
         target.style.transform = `translate(-50%, -50%) rotate(${settings.rotate}deg)`;
         target.classList.toggle('image-overlay-front', settings.layer === 'front');
         target.style.zIndex = settings.layer === 'front' ? '12' : '1';
+        target.innerHTML = '';
     }
 
     function updateImageOverlay() {
-        updateImageOverlayDisplays();
         const settings = getImageOverlaySettingsFromControls();
+        updateImageOverlayDisplays();
         const overlay = document.getElementById('graphImageOverlay');
         const capture = document.getElementById('capture-area');
         applyImageOverlayStyles(overlay, settings);
@@ -9622,37 +9722,15 @@ function isAreaChartType(type) {
 
     function buildImageOverlayHtml(settings, className = 'multi-card-image-overlay') {
         if (!settings || !settings.enabled || !settings.url) return '';
-        const safeUrl = escapeHtml(settings.url);
-        const opacity = settings.opacity / 100;
-        const frontClass = settings.layer === 'front' ? ' image-overlay-front' : '';
-        const fitStyle = `width:${settings.size}%; height:${settings.size}%; background-repeat:no-repeat; background-position:center center;`;
+        const safeUrl = escapeHtml(toCssUrlValue(settings.url));
+        const filterStyle = `grayscale(${settings.grayscale}%) blur(${settings.blur}px) brightness(${settings.brightness}%)`;
         const bgSize = settings.fit === 'cover' ? 'cover' : 'contain';
-        return `<div class="${className}${frontClass}" aria-hidden="true" style="left:${settings.x}%; top:${settings.y}%; ${fitStyle} background-image:url(&quot;${safeUrl}&quot;); background-size:${bgSize}; opacity:${opacity}; transform:translate(-50%, -50%) rotate(${settings.rotate}deg); z-index:${settings.layer === 'front' ? 12 : 1};"></div>`;
+        return `<div class="${className}${settings.layer === 'front' ? ' image-overlay-front' : ''}" aria-hidden="true" style="left:${settings.x}%; top:${settings.y}%; width:${settings.size}%; height:${settings.size}%; background-image:url(&quot;${safeUrl}&quot;); background-size:${bgSize}; background-position:center center; background-repeat:no-repeat; filter:${escapeHtml(filterStyle)}; opacity:${settings.opacity / 100}; transform:translate(-50%, -50%) rotate(${settings.rotate}deg); z-index:${settings.layer === 'front' ? 12 : 1};"></div>`;
     }
 
     function waitForOverlayImages(root, timeoutMs = 2500) {
-        const scope = root || document;
-        const images = Array.from(scope.querySelectorAll('img.multi-card-image-overlay, img#graphImageOverlay'))
-            .filter(img => img && img.style.display !== 'none' && img.getAttribute('src'));
-        if (!images.length) return Promise.resolve();
-        return Promise.all(images.map(img => {
-            if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-            return new Promise(resolve => {
-                let done = false;
-                const finish = () => {
-                    if (done) return;
-                    done = true;
-                    img.removeEventListener('load', finish);
-                    img.removeEventListener('error', finish);
-                    resolve();
-                };
-                img.addEventListener('load', finish);
-                img.addEventListener('error', finish);
-                setTimeout(finish, timeoutMs);
-            });
-        }));
+        return Promise.resolve();
     }
-
     function handleApplyClick() {
         updateOutput();
     }
