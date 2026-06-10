@@ -250,8 +250,59 @@
             filter: saturate(0.92);
             transform-origin: center center;
         }
-        .multi-graph-card > :not(.multi-card-emoji-overlay) { position: relative; z-index: 2; }
+        .multi-graph-card > :not(.multi-card-emoji-overlay):not(.multi-card-image-overlay) { position: relative; z-index: 2; }
         .multi-card-emoji-overlay.emoji-overlay-front { z-index: 12; }
+
+        /* 그래프 여백 배경 이미지 오버레이 */
+        #graphImageOverlay {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 110%;
+            height: 110%;
+            max-width: none;
+            max-height: none;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: contain;
+            transform: translate(-50%, -50%) rotate(0deg);
+            opacity: 0.14;
+            z-index: 1;
+            pointer-events: none;
+            user-select: none;
+            transform-origin: center center;
+            display: none;
+        }
+        #capture-area.image-overlay-front #graphImageOverlay { z-index: 12; }
+        #sectionDesign #imageOverlaySettingGroup { --design-group-accent: #0ea5e9; --design-group-bg: #effaff; --design-group-chip-bg: #dff4ff; overflow: hidden; }
+        #imageOverlaySettingGroup .slider-group { display: grid; grid-template-columns: minmax(0, 1fr) 48px; gap: 6px; align-items: center; width: 100%; min-width: 0; }
+        #imageOverlaySettingGroup .slider-group input[type="range"] { width: 100%; min-width: 0; max-width: 100%; }
+        #imageOverlaySettingGroup .font-size-display { width: auto; min-width: 0; text-align: right; white-space: nowrap; font-size: 13px; }
+        .image-overlay-preset-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 8px 0 4px; }
+        .image-overlay-preset-row button { min-width: 0; border: 1px solid #cfe8f6; background: #fff; border-radius: 8px; padding: 8px 4px; cursor: pointer; font-family: var(--main-font); font-size: 11px; font-weight: 900; color: #0369a1; }
+        .image-overlay-preset-row button:hover { border-color: #0ea5e9; background: #effaff; }
+        .image-overlay-file-input { display: none; }
+        .image-overlay-source-status { margin-top: 4px; color: #0369a1; }
+        .multi-card-image-overlay {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 110%;
+            height: 110%;
+            max-width: none;
+            max-height: none;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: contain;
+            transform: translate(-50%, -50%) rotate(0deg);
+            opacity: 0.14;
+            z-index: 1;
+            pointer-events: none;
+            user-select: none;
+            transform-origin: center center;
+            display: block;
+        }
+        .multi-card-image-overlay.image-overlay-front { z-index: 12; }
 
         #table-container { display: none; margin-top: 5px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
         
@@ -962,6 +1013,79 @@
             <span class="help-text" style="margin-top:8px; margin-bottom:0;">PNG·SVG 저장 시에도 함께 출력됩니다. 숫자와 겹치면 ‘뒤에 깔기’를 유지하고 투명도를 10~20% 정도로 낮추는 게 안전합니다.</span>
         </div>
 
+        <div class="data-group" id="imageOverlaySettingGroup">
+            <label style="color:var(--ak-red); font-size:14px; display:block;">🖼️ 여백 배경 이미지</label>
+            <span class="help-text" style="margin-top:6px;">이미지 주소를 붙여넣으면 그래프 배경에 반투명하게 깔립니다. 크기를 5~180%까지 조절할 수 있어 화면을 꽉 채우거나 작은 워터마크처럼 넣을 수 있습니다.</span>
+            <label for="imageOverlayEnabled" style="margin-top:8px;">사용 여부</label>
+            <select id="imageOverlayEnabled" onchange="updateImageOverlay(); scheduleHistoryCheckpoint('배경 이미지 변경');">
+                <option value="off" selected>사용 안 함</option>
+                <option value="on">사용함</option>
+            </select>
+            <label for="imageOverlayUrl">이미지 주소</label>
+            <div class="emoji-input-link-row">
+                <input type="text" id="imageOverlayUrl" value="" placeholder="https://.../image.png 또는 .jpg, .svg" oninput="handleImageOverlayUrlInput();">
+                <button type="button" class="emoji-link-btn" onclick="document.getElementById('imageOverlayFile').click();">이미지 업로드</button>
+            </div>
+            <input type="file" id="imageOverlayFile" class="image-overlay-file-input" accept="image/*" onchange="handleImageOverlayFileUpload(event);">
+            <input type="hidden" id="imageOverlayDataUrl" value="">
+            <input type="hidden" id="imageOverlayUploadName" value="">
+            <span id="imageOverlaySourceStatus" class="help-text image-overlay-source-status"></span>
+            <span class="help-text" style="margin-top:2px;">업로드한 이미지는 내부에 포함되어 저장에 유리합니다. 주소 입력 시에는 가급적 GitHub raw, 자사 서버, CORS 허용 이미지 주소를 쓰는 게 안전합니다.</span>
+            <div class="image-overlay-preset-row" aria-label="이미지 크기 빠른 선택">
+                <button type="button" onclick="setImageOverlayPreset('small')">작게</button>
+                <button type="button" onclick="setImageOverlayPreset('medium')">중간</button>
+                <button type="button" onclick="setImageOverlayPreset('cover')">가득 채우기</button>
+            </div>
+            <div class="emoji-overlay-row">
+                <div>
+                    <label for="imageOverlayX">좌우 위치</label>
+                    <div class="slider-group">
+                        <input type="range" id="imageOverlayX" min="-50" max="150" value="50" oninput="updateImageOverlayDisplays(); updateImageOverlay();">
+                        <span id="imageOverlayXDisplay" class="font-size-display">50%</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="imageOverlayY">상하 위치</label>
+                    <div class="slider-group">
+                        <input type="range" id="imageOverlayY" min="-50" max="150" value="50" oninput="updateImageOverlayDisplays(); updateImageOverlay();">
+                        <span id="imageOverlayYDisplay" class="font-size-display">50%</span>
+                    </div>
+                </div>
+            </div>
+            <label for="imageOverlaySize">크기</label>
+            <div class="slider-group">
+                <input type="range" id="imageOverlaySize" min="5" max="180" value="110" oninput="updateImageOverlayDisplays(); updateImageOverlay();">
+                <span id="imageOverlaySizeDisplay" class="font-size-display">110%</span>
+            </div>
+            <div class="emoji-overlay-row">
+                <div>
+                    <label for="imageOverlayOpacity">투명도</label>
+                    <div class="slider-group">
+                        <input type="range" id="imageOverlayOpacity" min="0" max="80" value="14" oninput="updateImageOverlayDisplays(); updateImageOverlay();">
+                        <span id="imageOverlayOpacityDisplay" class="font-size-display">14%</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="imageOverlayRotate">기울기</label>
+                    <div class="slider-group">
+                        <input type="range" id="imageOverlayRotate" min="-45" max="45" value="0" oninput="updateImageOverlayDisplays(); updateImageOverlay();">
+                        <span id="imageOverlayRotateDisplay" class="font-size-display">0°</span>
+                    </div>
+                </div>
+            </div>
+            <label for="imageOverlayFit">표시 방식</label>
+            <select id="imageOverlayFit" onchange="updateImageOverlay(); scheduleHistoryCheckpoint('배경 이미지 변경');">
+                <option value="contain" selected>비율 유지 · 크기 조절</option>
+                <option value="cover">창 가득 채우기 · 필요하면 잘림</option>
+            </select>
+            <label for="imageOverlayLayer">겹침 순서</label>
+            <select id="imageOverlayLayer" onchange="updateImageOverlay(); scheduleHistoryCheckpoint('배경 이미지 변경');">
+                <option value="behind" selected>그래프 뒤에 깔기</option>
+                <option value="front">그래프 위에 반투명으로 올리기</option>
+            </select>
+            <span class="help-text" style="margin-top:8px; margin-bottom:0;">‘가득 채우기’는 크기 110~120%, 표시 방식 ‘창 가득 채우기’ 조합을 씁니다. 로고·아이콘처럼 작게 넣으려면 ‘비율 유지’와 크기 10~30%가 좋습니다.</span>
+        </div>
+
         
         <div class="data-group" id="multiGraphStyleGroup" style="display:none !important;">
             <label style="color:var(--ak-red); font-size:14px; display:block;">🧩 멀티 그래프 개별 디자인</label>
@@ -1479,6 +1603,7 @@
         <div id="capture-area">
             <div class="header-line" id="topLine"></div>
             <div id="graphEmojiOverlay" class="graph-emoji-overlay" aria-hidden="true" style="display:none;">🏌️</div>
+            <div id="graphImageOverlay" class="graph-image-overlay" aria-hidden="true"></div>
             
             <h1 class="chart-title inline-editable" id="displayTitle" title="더블클릭해서 제목 수정">제목입력</h1>
             <br>
@@ -2134,7 +2259,7 @@
         appendExisting(designSection.body, [
             '#fontSizeSettingGroup', '#datasetLabelSizeGroup', '#datasetLabelColorGroup',
             '#labelSettingGroup', '#highlightSettingGroup', '#axisSettingGroup', '#areaShapeSettingGroup', '#columnWidthSettingGroup', '#tableColorSettingGroup',
-            '#referenceLabelStyleGroup', '#palettePresetGroup', '#emojiOverlaySettingGroup', '#koreanNumberGroup'
+            '#referenceLabelStyleGroup', '#palettePresetGroup', '#emojiOverlaySettingGroup', '#imageOverlaySettingGroup', '#koreanNumberGroup'
         ]);
         appendExisting(exportSection.body, [
             '#reporterSettingGroup', '#exportOptionGroup', '#downloadBtn', '#svgDownloadBtn', '#creatorFooter'
@@ -2885,6 +3010,7 @@
         await setAllChartPixelRatios(chartExportDpr);
         await waitForNextPaint();
         const captureDiv = document.getElementById('capture-area');
+        await waitForOverlayImages(captureDiv);
         return await html2canvas(captureDiv, {
             scale: exportScale,
             width: captureDiv.offsetWidth,
@@ -2920,6 +3046,7 @@
             if (document.fonts && document.fonts.ready) await document.fonts.ready;
             await setAllChartPixelRatios(chartExportDpr);
             await waitForNextPaint();
+            await waitForOverlayImages(captureDiv);
             const rect = captureDiv.getBoundingClientRect();
             const exportWidth = Math.max(750, captureDiv.scrollWidth, captureDiv.offsetWidth, Math.round(rect.width));
             const exportHeight = Math.max(100, captureDiv.scrollHeight, captureDiv.offsetHeight, Math.round(rect.height));
@@ -5558,6 +5685,7 @@
                     koreanNumberSubText: item.config.subtitle || '',
                     tableState: item.state,
                     emojiOverlay: getEmojiOverlaySettingsFromState(item.state),
+                    imageOverlay: getImageOverlaySettingsFromState(item.state),
                     allowEmptyTitle: sequenceIndex > 0,
                     allowEmptySubtitle: sequenceIndex > 0
                 }
@@ -5719,7 +5847,9 @@
         const footnoteHtml = footnote ? escapeHtml(footnote) : (isTextBlock ? '' : '&nbsp;');
         const chartAreaStyle = (isTextBlock || isAdvancedTableBlock) ? 'height:auto; min-height:0; overflow:visible;' : `height:${cardHeight}px;`; 
         const emojiOverlayHtml = buildEmojiOverlayHtml(renderOptions.emojiOverlay, 'multi-card-emoji-overlay');
+        const imageOverlayHtml = buildImageOverlayHtml(renderOptions.imageOverlay, 'multi-card-image-overlay');
         card.innerHTML = `
+            ${imageOverlayHtml}
             ${emojiOverlayHtml}
             <div class="multi-card-topline" style="background:${escapeHtml(palette.main || '#E61E2B')};"></div>
             <div class="multi-card-title" style="font-size:${design.titleSize}px;">${escapeHtml(title)}</div>
@@ -9310,6 +9440,219 @@ function isAreaChartType(type) {
         return `<div class="${className}${frontClass}" style="left:${settings.x}%; top:${settings.y}%; font-size:${fontSize}px; opacity:${opacity}; transform:translate(-50%, -50%) rotate(${settings.rotate}deg); z-index:${settings.layer === 'front' ? 12 : 1};">${safeText}</div>`;
     }
 
+    function getImageOverlaySettingsFromControls() {
+        const enabledEl = document.getElementById('imageOverlayEnabled');
+        const urlEl = document.getElementById('imageOverlayUrl');
+        const dataUrlEl = document.getElementById('imageOverlayDataUrl');
+        const sizeEl = document.getElementById('imageOverlaySize');
+        const xEl = document.getElementById('imageOverlayX');
+        const yEl = document.getElementById('imageOverlayY');
+        const opacityEl = document.getElementById('imageOverlayOpacity');
+        const rotateEl = document.getElementById('imageOverlayRotate');
+        const fitEl = document.getElementById('imageOverlayFit');
+        const layerEl = document.getElementById('imageOverlayLayer');
+        const dataUrl = dataUrlEl ? String(dataUrlEl.value || '').trim() : '';
+        const directUrl = urlEl ? String(urlEl.value || '').trim() : '';
+        return {
+            enabled: enabledEl ? enabledEl.value === 'on' : false,
+            url: dataUrl || directUrl,
+            size: clampNumber(sizeEl ? sizeEl.value : 110, 5, 180, 110),
+            x: clampNumber(xEl ? xEl.value : 50, -50, 150, 50),
+            y: clampNumber(yEl ? yEl.value : 50, -50, 150, 50),
+            opacity: clampNumber(opacityEl ? opacityEl.value : 14, 0, 80, 14),
+            rotate: clampNumber(rotateEl ? rotateEl.value : 0, -45, 45, 0),
+            fit: fitEl && fitEl.value === 'cover' ? 'cover' : 'contain',
+            layer: layerEl && layerEl.value === 'front' ? 'front' : 'behind'
+        };
+    }
+
+    function getImageOverlaySettingsFromState(state) {
+        const dataUrl = String(getSnapshotControlValue(state, 'imageOverlayDataUrl', '') || '').trim();
+        const directUrl = String(getSnapshotControlValue(state, 'imageOverlayUrl', '') || '').trim();
+        return {
+            enabled: String(getSnapshotControlValue(state, 'imageOverlayEnabled', 'off')) === 'on',
+            url: dataUrl || directUrl,
+            size: clampNumber(getSnapshotControlValue(state, 'imageOverlaySize', 110), 5, 180, 110),
+            x: clampNumber(getSnapshotControlValue(state, 'imageOverlayX', 50), -50, 150, 50),
+            y: clampNumber(getSnapshotControlValue(state, 'imageOverlayY', 50), -50, 150, 50),
+            opacity: clampNumber(getSnapshotControlValue(state, 'imageOverlayOpacity', 14), 0, 80, 14),
+            rotate: clampNumber(getSnapshotControlValue(state, 'imageOverlayRotate', 0), -45, 45, 0),
+            fit: String(getSnapshotControlValue(state, 'imageOverlayFit', 'contain')) === 'cover' ? 'cover' : 'contain',
+            layer: String(getSnapshotControlValue(state, 'imageOverlayLayer', 'behind')) === 'front' ? 'front' : 'behind'
+        };
+    }
+
+    function syncImageOverlaySourceStatus() {
+        const statusEl = document.getElementById('imageOverlaySourceStatus');
+        if (!statusEl) return;
+        const uploadNameEl = document.getElementById('imageOverlayUploadName');
+        const dataUrlEl = document.getElementById('imageOverlayDataUrl');
+        const urlEl = document.getElementById('imageOverlayUrl');
+        const uploadName = uploadNameEl ? String(uploadNameEl.value || '').trim() : '';
+        const dataUrl = dataUrlEl ? String(dataUrlEl.value || '').trim() : '';
+        const directUrl = urlEl ? String(urlEl.value || '').trim() : '';
+        if (dataUrl) {
+            statusEl.textContent = uploadName ? `업로드 파일 사용 중: ${uploadName}` : '업로드한 이미지 사용 중';
+        } else if (directUrl) {
+            statusEl.textContent = '외부 이미지 주소 사용 중';
+        } else {
+            statusEl.textContent = '';
+        }
+    }
+
+    function handleImageOverlayUrlInput() {
+        const urlEl = document.getElementById('imageOverlayUrl');
+        const enabledEl = document.getElementById('imageOverlayEnabled');
+        const dataUrlEl = document.getElementById('imageOverlayDataUrl');
+        const uploadNameEl = document.getElementById('imageOverlayUploadName');
+        const typedUrl = urlEl ? String(urlEl.value || '').trim() : '';
+        if (dataUrlEl) dataUrlEl.value = '';
+        if (uploadNameEl) uploadNameEl.value = '';
+        if (enabledEl && typedUrl) enabledEl.value = 'on';
+        syncImageOverlaySourceStatus();
+        updateImageOverlay();
+        scheduleHistoryCheckpoint('배경 이미지 변경');
+    }
+
+    function handleImageOverlayFileUpload(event) {
+        const file = event && event.target && event.target.files ? event.target.files[0] : null;
+        if (!file) return;
+        if (file.type && !file.type.startsWith('image/')) {
+            alert('이미지 파일만 업로드할 수 있습니다.');
+            event.target.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            const urlEl = document.getElementById('imageOverlayUrl');
+            const dataUrlEl = document.getElementById('imageOverlayDataUrl');
+            const uploadNameEl = document.getElementById('imageOverlayUploadName');
+            const enabledEl = document.getElementById('imageOverlayEnabled');
+            if (urlEl) urlEl.value = '';
+            if (dataUrlEl) dataUrlEl.value = typeof reader.result === 'string' ? reader.result : '';
+            if (uploadNameEl) uploadNameEl.value = file.name || '';
+            if (enabledEl) enabledEl.value = 'on';
+            syncImageOverlaySourceStatus();
+            updateImageOverlay();
+            scheduleHistoryCheckpoint('배경 이미지 업로드');
+        };
+        reader.onerror = () => {
+            alert('이미지 파일을 불러오지 못했습니다. 다른 파일로 다시 시도해 주세요.');
+        };
+        reader.readAsDataURL(file);
+        event.target.value = '';
+    }
+
+    function updateImageOverlayDisplays() {
+        const settings = getImageOverlaySettingsFromControls();
+        const displayMap = {
+            imageOverlayXDisplay: `${Math.round(settings.x)}%`,
+            imageOverlayYDisplay: `${Math.round(settings.y)}%`,
+            imageOverlaySizeDisplay: `${Math.round(settings.size)}%`,
+            imageOverlayOpacityDisplay: `${Math.round(settings.opacity)}%`,
+            imageOverlayRotateDisplay: `${Math.round(settings.rotate)}°`
+        };
+        Object.entries(displayMap).forEach(([id, value]) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = value;
+        });
+        syncImageOverlaySourceStatus();
+    }
+
+    function toCssUrlValue(url) {
+        return String(url || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n|\r/g, '');
+    }
+
+    function applyImageOverlayStyles(target, settings) {
+        if (!target || !settings) return;
+        const safeUrl = String(settings.url || '').trim();
+        const shouldShow = !!(settings.enabled && safeUrl);
+        target.style.display = shouldShow ? 'block' : 'none';
+        target.style.backgroundImage = shouldShow ? `url("${toCssUrlValue(safeUrl)}")` : 'none';
+        target.style.left = `${settings.x}%`;
+        target.style.top = `${settings.y}%`;
+        target.style.width = `${settings.size}%`;
+        target.style.height = `${settings.size}%`;
+        target.style.backgroundSize = settings.fit === 'cover' ? 'cover' : 'contain';
+        target.style.opacity = String(settings.opacity / 100);
+        target.style.transform = `translate(-50%, -50%) rotate(${settings.rotate}deg)`;
+        target.classList.toggle('image-overlay-front', settings.layer === 'front');
+        target.style.zIndex = settings.layer === 'front' ? '12' : '1';
+    }
+
+    function updateImageOverlay() {
+        updateImageOverlayDisplays();
+        const settings = getImageOverlaySettingsFromControls();
+        const overlay = document.getElementById('graphImageOverlay');
+        const capture = document.getElementById('capture-area');
+        applyImageOverlayStyles(overlay, settings);
+        if (capture) capture.classList.toggle('image-overlay-front', settings.layer === 'front');
+        if (isMultiEditorEnabled()) {
+            try {
+                graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+                renderMultiGraphComposition();
+            } catch (error) {}
+        }
+    }
+
+    function setImageOverlayPreset(mode) {
+        const presets = {
+            small: { enabled: 'on', x: 18, y: 50, size: 22, opacity: 18, rotate: -8, fit: 'contain', layer: 'behind' },
+            medium: { enabled: 'on', x: 50, y: 50, size: 70, opacity: 14, rotate: 0, fit: 'contain', layer: 'behind' },
+            cover: { enabled: 'on', x: 50, y: 50, size: 115, opacity: 12, rotate: 0, fit: 'cover', layer: 'behind' }
+        };
+        const preset = presets[mode] || presets.medium;
+        const assignments = {
+            imageOverlayEnabled: preset.enabled,
+            imageOverlayX: preset.x,
+            imageOverlayY: preset.y,
+            imageOverlaySize: preset.size,
+            imageOverlayOpacity: preset.opacity,
+            imageOverlayRotate: preset.rotate,
+            imageOverlayFit: preset.fit,
+            imageOverlayLayer: preset.layer
+        };
+        Object.entries(assignments).forEach(([id, value]) => {
+            const el = document.getElementById(id);
+            if (el) el.value = String(value);
+        });
+        updateImageOverlay();
+        scheduleHistoryCheckpoint('배경 이미지 프리셋');
+    }
+
+    function buildImageOverlayHtml(settings, className = 'multi-card-image-overlay') {
+        if (!settings || !settings.enabled || !settings.url) return '';
+        const safeUrl = escapeHtml(settings.url);
+        const opacity = settings.opacity / 100;
+        const frontClass = settings.layer === 'front' ? ' image-overlay-front' : '';
+        const fitStyle = `width:${settings.size}%; height:${settings.size}%; background-repeat:no-repeat; background-position:center center;`;
+        const bgSize = settings.fit === 'cover' ? 'cover' : 'contain';
+        return `<div class="${className}${frontClass}" aria-hidden="true" style="left:${settings.x}%; top:${settings.y}%; ${fitStyle} background-image:url(&quot;${safeUrl}&quot;); background-size:${bgSize}; opacity:${opacity}; transform:translate(-50%, -50%) rotate(${settings.rotate}deg); z-index:${settings.layer === 'front' ? 12 : 1};"></div>`;
+    }
+
+    function waitForOverlayImages(root, timeoutMs = 2500) {
+        const scope = root || document;
+        const images = Array.from(scope.querySelectorAll('img.multi-card-image-overlay, img#graphImageOverlay'))
+            .filter(img => img && img.style.display !== 'none' && img.getAttribute('src'));
+        if (!images.length) return Promise.resolve();
+        return Promise.all(images.map(img => {
+            if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+            return new Promise(resolve => {
+                let done = false;
+                const finish = () => {
+                    if (done) return;
+                    done = true;
+                    img.removeEventListener('load', finish);
+                    img.removeEventListener('error', finish);
+                    resolve();
+                };
+                img.addEventListener('load', finish);
+                img.addEventListener('error', finish);
+                setTimeout(finish, timeoutMs);
+            });
+        }));
+    }
+
     function handleApplyClick() {
         updateOutput();
     }
@@ -9325,6 +9668,7 @@ function isAreaChartType(type) {
         refreshTableColorControls();
         refreshReferenceStyleControls();
         updateEmojiOverlayDisplays();
+        updateImageOverlayDisplays();
 
         const titleText = document.getElementById('titleInput').value;
         const displayTitle = document.getElementById('displayTitle');
@@ -9437,6 +9781,7 @@ function isAreaChartType(type) {
         }
 
         updateEmojiOverlay();
+        updateImageOverlay();
         renderMultiGraphComposition();
         updateExportSizeHint();
     }
@@ -11147,6 +11492,7 @@ function isAreaChartType(type) {
 
             await setAllChartPixelRatios(chartExportDpr);
             await waitForNextPaint();
+            await waitForOverlayImages(captureDiv);
 
             const canvas = await html2canvas(captureDiv, {
                 scale: exportScale,
@@ -11258,6 +11604,7 @@ function isAreaChartType(type) {
 
             await setAllChartPixelRatios(chartExportDpr);
             await waitForNextPaint();
+            await waitForOverlayImages(captureDiv);
 
             const renderedCanvas = await html2canvas(captureDiv, {
                 scale: exportScale,
@@ -11355,6 +11702,8 @@ function isAreaChartType(type) {
         updateDatasetFontDisplays();
         updateEmojiOverlayDisplays();
         updateEmojiOverlay();
+        updateImageOverlayDisplays();
+        updateImageOverlay();
         refreshDatasetLabelDisplayControls();
         refreshDatasetFontControls();
         refreshDatasetColorControls();
