@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V 5.01</title>
+    <title>그래픽 보조 데스크 V 5.5</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -194,6 +194,65 @@
         .reference-modal-table input { width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; padding: 8px 7px; text-align: center; font-family: var(--main-font); font-size: 13px; }
         .reference-modal-table input:focus { border-color: var(--ak-red); outline: 2px solid rgba(230,30,43,0.15); background: #fff; }
         .reference-modal-help { font-size: 12px; color: #666; line-height: 1.45; margin: 8px 0 14px; word-break: keep-all; }
+        /* 그래프 여백 배경 이모지 오버레이 */
+        #capture-area { isolation: isolate; overflow: hidden; }
+        #graphEmojiOverlay {
+            position: absolute;
+            left: 22%;
+            top: 48%;
+            transform: translate(-50%, -50%) rotate(-8deg);
+            font-size: 118px;
+            line-height: 1;
+            opacity: 0.16;
+            z-index: 1;
+            pointer-events: none;
+            user-select: none;
+            white-space: nowrap;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", var(--main-font), sans-serif;
+            filter: saturate(0.92);
+            text-shadow: none;
+            transform-origin: center center;
+        }
+        #capture-area > .header-line,
+        #capture-area > .chart-title,
+        #capture-area > .chart-subtitle,
+        #capture-area > #chart-container,
+        #capture-area > #table-container,
+        #capture-area > #displayFootnote,
+        #capture-area > .footer-watermark { position: relative; z-index: 2; }
+        #capture-area.emoji-overlay-front #graphEmojiOverlay { z-index: 12; }
+        #sectionDesign #emojiOverlaySettingGroup { --design-group-accent: #be185d; --design-group-bg: #fff1f8; --design-group-chip-bg: #fce7f3; overflow: hidden; }
+        .emoji-overlay-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: end; width: 100%; }
+        .emoji-overlay-row > div { min-width: 0; }
+        #emojiOverlaySettingGroup .slider-group { display: grid; grid-template-columns: minmax(0, 1fr) 48px; gap: 6px; align-items: center; width: 100%; min-width: 0; }
+        #emojiOverlaySettingGroup .slider-group input[type="range"] { width: 100%; min-width: 0; max-width: 100%; }
+        #emojiOverlaySettingGroup .font-size-display { width: auto; min-width: 0; text-align: right; white-space: nowrap; font-size: 13px; }
+        .emoji-preset-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+        .emoji-preset-row button { min-width: 0; border: 1px solid #ddd; background: #fff; border-radius: 8px; padding: 7px 4px; cursor: pointer; font-size: 18px; line-height: 1; }
+        .emoji-preset-row button:hover { border-color: #be185d; background: #fff1f8; }
+        .emoji-input-link-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; width: 100%; }
+        .emoji-link-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 112px; height: 42px; padding: 0 12px; border: 1px solid #d8b4c7; border-radius: 8px; background: #fff; color: #be185d; font-size: 12px; font-weight: 900; text-decoration: none; white-space: nowrap; box-sizing: border-box; }
+        .emoji-link-btn:hover { border-color: #be185d; background: #fff1f8; }
+        .multi-graph-card { position: relative; isolation: isolate; overflow: hidden; }
+        .multi-card-emoji-overlay {
+            position: absolute;
+            left: 22%;
+            top: 48%;
+            transform: translate(-50%, -50%) rotate(-8deg);
+            font-size: 78px;
+            line-height: 1;
+            opacity: 0.16;
+            z-index: 1;
+            pointer-events: none;
+            user-select: none;
+            white-space: nowrap;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", var(--main-font), sans-serif;
+            filter: saturate(0.92);
+            transform-origin: center center;
+        }
+        .multi-graph-card > :not(.multi-card-emoji-overlay) { position: relative; z-index: 2; }
+        .multi-card-emoji-overlay.emoji-overlay-front { z-index: 12; }
+
         #table-container { display: none; margin-top: 5px; margin-bottom: 0px; flex-grow: 1; height: auto; min-height: unset; }
         
         /* 일반 엑셀 표 */
@@ -225,7 +284,9 @@
 
         /* 데이터 입력은 데이터 시트 모달로만 처리: 하단 별도 기입란 숨김 */
         #chartInputs, #tableInputs, .hidden-data-storage,
-        #textSettingGroup, #footnoteSettingGroup, #reporterSettingGroup { display: none !important; }
+        #textSettingGroup, #footnoteSettingGroup { display: none !important; }
+        #nameInputWrap { display: block; }
+        .footer-watermark.byline-hidden { justify-content: flex-end; }
         .preview-edit-guide-card {
             margin: 12px 0 0;
             padding: 13px 14px;
@@ -544,6 +605,8 @@
             .control-section > summary::after { font-size: 10px; padding: 5px 8px; background: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
             .history-status { font-size: 10.5px; }
             .reference-style-row { grid-template-columns: 1fr; }
+            .emoji-input-link-row { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+            .emoji-link-btn { min-width: 102px; font-size: 11px; padding: 0 10px; }
             .reference-size-preset-row { grid-template-columns: 1fr; }
             .chart-type-tip { font-size: 11px; padding: 8px 9px; }
         }
@@ -718,7 +781,7 @@
 <body>
 
     <div class="control-panel">
-        <h2 class="desk-title-with-toggle">🛠️ 그래픽 보조 데스크 V 5.01 <label class="multi-editor-toggle title-toggle"><input type="checkbox" id="multiEditorEnabled" onchange="handleMultiEditorToggle()"> 복수 그래프</label></h2>
+        <h2 class="desk-title-with-toggle">🛠️ 그래픽 보조 데스크 V 5.5 <label class="multi-editor-toggle title-toggle"><input type="checkbox" id="multiEditorEnabled" onchange="handleMultiEditorToggle()"> 복수 그래프</label></h2>
 
         <div class="quick-action-bar" id="quickActionBar">
             <button type="button" class="quick-btn" id="undoBtn" onclick="undoLastChange()" title="Ctrl+Z / Command+Z">되돌리기</button>
@@ -831,6 +894,72 @@
                 <button type="button" class="palette-btn" data-palette="trendSpectrum" onclick="applyPalettePreset('trendSpectrum')"><span class="palette-swatch" style="background:linear-gradient(135deg,#FA4146,#F5732D,#FA961E,#FAC850,#91BE6E,#41AA8C,#4B918C,#287DA0)"></span>트렌드 4</button>
             </div>
             <span class="help-text" style="margin-top:8px; margin-bottom:0;">그래프·표 강조색을 기사 성격에 맞게 한 번에 바꿉니다.</span>
+        </div>
+
+
+        <div class="data-group" id="emojiOverlaySettingGroup">
+            <label style="color:var(--ak-red); font-size:14px; display:block;">🖼️ 여백 배경 이모지</label>
+            <span class="help-text" style="margin-top:6px;">그래프 여백에 반투명 이모지를 깔아 분위기를 더합니다. 위치·크기·투명도를 조절해 데이터와 겹치지 않게 배치하세요.</span>
+            <label for="emojiOverlayEnabled" style="margin-top:8px;">사용 여부</label>
+            <select id="emojiOverlayEnabled" onchange="updateEmojiOverlay(); scheduleHistoryCheckpoint('배경 이모지 변경');">
+                <option value="off" selected>사용 안 함</option>
+                <option value="on">사용함</option>
+            </select>
+            <label for="emojiOverlayText">이모지 입력</label>
+            <div class="emoji-input-link-row">
+                <input type="text" id="emojiOverlayText" value="🏌️" maxlength="12" placeholder="예: 🏌️, ⚽, 📊, 🐷" oninput="updateEmojiOverlay(); scheduleHistoryCheckpoint('배경 이모지 변경');">
+                <a href="https://emojiterra.com/keyboard/ko/" target="_blank" rel="noopener noreferrer" class="emoji-link-btn" title="이모지 참조 사이트 열기">🔗 이모지 찾기</a>
+            </div>
+            <div class="emoji-preset-row" aria-label="이모지 빠른 선택">
+                <button type="button" onclick="setEmojiOverlayPreset('🏌️', 22, 48, 118, 16, -8)" title="골프">🏌️</button>
+                <button type="button" onclick="setEmojiOverlayPreset('⚽', 22, 50, 120, 13, -12)" title="스포츠">⚽</button>
+                <button type="button" onclick="setEmojiOverlayPreset('💰', 22, 50, 118, 13, -8)" title="경제">💰</button>
+                <button type="button" onclick="setEmojiOverlayPreset('📈', 22, 50, 118, 13, -8)" title="증시">📈</button>
+                <button type="button" onclick="setEmojiOverlayPreset('🐷', 22, 50, 118, 13, -8)" title="저금통">🐷</button>
+            </div>
+            <div class="emoji-overlay-row">
+                <div>
+                    <label for="emojiOverlayX">좌우 위치</label>
+                    <div class="slider-group">
+                        <input type="range" id="emojiOverlayX" min="-20" max="120" value="22" oninput="updateEmojiOverlayDisplays(); updateEmojiOverlay();">
+                        <span id="emojiOverlayXDisplay" class="font-size-display">22%</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="emojiOverlayY">상하 위치</label>
+                    <div class="slider-group">
+                        <input type="range" id="emojiOverlayY" min="-20" max="120" value="48" oninput="updateEmojiOverlayDisplays(); updateEmojiOverlay();">
+                        <span id="emojiOverlayYDisplay" class="font-size-display">48%</span>
+                    </div>
+                </div>
+            </div>
+            <label for="emojiOverlaySize">크기</label>
+            <div class="slider-group">
+                <input type="range" id="emojiOverlaySize" min="30" max="260" value="118" oninput="updateEmojiOverlayDisplays(); updateEmojiOverlay();">
+                <span id="emojiOverlaySizeDisplay" class="font-size-display">118px</span>
+            </div>
+            <div class="emoji-overlay-row">
+                <div>
+                    <label for="emojiOverlayOpacity">투명도</label>
+                    <div class="slider-group">
+                        <input type="range" id="emojiOverlayOpacity" min="0" max="60" value="16" oninput="updateEmojiOverlayDisplays(); updateEmojiOverlay();">
+                        <span id="emojiOverlayOpacityDisplay" class="font-size-display">16%</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="emojiOverlayRotate">기울기</label>
+                    <div class="slider-group">
+                        <input type="range" id="emojiOverlayRotate" min="-45" max="45" value="-8" oninput="updateEmojiOverlayDisplays(); updateEmojiOverlay();">
+                        <span id="emojiOverlayRotateDisplay" class="font-size-display">-8°</span>
+                    </div>
+                </div>
+            </div>
+            <label for="emojiOverlayLayer">겹침 순서</label>
+            <select id="emojiOverlayLayer" onchange="updateEmojiOverlay(); scheduleHistoryCheckpoint('배경 이모지 변경');">
+                <option value="behind" selected>그래프 뒤에 깔기</option>
+                <option value="front">그래프 위에 반투명으로 올리기</option>
+            </select>
+            <span class="help-text" style="margin-top:8px; margin-bottom:0;">PNG·SVG 저장 시에도 함께 출력됩니다. 숫자와 겹치면 ‘뒤에 깔기’를 유지하고 투명도를 10~20% 정도로 낮추는 게 안전합니다.</span>
         </div>
 
         
@@ -1267,8 +1396,17 @@
         </div>
         
         <div class="data-group" id="reporterSettingGroup">
-            <label style="margin-top:0;">기자 이름</label>
-            <input type="text" id="nameInput" value="박조비 기자">
+            <label style="color:var(--ak-red); font-size:14px; display:block;">✍️ 그래픽 바이라인</label>
+            <label style="margin-top:0;">바이라인 표시</label>
+            <select id="showReporterByline" onchange="handleReporterBylineToggle()">
+                <option value="on" selected>표시함</option>
+                <option value="off">표시 안 함</option>
+            </select>
+            <div id="nameInputWrap">
+                <label>기자 이름</label>
+                <input type="text" id="nameInput" value="박조비 기자" placeholder="예: 홍길동 기자">
+            </div>
+            <span class="help-text" style="margin-top:8px;">‘표시 안 함’을 선택하면 이름을 입력하지 않아도 저장되며, 최종 결과물에서 ‘그래픽 ○○○ 기자’ 문구는 숨겨집니다.</span>
         </div>
         
         <button class="main-btn" id="applyBtn" onclick="handleApplyClick()">🔄 수동 적용하기</button>
@@ -1340,6 +1478,7 @@
     <div class="preview-area">
         <div id="capture-area">
             <div class="header-line" id="topLine"></div>
+            <div id="graphEmojiOverlay" class="graph-emoji-overlay" aria-hidden="true" style="display:none;">🏌️</div>
             
             <h1 class="chart-title inline-editable" id="displayTitle" title="더블클릭해서 제목 수정">제목입력</h1>
             <br>
@@ -1375,8 +1514,8 @@
             
             <div id="displayFootnote" class="inline-editable" title="더블클릭해서 주석 수정"></div>
             
-            <div class="footer-watermark">
-                그래픽&nbsp;&nbsp;<span id="displayName" class="inline-editable" title="더블클릭해서 기자 이름 수정">박조비 기자</span>
+            <div class="footer-watermark" id="singleFooterWatermark">
+                <span id="displayBylineText">그래픽&nbsp;&nbsp;<span id="displayName" class="inline-editable" title="더블클릭해서 기자 이름 수정">박조비 기자</span></span>
                 <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
             </div>
         </div>
@@ -1385,8 +1524,8 @@
             <div class="joined-preview-label">🧩 이어붙인 이미지 미리보기</div>
             <div id="multi-capture-area">
                 <div id="multiGraphLayoutWrap" class="multi-graph-layout stack"></div>
-                <div class="footer-watermark multi-capture-footer">
-                    그래픽&nbsp;&nbsp;<span id="multiDisplayName">박조비 기자</span>
+                <div class="footer-watermark multi-capture-footer" id="multiFooterWatermark">
+                    <span id="multiDisplayBylineText">그래픽&nbsp;&nbsp;<span id="multiDisplayName">박조비 기자</span></span>
                     <img src="https://raw.githubusercontent.com/parkjovio/quiz-app/main/aklogo.png" alt="아시아경제 로고" class="as_logo_img" crossorigin="anonymous" onerror="this.style.display='none'">
                 </div>
             </div>
@@ -1995,10 +2134,10 @@
         appendExisting(designSection.body, [
             '#fontSizeSettingGroup', '#datasetLabelSizeGroup', '#datasetLabelColorGroup',
             '#labelSettingGroup', '#highlightSettingGroup', '#axisSettingGroup', '#areaShapeSettingGroup', '#columnWidthSettingGroup', '#tableColorSettingGroup',
-            '#referenceLabelStyleGroup', '#palettePresetGroup', '#koreanNumberGroup'
+            '#referenceLabelStyleGroup', '#palettePresetGroup', '#emojiOverlaySettingGroup', '#koreanNumberGroup'
         ]);
         appendExisting(exportSection.body, [
-            '#exportOptionGroup', '#downloadBtn', '#svgDownloadBtn', '#creatorFooter'
+            '#reporterSettingGroup', '#exportOptionGroup', '#downloadBtn', '#svgDownloadBtn', '#creatorFooter'
         ]);
 
         [geminiSection.details, dataEditSection.details, designSection.details, exportSection.details].forEach(bindExclusiveMenuBehavior);
@@ -2971,7 +3110,7 @@
         input: '제미나이 텍스트를 붙여넣으면 데이터와 제목을 자동으로 채웁니다.',
         dataedit: '그래프 종류를 고르고, 데이터는 데이터 시트 버튼에서 일괄 편집합니다. 미리보기 위 텍스트와 수치는 커서를 올린 뒤 더블클릭해서 바로 수정합니다.',
         design: '글자 크기, 색상, 수치 표시, 강조 데이터, 축 범위 같은 디자인 옵션을 조정합니다.',
-        save: 'PNG/SVG 저장 옵션을 열어 저장 배율과 저장 버튼을 확인합니다.'
+        save: '바이라인 표시 여부, PNG/SVG 저장 배율과 저장 버튼을 확인합니다.'
     };
 
     function cleanHelpText(text) {
@@ -4252,6 +4391,37 @@
         return document.getElementById((isMultiEditorEnabled() || isMultiGraphMode()) ? 'multi-capture-area' : 'capture-area');
     }
 
+    function isReporterBylineEnabled() {
+        const control = document.getElementById('showReporterByline');
+        return !control || control.value !== 'off';
+    }
+
+    function updateReporterVisibility() {
+        const enabled = isReporterBylineEnabled();
+        const nameWrap = document.getElementById('nameInputWrap');
+        if (nameWrap) nameWrap.style.display = enabled ? 'block' : 'none';
+
+        const singleByline = document.getElementById('displayBylineText');
+        if (singleByline) singleByline.style.display = enabled ? 'inline' : 'none';
+
+        const multiByline = document.getElementById('multiDisplayBylineText');
+        if (multiByline) multiByline.style.display = enabled ? 'inline' : 'none';
+
+        const singleFooter = document.getElementById('singleFooterWatermark');
+        if (singleFooter) singleFooter.classList.toggle('byline-hidden', !enabled);
+
+        const multiFooter = document.getElementById('multiFooterWatermark');
+        if (multiFooter) multiFooter.classList.toggle('byline-hidden', !enabled);
+    }
+
+    function handleReporterBylineToggle() {
+        updateReporterVisibility();
+        updateOutput();
+        if (typeof recordHistoryCheckpoint === 'function') {
+            recordHistoryCheckpoint('그래픽 바이라인 표시 설정 변경');
+        }
+    }
+
     function getPrimaryPreviewReporterName() {
         const nameInput = document.getElementById('nameInput');
         return nameInput && nameInput.value.trim() ? nameInput.value.trim() : '박조비 기자';
@@ -4271,7 +4441,8 @@
     function syncJoinedPreviewReporterName() {
         const reporterName = syncReporterNameAcrossMultiEditorStates();
         const multiName = document.getElementById('multiDisplayName');
-        if (multiName) multiName.textContent = reporterName;
+        if (multiName) multiName.textContent = reporterName || '기자 이름';
+        updateReporterVisibility();
         return reporterName;
     }
 
@@ -5386,6 +5557,7 @@
                     koreanNumberApply: getKoreanNumberApplyFromState(item.state),
                     koreanNumberSubText: item.config.subtitle || '',
                     tableState: item.state,
+                    emojiOverlay: getEmojiOverlaySettingsFromState(item.state),
                     allowEmptyTitle: sequenceIndex > 0,
                     allowEmptySubtitle: sequenceIndex > 0
                 }
@@ -5546,7 +5718,9 @@
         const footnote = config.footnote || '';
         const footnoteHtml = footnote ? escapeHtml(footnote) : (isTextBlock ? '' : '&nbsp;');
         const chartAreaStyle = (isTextBlock || isAdvancedTableBlock) ? 'height:auto; min-height:0; overflow:visible;' : `height:${cardHeight}px;`; 
+        const emojiOverlayHtml = buildEmojiOverlayHtml(renderOptions.emojiOverlay, 'multi-card-emoji-overlay');
         card.innerHTML = `
+            ${emojiOverlayHtml}
             <div class="multi-card-topline" style="background:${escapeHtml(palette.main || '#E61E2B')};"></div>
             <div class="multi-card-title" style="font-size:${design.titleSize}px;">${escapeHtml(title)}</div>
             <div class="multi-card-sub" style="font-size:${design.subtitleSize}px;">${escapeHtml(subtitle)}</div>
@@ -8675,7 +8849,7 @@ function isAreaChartType(type) {
         document.getElementById('dataName4').value = ''; document.getElementById('dataInput4').value = '';
         document.getElementById('yMin').value = ''; document.getElementById('yMax').value = '';
         document.getElementById('y1Min').value = ''; document.getElementById('y1Max').value = '';
-        document.getElementById('footnoteInput').value = ''; document.getElementById('nameInput').value = '박조비 기자';
+        document.getElementById('footnoteInput').value = ''; document.getElementById('nameInput').value = '박조비 기자'; const bylineToggle = document.getElementById('showReporterByline'); if (bylineToggle) bylineToggle.value = 'on';
 
         if (type === 'table') {
             document.getElementById('titleInput').value = '주요 지역별 부동산 시장 동향';
@@ -8982,10 +9156,13 @@ function isAreaChartType(type) {
         refreshTableColorControls();
         refreshReferenceStyleControls();
         refreshChartAwareVisibility();
+        updateReporterVisibility();
         updateOutput();
     }
 
     function validateReporterName() {
+        if (!isReporterBylineEnabled()) return true;
+
         const nameInput = document.getElementById('nameInput');
         if (!nameInput) return true;
 
@@ -9014,6 +9191,125 @@ function isAreaChartType(type) {
         return true;
     }
 
+    function clampNumber(value, min, max, fallback) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return fallback;
+        return Math.max(min, Math.min(max, numeric));
+    }
+
+    function getEmojiOverlaySettingsFromControls() {
+        const enabledEl = document.getElementById('emojiOverlayEnabled');
+        const textEl = document.getElementById('emojiOverlayText');
+        const sizeEl = document.getElementById('emojiOverlaySize');
+        const xEl = document.getElementById('emojiOverlayX');
+        const yEl = document.getElementById('emojiOverlayY');
+        const opacityEl = document.getElementById('emojiOverlayOpacity');
+        const rotateEl = document.getElementById('emojiOverlayRotate');
+        const layerEl = document.getElementById('emojiOverlayLayer');
+        return {
+            enabled: enabledEl ? enabledEl.value === 'on' : false,
+            text: textEl ? String(textEl.value || '').trim() : '',
+            size: clampNumber(sizeEl ? sizeEl.value : 118, 30, 260, 118),
+            x: clampNumber(xEl ? xEl.value : 22, -20, 120, 22),
+            y: clampNumber(yEl ? yEl.value : 48, -20, 120, 48),
+            opacity: clampNumber(opacityEl ? opacityEl.value : 16, 0, 60, 16),
+            rotate: clampNumber(rotateEl ? rotateEl.value : -8, -45, 45, -8),
+            layer: layerEl && layerEl.value === 'front' ? 'front' : 'behind'
+        };
+    }
+
+    function getSnapshotControlValue(state, id, fallback = '') {
+        const payload = state && state[id];
+        if (!payload) return fallback;
+        if ('checked' in payload) return payload.checked;
+        if ('value' in payload) return payload.value;
+        return fallback;
+    }
+
+    function getEmojiOverlaySettingsFromState(state) {
+        return {
+            enabled: String(getSnapshotControlValue(state, 'emojiOverlayEnabled', 'off')) === 'on',
+            text: String(getSnapshotControlValue(state, 'emojiOverlayText', '🏌️') || '').trim(),
+            size: clampNumber(getSnapshotControlValue(state, 'emojiOverlaySize', 118), 30, 260, 118),
+            x: clampNumber(getSnapshotControlValue(state, 'emojiOverlayX', 22), -20, 120, 22),
+            y: clampNumber(getSnapshotControlValue(state, 'emojiOverlayY', 48), -20, 120, 48),
+            opacity: clampNumber(getSnapshotControlValue(state, 'emojiOverlayOpacity', 16), 0, 60, 16),
+            rotate: clampNumber(getSnapshotControlValue(state, 'emojiOverlayRotate', -8), -45, 45, -8),
+            layer: String(getSnapshotControlValue(state, 'emojiOverlayLayer', 'behind')) === 'front' ? 'front' : 'behind'
+        };
+    }
+
+    function updateEmojiOverlayDisplays() {
+        const settings = getEmojiOverlaySettingsFromControls();
+        const displayMap = {
+            emojiOverlayXDisplay: `${Math.round(settings.x)}%`,
+            emojiOverlayYDisplay: `${Math.round(settings.y)}%`,
+            emojiOverlaySizeDisplay: `${Math.round(settings.size)}px`,
+            emojiOverlayOpacityDisplay: `${Math.round(settings.opacity)}%`,
+            emojiOverlayRotateDisplay: `${Math.round(settings.rotate)}°`
+        };
+        Object.entries(displayMap).forEach(([id, value]) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = value;
+        });
+    }
+
+    function applyEmojiOverlayStyles(target, settings) {
+        if (!target || !settings) return;
+        const shouldShow = !!(settings.enabled && settings.text);
+        target.textContent = settings.text || '';
+        target.style.display = shouldShow ? 'block' : 'none';
+        target.style.left = `${settings.x}%`;
+        target.style.top = `${settings.y}%`;
+        target.style.fontSize = `${settings.size}px`;
+        target.style.opacity = String(settings.opacity / 100);
+        target.style.transform = `translate(-50%, -50%) rotate(${settings.rotate}deg)`;
+        target.classList.toggle('emoji-overlay-front', settings.layer === 'front');
+        target.style.zIndex = settings.layer === 'front' ? '12' : '1';
+    }
+
+    function updateEmojiOverlay() {
+        updateEmojiOverlayDisplays();
+        const settings = getEmojiOverlaySettingsFromControls();
+        const overlay = document.getElementById('graphEmojiOverlay');
+        const capture = document.getElementById('capture-area');
+        applyEmojiOverlayStyles(overlay, settings);
+        if (capture) capture.classList.toggle('emoji-overlay-front', settings.layer === 'front');
+        if (isMultiEditorEnabled()) {
+            try {
+                graphEditorStates[activeGraphEditorIndex] = serializeGraphEditorState();
+                renderMultiGraphComposition();
+            } catch (error) {}
+        }
+    }
+
+    function setEmojiOverlayPreset(emoji, x, y, size, opacity, rotate) {
+        const assignments = {
+            emojiOverlayEnabled: 'on',
+            emojiOverlayText: emoji,
+            emojiOverlayX: x,
+            emojiOverlayY: y,
+            emojiOverlaySize: size,
+            emojiOverlayOpacity: opacity,
+            emojiOverlayRotate: rotate
+        };
+        Object.entries(assignments).forEach(([id, value]) => {
+            const el = document.getElementById(id);
+            if (el) el.value = String(value);
+        });
+        updateEmojiOverlay();
+        scheduleHistoryCheckpoint('배경 이모지 프리셋');
+    }
+
+    function buildEmojiOverlayHtml(settings, className = 'multi-card-emoji-overlay') {
+        if (!settings || !settings.enabled || !settings.text) return '';
+        const safeText = escapeHtml(settings.text);
+        const fontSize = Math.round(settings.size * 0.72);
+        const opacity = settings.opacity / 100;
+        const frontClass = settings.layer === 'front' ? ' emoji-overlay-front' : '';
+        return `<div class="${className}${frontClass}" style="left:${settings.x}%; top:${settings.y}%; font-size:${fontSize}px; opacity:${opacity}; transform:translate(-50%, -50%) rotate(${settings.rotate}deg); z-index:${settings.layer === 'front' ? 12 : 1};">${safeText}</div>`;
+    }
+
     function handleApplyClick() {
         updateOutput();
     }
@@ -9028,6 +9324,7 @@ function isAreaChartType(type) {
         refreshAreaShapeControls();
         refreshTableColorControls();
         refreshReferenceStyleControls();
+        updateEmojiOverlayDisplays();
 
         const titleText = document.getElementById('titleInput').value;
         const displayTitle = document.getElementById('displayTitle');
@@ -9043,7 +9340,10 @@ function isAreaChartType(type) {
             }
             displayTitle.style.display = 'inline-block';
         }
-        if(document.getElementById('displayName')) document.getElementById('displayName').innerText = document.getElementById('nameInput').value;
+        const reporterInput = document.getElementById('nameInput');
+        const reporterText = reporterInput ? reporterInput.value.trim() : '';
+        if (document.getElementById('displayName')) document.getElementById('displayName').innerText = reporterText || '기자 이름';
+        updateReporterVisibility();
         if (isMultiEditorEnabled()) syncJoinedPreviewReporterName();
 
         const subText = document.getElementById('subInput').value;
@@ -9136,6 +9436,7 @@ function isAreaChartType(type) {
             }
         }
 
+        updateEmojiOverlay();
         renderMultiGraphComposition();
         updateExportSizeHint();
     }
@@ -11052,6 +11353,8 @@ function isAreaChartType(type) {
         });
 
         updateDatasetFontDisplays();
+        updateEmojiOverlayDisplays();
+        updateEmojiOverlay();
         refreshDatasetLabelDisplayControls();
         refreshDatasetFontControls();
         refreshDatasetColorControls();
