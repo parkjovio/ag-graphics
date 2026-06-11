@@ -1060,6 +1060,22 @@
                     </div>
                 </div>
             </div>
+            <div class="emoji-overlay-row">
+                <div>
+                    <label for="emojiOverlayGrayscale">흑백</label>
+                    <div class="slider-group">
+                        <input type="range" id="emojiOverlayGrayscale" min="0" max="100" value="0" oninput="updateEmojiOverlayDisplays(); updateEmojiOverlay();">
+                        <span id="emojiOverlayGrayscaleDisplay" class="font-size-display">0%</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="emojiOverlayBrightness">밝기</label>
+                    <div class="slider-group">
+                        <input type="range" id="emojiOverlayBrightness" min="20" max="200" value="100" oninput="updateEmojiOverlayDisplays(); updateEmojiOverlay();">
+                        <span id="emojiOverlayBrightnessDisplay" class="font-size-display">100%</span>
+                    </div>
+                </div>
+            </div>
             <label for="emojiOverlayLayer">겹침 순서</label>
             <select id="emojiOverlayLayer" onchange="updateEmojiOverlay(); scheduleHistoryCheckpoint('배경 이모지 변경');">
                 <option value="behind" selected>그래프 뒤에 깔기</option>
@@ -3087,7 +3103,7 @@
         await waitForNextPaint();
         const captureDiv = document.getElementById('capture-area');
         await waitForOverlayImages(captureDiv);
-        const restoreOverlayAssets = await prepareImageOverlayAssetsForExport(captureDiv);
+        const restoreOverlayAssets = await prepareOverlayAssetsForExport(captureDiv);
         try {
             return await html2canvas(captureDiv, {
                 scale: exportScale,
@@ -3128,12 +3144,12 @@
             await setAllChartPixelRatios(chartExportDpr);
             await waitForNextPaint();
             await waitForOverlayImages(captureDiv);
-            const restoreOverlayAssets = await prepareImageOverlayAssetsForExport(captureDiv);
+            const restoreOverlayAssets = await prepareOverlayAssetsForExport(captureDiv);
             const rect = captureDiv.getBoundingClientRect();
             const exportWidth = Math.max(750, captureDiv.scrollWidth, captureDiv.offsetWidth, Math.round(rect.width));
             const exportHeight = Math.max(100, captureDiv.scrollHeight, captureDiv.offsetHeight, Math.round(rect.height));
             try {
-                return await html2canvas(captureDiv, {
+                const renderedCanvas = await html2canvas(captureDiv, {
                     scale: exportScale,
                     width: exportWidth,
                     height: exportHeight,
@@ -3144,6 +3160,7 @@
                     backgroundColor: '#ffffff',
                     logging: false
                 });
+                return trimBottomSpaceAfterFooter(renderedCanvas, captureDiv, exportScale);
             } finally {
                 restoreOverlayAssets();
             }
@@ -9441,6 +9458,8 @@ function isAreaChartType(type) {
         const yEl = document.getElementById('emojiOverlayY');
         const opacityEl = document.getElementById('emojiOverlayOpacity');
         const rotateEl = document.getElementById('emojiOverlayRotate');
+        const grayscaleEl = document.getElementById('emojiOverlayGrayscale');
+        const brightnessEl = document.getElementById('emojiOverlayBrightness');
         const layerEl = document.getElementById('emojiOverlayLayer');
         return {
             enabled: enabledEl ? enabledEl.value === 'on' : false,
@@ -9450,6 +9469,8 @@ function isAreaChartType(type) {
             y: clampNumber(yEl ? yEl.value : 48, -20, 120, 48),
             opacity: clampNumber(opacityEl ? opacityEl.value : 16, 0, 60, 16),
             rotate: clampNumber(rotateEl ? rotateEl.value : -8, -45, 45, -8),
+            grayscale: clampNumber(grayscaleEl ? grayscaleEl.value : 0, 0, 100, 0),
+            brightness: clampNumber(brightnessEl ? brightnessEl.value : 100, 20, 200, 100),
             layer: layerEl && layerEl.value === 'front' ? 'front' : 'behind'
         };
     }
@@ -9471,6 +9492,8 @@ function isAreaChartType(type) {
             y: clampNumber(getSnapshotControlValue(state, 'emojiOverlayY', 48), -20, 120, 48),
             opacity: clampNumber(getSnapshotControlValue(state, 'emojiOverlayOpacity', 16), 0, 60, 16),
             rotate: clampNumber(getSnapshotControlValue(state, 'emojiOverlayRotate', -8), -45, 45, -8),
+            grayscale: clampNumber(getSnapshotControlValue(state, 'emojiOverlayGrayscale', 0), 0, 100, 0),
+            brightness: clampNumber(getSnapshotControlValue(state, 'emojiOverlayBrightness', 100), 20, 200, 100),
             layer: String(getSnapshotControlValue(state, 'emojiOverlayLayer', 'behind')) === 'front' ? 'front' : 'behind'
         };
     }
@@ -9482,7 +9505,9 @@ function isAreaChartType(type) {
             emojiOverlayYDisplay: `${Math.round(settings.y)}%`,
             emojiOverlaySizeDisplay: `${Math.round(settings.size)}px`,
             emojiOverlayOpacityDisplay: `${Math.round(settings.opacity)}%`,
-            emojiOverlayRotateDisplay: `${Math.round(settings.rotate)}°`
+            emojiOverlayRotateDisplay: `${Math.round(settings.rotate)}°`,
+            emojiOverlayGrayscaleDisplay: `${Math.round(settings.grayscale)}%`,
+            emojiOverlayBrightnessDisplay: `${Math.round(settings.brightness)}%`
         };
         Object.entries(displayMap).forEach(([id, value]) => {
             const el = document.getElementById(id);
@@ -9499,6 +9524,7 @@ function isAreaChartType(type) {
         target.style.top = `${settings.y}%`;
         target.style.fontSize = `${settings.size}px`;
         target.style.opacity = String(settings.opacity / 100);
+        target.style.filter = `grayscale(${settings.grayscale}%) brightness(${settings.brightness}%)`;
         target.style.transform = `translate(-50%, -50%) rotate(${settings.rotate}deg)`;
         target.classList.toggle('emoji-overlay-front', settings.layer === 'front');
         target.style.zIndex = settings.layer === 'front' ? '12' : '1';
@@ -9527,7 +9553,9 @@ function isAreaChartType(type) {
             emojiOverlayY: y,
             emojiOverlaySize: size,
             emojiOverlayOpacity: opacity,
-            emojiOverlayRotate: rotate
+            emojiOverlayRotate: rotate,
+            emojiOverlayGrayscale: 0,
+            emojiOverlayBrightness: 100
         };
         Object.entries(assignments).forEach(([id, value]) => {
             const el = document.getElementById(id);
@@ -9543,7 +9571,8 @@ function isAreaChartType(type) {
         const fontSize = Math.round(settings.size * 0.72);
         const opacity = settings.opacity / 100;
         const frontClass = settings.layer === 'front' ? ' emoji-overlay-front' : '';
-        return `<div class="${className}${frontClass}" style="left:${settings.x}%; top:${settings.y}%; font-size:${fontSize}px; opacity:${opacity}; transform:translate(-50%, -50%) rotate(${settings.rotate}deg); z-index:${settings.layer === 'front' ? 12 : 1};">${safeText}</div>`;
+        const filterStyle = `grayscale(${settings.grayscale}%) brightness(${settings.brightness}%)`;
+        return `<div class="${className}${frontClass}" style="left:${settings.x}%; top:${settings.y}%; font-size:${fontSize}px; opacity:${opacity}; filter:${escapeHtml(filterStyle)}; transform:translate(-50%, -50%) rotate(${settings.rotate}deg); z-index:${settings.layer === 'front' ? 12 : 1};">${safeText}</div>`;
     }
 
 
@@ -9825,6 +9854,94 @@ function isAreaChartType(type) {
         };
     }
 
+    function getOverlayFilterBlurPixels(filterText) {
+        const match = String(filterText || '').match(/blur\(([-0-9.]+)px\)/i);
+        return match ? Math.max(0, Number(match[1]) || 0) : 0;
+    }
+
+    async function prepareEmojiOverlayAssetsForExport(root) {
+        if (!root) return () => {};
+        const nodes = Array.from(root.querySelectorAll('#graphEmojiOverlay, .multi-card-emoji-overlay'));
+        const prepared = [];
+        for (const node of nodes) {
+            if (!node) continue;
+            const computed = getComputedStyle(node);
+            if (computed.display === 'none' || computed.visibility === 'hidden') continue;
+            const text = String(node.textContent || '').trim();
+            const filterText = normalizeOverlayFilter(node.style.filter || computed.filter);
+            if (!text || !filterText) continue;
+            try {
+                const rect = node.getBoundingClientRect();
+                const fontSize = parseFloat(computed.fontSize) || 80;
+                const pad = Math.ceil(Math.max(18, fontSize * 0.22, getOverlayFilterBlurPixels(filterText) * 4));
+                const width = Math.max(1, Math.ceil((rect.width || fontSize) + pad * 2));
+                const height = Math.max(1, Math.ceil((rect.height || fontSize) + pad * 2));
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) continue;
+                ctx.clearRect(0, 0, width, height);
+                ctx.filter = filterText || 'none';
+                ctx.font = computed.font || `${computed.fontWeight || '400'} ${computed.fontSize || fontSize + 'px'} ${computed.fontFamily || 'sans-serif'}`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = computed.color && computed.color !== 'transparent' ? computed.color : '#000';
+                ctx.fillText(text, width / 2, height / 2);
+
+                prepared.push({
+                    node,
+                    text: node.textContent,
+                    backgroundImage: node.style.backgroundImage,
+                    backgroundSize: node.style.backgroundSize,
+                    backgroundPosition: node.style.backgroundPosition,
+                    backgroundRepeat: node.style.backgroundRepeat,
+                    filter: node.style.filter,
+                    color: node.style.color,
+                    width: node.style.width,
+                    height: node.style.height,
+                    lineHeight: node.style.lineHeight
+                });
+                node.textContent = '';
+                node.style.backgroundImage = `url("${toCssUrlValue(canvas.toDataURL('image/png'))}")`;
+                node.style.backgroundSize = 'contain';
+                node.style.backgroundPosition = 'center center';
+                node.style.backgroundRepeat = 'no-repeat';
+                node.style.filter = 'none';
+                node.style.color = 'transparent';
+                node.style.width = `${width}px`;
+                node.style.height = `${height}px`;
+                node.style.lineHeight = `${height}px`;
+            } catch (error) {
+                console.warn('이모지 오버레이 필터 export 보정 실패', error);
+            }
+        }
+        return function restorePreparedEmojiOverlayAssets() {
+            prepared.forEach(item => {
+                if (!item || !item.node) return;
+                item.node.textContent = item.text;
+                item.node.style.backgroundImage = item.backgroundImage;
+                item.node.style.backgroundSize = item.backgroundSize;
+                item.node.style.backgroundPosition = item.backgroundPosition;
+                item.node.style.backgroundRepeat = item.backgroundRepeat;
+                item.node.style.filter = item.filter;
+                item.node.style.color = item.color;
+                item.node.style.width = item.width;
+                item.node.style.height = item.height;
+                item.node.style.lineHeight = item.lineHeight;
+            });
+        };
+    }
+
+    async function prepareOverlayAssetsForExport(root) {
+        const restoreImages = await prepareImageOverlayAssetsForExport(root);
+        const restoreEmojis = await prepareEmojiOverlayAssetsForExport(root);
+        return function restorePreparedOverlayAssets() {
+            restoreEmojis();
+            restoreImages();
+        };
+    }
+
     function waitForOverlayImages(root, timeoutMs = 2500) {
         if (!root) return Promise.resolve();
         const nodes = Array.from(root.querySelectorAll('#graphImageOverlay, .multi-card-image-overlay, .image-overlay-item'));
@@ -9847,6 +9964,42 @@ function isAreaChartType(type) {
     function isImageOverlayActiveForExport() {
         const settings = typeof getImageOverlaySettingsFromControls === 'function' ? getImageOverlaySettingsFromControls() : null;
         return !!(settings && settings.enabled && String(settings.url || '').trim());
+    }
+
+    function cropCanvasToHeight(canvas, cropHeight) {
+        if (!canvas || !canvas.width || !canvas.height) return canvas;
+        const safeCropHeight = Math.max(1, Math.min(canvas.height, Math.round(cropHeight || canvas.height)));
+        if (canvas.height - safeCropHeight < 2) return canvas;
+        const croppedCanvas = document.createElement('canvas');
+        croppedCanvas.width = canvas.width;
+        croppedCanvas.height = safeCropHeight;
+        const croppedCtx = croppedCanvas.getContext('2d');
+        if (!croppedCtx) return canvas;
+        croppedCtx.fillStyle = '#ffffff';
+        croppedCtx.fillRect(0, 0, croppedCanvas.width, croppedCanvas.height);
+        croppedCtx.drawImage(canvas, 0, 0, canvas.width, safeCropHeight, 0, 0, canvas.width, safeCropHeight);
+        return croppedCanvas;
+    }
+
+    function getFooterTightCropHeight(canvas, captureRoot, exportScale = 1, bottomGapCssPx = 8) {
+        if (!canvas || !captureRoot) return 0;
+        const footer = captureRoot.querySelector('.footer-watermark');
+        if (!footer) return 0;
+        const footerStyle = getComputedStyle(footer);
+        if (footerStyle.display === 'none' || footerStyle.visibility === 'hidden') return 0;
+
+        const rootRect = captureRoot.getBoundingClientRect();
+        const footerRect = footer.getBoundingClientRect();
+        const logo = footer.querySelector('.as_logo_img');
+        const byline = footer.querySelector('span');
+        const logoRect = logo ? logo.getBoundingClientRect() : null;
+        const bylineRect = byline ? byline.getBoundingClientRect() : null;
+        const bottomCandidates = [footerRect.top];
+        if (logoRect && logoRect.width && logoRect.height) bottomCandidates.push(logoRect.bottom);
+        if (bylineRect && bylineRect.width && bylineRect.height) bottomCandidates.push(bylineRect.bottom);
+        const contentBottomCss = Math.max(...bottomCandidates) - rootRect.top;
+        const scale = Number(exportScale) || (canvas.width / Math.max(1, rootRect.width)) || 1;
+        return Math.ceil((contentBottomCss + bottomGapCssPx) * scale);
     }
 
     function trimBottomWhitespaceForImageOverlay(canvas, exportScale = 1) {
@@ -9881,18 +10034,18 @@ function isAreaChartType(type) {
 
         if (lastContentY < 0) return canvas;
 
-        const bottomPadding = Math.max(16, Math.round(18 * (Number(exportScale) || 1)));
+        const bottomPadding = Math.max(8, Math.round(8 * (Number(exportScale) || 1)));
         const cropHeight = Math.min(canvas.height, lastContentY + 1 + bottomPadding);
-        if (canvas.height - cropHeight < Math.max(8, Math.round(8 * (Number(exportScale) || 1)))) return canvas;
+        if (canvas.height - cropHeight < Math.max(4, Math.round(4 * (Number(exportScale) || 1)))) return canvas;
+        return cropCanvasToHeight(canvas, cropHeight);
+    }
 
-        const croppedCanvas = document.createElement('canvas');
-        croppedCanvas.width = canvas.width;
-        croppedCanvas.height = cropHeight;
-        const croppedCtx = croppedCanvas.getContext('2d');
-        croppedCtx.fillStyle = '#ffffff';
-        croppedCtx.fillRect(0, 0, croppedCanvas.width, croppedCanvas.height);
-        croppedCtx.drawImage(canvas, 0, 0, canvas.width, cropHeight, 0, 0, canvas.width, cropHeight);
-        return croppedCanvas;
+    function trimBottomSpaceAfterFooter(canvas, captureRoot, exportScale = 1) {
+        const footerCropHeight = getFooterTightCropHeight(canvas, captureRoot, exportScale, 8);
+        if (footerCropHeight && footerCropHeight < canvas.height) {
+            return cropCanvasToHeight(canvas, footerCropHeight);
+        }
+        return trimBottomWhitespaceForImageOverlay(canvas, exportScale);
     }
     function handleApplyClick() {
         updateOutput();
@@ -11735,7 +11888,7 @@ function isAreaChartType(type) {
             await setAllChartPixelRatios(chartExportDpr);
             await waitForNextPaint();
             await waitForOverlayImages(captureDiv);
-            restoreOverlayAssets = await prepareImageOverlayAssetsForExport(captureDiv);
+            restoreOverlayAssets = await prepareOverlayAssetsForExport(captureDiv);
 
             const canvas = await html2canvas(captureDiv, {
                 scale: exportScale,
@@ -11758,9 +11911,7 @@ function isAreaChartType(type) {
                 outputCanvas = fixedCanvas;
             }
 
-            if (isImageOverlayActiveForExport()) {
-                outputCanvas = trimBottomWhitespaceForImageOverlay(outputCanvas, exportScale);
-            }
+            outputCanvas = trimBottomSpaceAfterFooter(outputCanvas, captureDiv, exportScale);
 
             const link = document.createElement('a');
             const type = document.getElementById('chartType').value;
@@ -11849,7 +12000,7 @@ function isAreaChartType(type) {
             await setAllChartPixelRatios(chartExportDpr);
             await waitForNextPaint();
             await waitForOverlayImages(captureDiv);
-            restoreOverlayAssets = await prepareImageOverlayAssetsForExport(captureDiv);
+            restoreOverlayAssets = await prepareOverlayAssetsForExport(captureDiv);
 
             const renderedCanvas = await html2canvas(captureDiv, {
                 scale: exportScale,
@@ -11871,7 +12022,7 @@ function isAreaChartType(type) {
             finalCtx.fillRect(0, 0, exportWidth, exportHeight);
             finalCtx.drawImage(renderedCanvas, 0, 0, exportWidth, exportHeight);
 
-            const svgCanvas = isImageOverlayActiveForExport() ? trimBottomWhitespaceForImageOverlay(finalCanvas, exportScale) : finalCanvas;
+            const svgCanvas = trimBottomSpaceAfterFooter(finalCanvas, captureDiv, exportScale);
             const svgWidth = svgCanvas.width;
             const svgHeight = svgCanvas.height;
             const pngDataUrl = svgCanvas.toDataURL('image/png');
