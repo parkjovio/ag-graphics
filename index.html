@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>그래픽 보조 데스크 V6 · 개선 메뉴</title>
+    <title>그래픽 보조 데스크 V7 · 개선 메뉴</title>
     <script>document.documentElement.classList.add('v6-booting');setTimeout(()=>document.documentElement.classList.remove('v6-booting'),15000);</script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -175,17 +175,17 @@
         #chart-container { height: 420px; margin-top: 0px; flex-shrink: 0; transition: none; position: relative;}
         #capture-area.pie-tight-layout #displayTitle { margin-bottom: 0px; }
         #capture-area.pie-tight-layout #displaySub { line-height: 1.1; position: relative; z-index: 30; pointer-events: auto; }
-        #capture-area.pie-tight-layout #chart-container { margin-top: -38px; margin-bottom: -44px; z-index: 1; }
+        #capture-area.pie-tight-layout #chart-container { margin-top:0; margin-bottom:0; z-index:1; }
         #capture-area.pie-tight-layout #displayFootnote { margin-top: -4px; position: relative; z-index: 30; pointer-events: auto; }
         #capture-area.pie-tight-layout #displayTitle { position: relative; z-index: 30; pointer-events: auto; }
         #capture-area.pie-tight-layout .footer-watermark { margin-top: 2px; padding-top: 8px; }
-        #pie-side-list { display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 210px; z-index: 5; cursor:grab; touch-action:none; user-select:none; }
+        #pie-side-list { display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); width:max-content; max-width:210px; min-width:0; box-sizing:border-box; z-index:5; cursor:grab; touch-action:none; user-select:none; }
         #pie-side-list.is-dragging { cursor:grabbing; outline:2px dashed rgba(230,30,43,.42); outline-offset:4px; background:rgba(255,255,255,.9); }
-        .pie-side-list-inner { display: flex; flex-direction: column; gap: 10px; }
-        .pie-side-item { display: flex; align-items: flex-start; gap: 8px; min-width: 0; cursor: pointer; border-radius: 8px; padding: 4px; margin: -4px; transition: box-shadow 0.15s ease, background-color 0.15s ease; }
+        .pie-side-list-inner { display:flex; flex-direction:column; align-items:flex-start; gap:10px; width:max-content; max-width:210px; }
+        .pie-side-item { display:flex; align-items:flex-start; gap:8px; width:max-content; max-width:210px; min-width:0; box-sizing:border-box; cursor:pointer; border-radius:8px; padding:4px; margin:-4px; transition:box-shadow 0.15s ease, background-color 0.15s ease; }
         .pie-side-item:hover { box-shadow: 0 0 0 2px rgba(230,30,43,0.20); background-color: rgba(255,248,248,0.92); }
         .pie-side-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-        .pie-side-text { min-width: 0; color: #111; font-weight: 700; line-height: 1.3; letter-spacing: -0.4px; word-break: keep-all; overflow-wrap: anywhere; }
+        .pie-side-text { width:max-content; max-width:185px; min-width:0; color:#111; font-weight:700; line-height:1.3; letter-spacing:-0.4px; word-break:keep-all; overflow-wrap:anywhere; }
         .pie-side-text strong { font-weight: 900; }
         .pie-side-label, .pie-side-value { display: inline-block; border-radius: 5px; padding: 1px 3px; margin: -1px -3px; transition: box-shadow 0.15s ease, background-color 0.15s ease; }
         .pie-side-label { cursor: text; }
@@ -348,6 +348,29 @@
         .asia-table th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 15px 5px; font-weight: bold; color: #333; }
         .asia-table td { border-bottom: 1px solid #ddd; padding: 15px 5px; color: #111; vertical-align: middle; }
         .asia-table td.col-0 { background-color: var(--ak-red); color: white; font-weight: bold; border-bottom: 1px solid #fff; }
+        #table-container .asia-table { table-layout: fixed; }
+        #table-container .asia-table th,
+        #table-container .asia-table td { position: relative; word-break: keep-all; overflow-wrap: anywhere; }
+        #table-container .direct-col-resize-handle { position:absolute; z-index:40; top:0; bottom:0; width:18px; cursor:col-resize; touch-action:none; }
+        #table-container .direct-col-resize-handle[data-side="right"] { right:-9px; }
+        #table-container .direct-col-resize-handle[data-side="left"] { left:-9px; }
+        #table-container .table-column-boundary-handle { right:auto; bottom:auto; transform:translateX(-50%); }
+        #table-container .direct-col-resize-handle::after { content:''; position:absolute; top:0; bottom:0; left:8px; width:2px; background:transparent; transition:width .12s ease, background-color .12s ease; }
+        #table-container .direct-col-resize-handle:hover::after { width:3px; background:#2563eb; }
+        #table-container.is-direct-resizing .direct-col-resize-handle.active::after { width:4px; background:#e61e2b; }
+        #table-container .timeline-left,
+        #table-container .list-header-box,
+        #table-container .list-item { position:relative; }
+        #table-container .direct-resize-col-left { cursor: col-resize !important; box-shadow: inset 3px 0 0 #2563eb !important; }
+        #table-container .direct-resize-col-right { cursor: col-resize !important; box-shadow: inset -3px 0 0 #2563eb !important; }
+        #table-container .direct-resize-row-bottom { cursor: row-resize !important; box-shadow: inset 0 -3px 0 #2563eb !important; }
+        #table-container.resize-col-active,
+        #table-container.resize-col-active * { cursor: col-resize !important; user-select: none !important; }
+        #table-container.resize-row-active,
+        #table-container.resize-row-active * { cursor: row-resize !important; user-select: none !important; }
+        #table-container.is-direct-resizing .direct-resize-col-left { box-shadow: inset 4px 0 0 #e61e2b !important; }
+        #table-container.is-direct-resizing .direct-resize-col-right { box-shadow: inset -4px 0 0 #e61e2b !important; }
+        #table-container.is-direct-resizing .direct-resize-row-bottom { box-shadow: inset 0 -4px 0 #e61e2b !important; }
         
         /* 카드형 리스트 표 */
         .list-info-container { width: 100%; display: flex; flex-direction: column; gap: 15px; font-family: var(--main-font); margin-top: 10px;}
@@ -514,6 +537,7 @@
             display: block;
             object-fit: contain;
             object-position: right top;
+            clip-path: inset(var(--logo-alpha-top, 0%) var(--logo-alpha-right, 0%) var(--logo-alpha-bottom, 0%) var(--logo-alpha-left, 0%));
         }
 
 
@@ -656,15 +680,23 @@
         .size-presets button { border:1px solid var(--design-group-accent); color:var(--design-group-accent); background:#fff; border-radius:7px; padding:5px 8px; font-family:var(--main-font); font-size:11px; font-weight:800; cursor:pointer; }
         .size-presets button:hover { background:var(--design-group-chip-bg); }
         #capture-area { --table-font-size:20px; --table-header-font-size:20px; --table-cell-padding-y:15px; --table-width-percent:100%; }
-        #table-container { width:var(--table-width-percent); max-width:none; margin-left:auto; margin-right:auto; }
+        #table-container { width:var(--table-width-percent); max-width:none; margin-left:auto; margin-right:auto; position:relative; }
         #table-container .asia-table { width:100% !important; font-size:var(--table-font-size) !important; }
         #table-container .asia-table th { font-size:var(--table-header-font-size) !important; padding-top:var(--table-cell-padding-y) !important; padding-bottom:var(--table-cell-padding-y) !important; }
         #table-container .asia-table td { font-size:var(--table-font-size) !important; padding-top:var(--table-cell-padding-y) !important; padding-bottom:var(--table-cell-padding-y) !important; }
+        #table-container .timeline-left,
+        #table-container .list-header-box { font-size:var(--table-header-font-size) !important; }
+        #table-container .timeline-right,
+        #table-container .list-item { font-size:var(--table-font-size) !important; }
         #multi-capture-area { --table-font-size:16px; --table-header-font-size:16px; --table-cell-padding-y:10px; --table-width-percent:100%; }
         #multi-capture-area .multi-card-table-content { width:var(--table-width-percent); margin-left:auto; margin-right:auto; }
         #multi-capture-area .asia-table { font-size:var(--table-font-size) !important; }
         #multi-capture-area .asia-table th { font-size:var(--table-header-font-size) !important; padding-top:var(--table-cell-padding-y) !important; padding-bottom:var(--table-cell-padding-y) !important; }
         #multi-capture-area .asia-table td { font-size:var(--table-font-size) !important; padding-top:var(--table-cell-padding-y) !important; padding-bottom:var(--table-cell-padding-y) !important; }
+        #multi-capture-area .timeline-left,
+        #multi-capture-area .list-header-box { font-size:var(--table-header-font-size) !important; }
+        #multi-capture-area .timeline-right,
+        #multi-capture-area .list-item { font-size:var(--table-font-size) !important; }
         #sectionDesign #palettePresetGroup { --design-group-accent: #7c3aed; --design-group-bg: #f5f0ff; --design-group-chip-bg: #eadcff; }
         #sectionDesign #labelSettingGroup { --design-group-accent: #2563eb; --design-group-bg: #eff6ff; --design-group-chip-bg: #dbeafe; }
         #sectionDesign #koreanNumberGroup { --design-group-accent: #0f766e; --design-group-bg: #ecfdf5; --design-group-chip-bg: #ccfbf1; }
@@ -725,6 +757,7 @@
         #topLine { position:relative; min-height:10px; cursor:ew-resize; box-sizing:border-box; }
         #topLine.is-resizing { outline:2px dashed rgba(37,99,235,.45); outline-offset:2px; }
         #sectionDesign #datasetLabelSizeGroup { --design-group-accent: #6d28d9; --design-group-bg: #f5f3ff; --design-group-chip-bg: #ede9fe; }
+        #sectionDesign #chartDataLabelDefaultSizeGroup { --design-group-accent: #7c3aed; --design-group-bg: #f5f3ff; --design-group-chip-bg: #ede9fe; }
         #sectionDesign #datasetLabelColorGroup { --design-group-accent: #0891b2; --design-group-bg: #ecfeff; --design-group-chip-bg: #cffafe; }
         #sectionDesign #referenceLabelStyleGroup { --design-group-accent: #475569; --design-group-bg: #f8fafc; --design-group-chip-bg: #e2e8f0; }
         #sectionDesign #axisSettingGroup { --design-group-accent: #4338ca; --design-group-bg: #eef2ff; --design-group-chip-bg: #e0e7ff; }
@@ -1524,26 +1557,20 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
             <span class="help-text">단일 그래프와 복수 그래프, PNG 저장 결과에 함께 적용됩니다.</span>
             <label for="chartHeight">전체 그래프 높이</label>
             <div class="size-control-row"><input type="range" id="chartHeight" min="240" max="760" step="10" value="420" oninput="syncSizeControl('chartHeight'); updateOutput();"><span class="size-number-wrap"><input type="number" id="chartHeightNumber" min="240" max="760" step="10" value="420" oninput="syncSizeControl('chartHeight', true); updateOutput();"><span>px</span></span></div>
-            <label for="chartInnerScale">그래프 내부 배율</label>
-            <div class="size-control-row"><input type="range" id="chartInnerScale" min="70" max="150" step="5" value="100" oninput="syncSizeControl('chartInnerScale'); updateOutput();"><span class="size-number-wrap"><input type="number" id="chartInnerScaleNumber" min="70" max="150" step="5" value="100" oninput="syncSizeControl('chartInnerScale', true); updateOutput();"><span>%</span></span></div>
+            <input type="hidden" id="chartInnerScale" value="100"><input type="hidden" id="chartInnerScaleNumber" value="100">
             <input type="hidden" id="chartAxisFontSize" value="16"><input type="hidden" id="chartAxisFontSizeNumber" value="16">
             <input type="hidden" id="chartAxisTitleFontSize" value="16"><input type="hidden" id="chartAxisTitleFontSizeNumber" value="16">
-            <label for="chartDataLabelFontSize">데이터 라벨 기본 크기</label>
-            <div class="size-control-row"><input type="range" id="chartDataLabelFontSize" min="8" max="40" value="18" oninput="syncSizeControl('chartDataLabelFontSize'); syncDatasetLabelSizesFromChart(); updateOutput();"><span class="size-number-wrap"><input type="number" id="chartDataLabelFontSizeNumber" min="8" max="40" value="18" oninput="syncSizeControl('chartDataLabelFontSize', true); syncDatasetLabelSizesFromChart(); updateOutput();"><span>px</span></span></div>
             <div class="size-presets"><button type="button" onclick="applyChartSizePreset('compact')">작게</button><button type="button" onclick="applyChartSizePreset('standard')">기본</button><button type="button" onclick="applyChartSizePreset('large')">크게</button><button type="button" onclick="applyChartSizePreset('standard')">초기화</button></div>
         </div>
 
         <div class="data-group" id="tableElementSizeGroup">
             <div class="element-size-heading"><strong>▦ 표 자체 크기·글자</strong><span class="element-size-badge">제목/부제/주석과 별도</span></div>
             <span class="help-text">표의 세로 셀 경계선을 끌어 열 너비를, 가로 셀 밑줄을 끌어 모든 행 높이를 한꺼번에 조절할 수 있습니다.</span>
-            <label for="tableBodyFontSize">표 전체 글자 크기</label>
-            <div class="size-control-row"><input type="range" id="tableBodyFontSize" min="8" max="36" value="20" oninput="syncSizeControl('tableBodyFontSize'); updateOutput();"><span class="size-number-wrap"><input type="number" id="tableBodyFontSizeNumber" min="8" max="36" value="20" oninput="syncSizeControl('tableBodyFontSize', true); updateOutput();"><span>px</span></span></div>
-            <label for="tableHeaderFontSize">헤더 글자 크기</label>
-            <div class="size-control-row"><input type="range" id="tableHeaderFontSize" min="8" max="40" value="20" oninput="syncSizeControl('tableHeaderFontSize'); updateOutput();"><span class="size-number-wrap"><input type="number" id="tableHeaderFontSizeNumber" min="8" max="40" value="20" oninput="syncSizeControl('tableHeaderFontSize', true); updateOutput();"><span>px</span></span></div>
+            <input type="hidden" id="tableBodyFontSize" value="20"><input type="hidden" id="tableBodyFontSizeNumber" value="20">
+            <input type="hidden" id="tableHeaderFontSize" value="20"><input type="hidden" id="tableHeaderFontSizeNumber" value="20">
             <input type="hidden" id="tableCellPaddingY" value="15"><input type="hidden" id="tableCellPaddingYNumber" value="15">
             <label for="tableWidthScale">표 전체 폭</label>
             <div class="size-control-row"><input type="range" id="tableWidthScale" min="60" max="130" step="5" value="100" oninput="syncSizeControl('tableWidthScale'); updateOutput();"><span class="size-number-wrap"><input type="number" id="tableWidthScaleNumber" min="60" max="130" step="5" value="100" oninput="syncSizeControl('tableWidthScale', true); updateOutput();"><span>%</span></span></div>
-            <div class="size-presets"><button type="button" onclick="applyTableSizePreset('compact')">촘촘</button><button type="button" onclick="applyTableSizePreset('standard')">기본</button><button type="button" onclick="applyTableSizePreset('large')">크게</button><button type="button" onclick="applyTableSizePreset('standard')">초기화</button></div>
         </div>
 
         <div class="data-group" id="fontSizeSettingGroup">
@@ -1556,9 +1583,15 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
             <span class="help-text">가로·세로 막대, 선·면적·누적·혼합·산점도의 X축과 Y축 눈금에 각각 적용됩니다.</span>
         </div>
 
+        <div class="data-group" id="chartDataLabelDefaultSizeGroup">
+            <label style="color:var(--ak-red); font-size:14px;">📌 데이터 라벨 기본 크기</label>
+            <span class="help-text">그래프 수치의 기본 크기이며, 텍스트 표·리스트·타임라인에서는 헤더 글자 크기를 조절합니다.</span>
+            <div class="size-control-row" style="margin-top:8px;"><input type="range" id="chartDataLabelFontSize" min="8" max="40" value="18" oninput="syncSizeControl('chartDataLabelFontSize'); syncDatasetLabelSizesFromChart(); updateOutput();"><span class="size-number-wrap"><input type="number" id="chartDataLabelFontSizeNumber" min="8" max="40" value="18" oninput="syncSizeControl('chartDataLabelFontSize', true); syncDatasetLabelSizesFromChart(); updateOutput();"><span>px</span></span></div>
+        </div>
+
         <div class="data-group" id="datasetLabelSizeGroup">
             <label style="color:var(--ak-red); font-size:14px;">📌 데이터 글자 크기</label>
-            <span class="help-text">그래프 위 숫자(값 라벨)만 데이터 묶음별로 따로 조절합니다.</span>
+            <span class="help-text">그래프 위 숫자를 데이터 묶음별로 조절하며, 텍스트 표·리스트·타임라인에서는 본문 글자 크기를 조절합니다.</span>
 
             <div id="datasetFontWrap1" style="margin-top:8px;">
                 <label id="datasetFontLabel1" style="margin-top:0;">데이터 1</label>
@@ -2173,19 +2206,22 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
         await waitForNextPaint();
     }
 
+    let chartLayoutStabilizeTimer = 0;
+    let chartLayoutStabilizeGeneration = 0;
     function stabilizeChartLayout() {
         if (!myChart) return;
+        const chartAtSchedule = myChart;
+        const generation = ++chartLayoutStabilizeGeneration;
+        if (chartLayoutStabilizeTimer) window.clearTimeout(chartLayoutStabilizeTimer);
 
         const resizeAndUpdate = () => {
-            if (!myChart) return;
-            myChart.resize();
-            myChart.update('none');
+            if (!myChart || myChart !== chartAtSchedule || generation !== chartLayoutStabilizeGeneration || chartAtSchedule._destroyed) return;
+            chartAtSchedule.resize();
+            chartAtSchedule.update('none');
         };
 
-        requestAnimationFrame(() => {
-            requestAnimationFrame(resizeAndUpdate);
-        });
-        window.setTimeout(resizeAndUpdate, 80);
+        requestAnimationFrame(() => requestAnimationFrame(resizeAndUpdate));
+        chartLayoutStabilizeTimer = window.setTimeout(resizeAndUpdate, 80);
     }
 
     function getSelectedExportScale() {
@@ -2534,7 +2570,8 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
         // 데이터 글자 크기·색상·수치 표기·강조 메뉴를 다시 노출합니다.
         setDisplayById('highlightSettingGroup', profile.isChart && (!profile.isLineOnly || isAreaType), 'block');
         setDisplayById('labelSettingGroup', profile.isChart, 'block');
-        setDisplayById('datasetLabelSizeGroup', profile.isChart, 'block');
+        setDisplayById('datasetLabelSizeGroup', profile.isChart || profile.isTextOnly, 'block');
+        setDisplayById('chartDataLabelDefaultSizeGroup', profile.isChart || profile.isTextOnly, 'block');
         setDisplayById('datasetLabelColorGroup', profile.isChart, 'block');
         setDisplayById('chartElementSizeGroup', true, 'block');
         setDisplayById('textBoxGroup', true, 'block');
@@ -2616,7 +2653,7 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
         ]);
         dataEditSection.body.appendChild(createPreviewEditGuideCard());
         appendExisting(designSection.body, [
-            '#printLayoutSettingGroup', '#graphicGuideBoxGroup', '#textBoxGroup', '#chartElementSizeGroup', '#tableElementSizeGroup', '#fontSizeSettingGroup', '#datasetLabelSizeGroup', '#datasetLabelColorGroup',
+            '#printLayoutSettingGroup', '#graphicGuideBoxGroup', '#textBoxGroup', '#chartElementSizeGroup', '#tableElementSizeGroup', '#fontSizeSettingGroup', '#chartDataLabelDefaultSizeGroup', '#datasetLabelSizeGroup', '#datasetLabelColorGroup',
             '#labelSettingGroup', '#highlightSettingGroup', '#axisSettingGroup', '#areaShapeSettingGroup', '#columnWidthSettingGroup', '#tableColorSettingGroup',
             '#referenceLabelStyleGroup', '#palettePresetGroup', '#emojiOverlaySettingGroup', '#imageOverlaySettingGroup', '#koreanNumberGroup'
         ]);
@@ -5476,7 +5513,7 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
         const safeBaseFontSize = Number.isFinite(baseFontSize) ? baseFontSize : 20;
         const scale = safeBaseFontSize / 20;
         const isSide = layoutMode === 'side';
-        const innerScale = (parseFloat(getSnapshotControlValue(state, 'chartInnerScale', '100')) || 100) / 100;
+        const innerScale = 1;
         const xAxisSize = (parseFloat(getSnapshotControlValue(state, 'xAxisFontSize', getSnapshotControlValue(state, 'chartAxisFontSize', '16'))) || 16) * innerScale;
         const yAxisSize = (parseFloat(getSnapshotControlValue(state, 'yAxisFontSize', getSnapshotControlValue(state, 'chartAxisFontSize', '16'))) || 16) * innerScale;
         const legendSize = (parseFloat(getSnapshotControlValue(state, 'chartLegendFontSize', '16')) || 16) * innerScale;
@@ -5646,7 +5683,7 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
             .map(value => value && value > 0 ? value : null);
     }
 
-    function getCompositeTableMetrics(tableData, design, layoutMode) {
+    function getCompositeTableMetrics(tableData, design, layoutMode, state = null) {
         const lines = String(tableData || '').trim() ? String(tableData || '').trim().split(/\n/) : [];
         const visibleRows = lines.filter(line => String(line || '').trim() && !String(line || '').trim().startsWith('##'));
         const rowCount = visibleRows.length;
@@ -5654,7 +5691,10 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
             const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',');
             return Math.max(max, cols.length);
         }, 0);
-        const baseFont = layoutMode === 'side' ? Math.max(10.5, design.axisSize + 0.4) : Math.max(11.5, design.axisSize + 0.9);
+        const layoutScale = layoutMode === 'side' ? 0.72 : 0.86;
+        const requestedBodyFont = parseFloat(getSnapshotControlValue(state, 'datasetFontSize1', '18')) || 18;
+        const requestedHeaderFont = parseFloat(getSnapshotControlValue(state, 'chartDataLabelFontSize', '18')) || 18;
+        const baseFont = requestedBodyFont * layoutScale;
         // 세로 높이 제한을 없앴으므로 행이 많다는 이유로 글자를 줄이지 않습니다.
         // 다만 열이 너무 많을 때만 가로 폭 안에 들어오도록 약간만 보정합니다.
         const densityPenalty = Math.max(0, colCount - 4) * 0.7;
@@ -5665,8 +5705,8 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
             rowCount,
             colCount,
             fontSize,
-            headerFontSize: clampCompositeFontSize(fontSize * 1.02, 8.8, maxFont),
-            blockHeaderFontSize: clampCompositeFontSize(fontSize * 0.94, 8.4, maxFont),
+            headerFontSize: clampCompositeFontSize(requestedHeaderFont * layoutScale, 8.8, Math.max(maxFont, requestedHeaderFont * layoutScale)),
+            blockHeaderFontSize: clampCompositeFontSize(requestedHeaderFont * layoutScale, 8.8, Math.max(maxFont, requestedHeaderFont * layoutScale)),
             cellPaddingY: Math.max(4, Math.round(fontSize * 0.5)),
             cellPaddingX: Math.max(3, Math.round(fontSize * 0.3)),
             lineHeight: rowCount <= 4 ? 1.28 : 1.22
@@ -5679,7 +5719,7 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
             return { html: getCompositeTextEmptyPlaceholderHtml(), hasTable: false };
         }
 
-        const metrics = getCompositeTableMetrics(rawText, design, layoutMode);
+        const metrics = getCompositeTableMetrics(rawText, design, layoutMode, state);
         const isKoreanNumber = String(getSnapshotControlValue(state, 'koreanNumberType', 'apply') || 'apply') === 'apply';
         const subText = config.subtitle || '';
         const columnColors = parseSnapshotTableColumnColors(state);
@@ -5776,7 +5816,7 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
             }
             if (!inTable) {
                 const visibleColumnIndexes = row.map((cell, cIdx) => cell.hide ? null : cIdx).filter(index => index !== null);
-                html += `<table class="asia-table multi-card-table" style="font-size:${metrics.fontSize}px; margin-top:4px;">`;
+                html += `<table class="asia-table multi-card-table" style="font-size:${metrics.fontSize}px; margin-top:4px; table-layout:fixed; width:100%;">`;
                 if (visibleColumnIndexes.length) {
                     html += '<colgroup>';
                     visibleColumnIndexes.forEach((_, visibleIdx) => {
@@ -5831,8 +5871,9 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
         const resolvedPalette = listPalette || getPaletteFromStateSnapshot(state) || getActivePalette();
         const mainColor = normalizePieHexColor(resolvedPalette.main || '#E61E2B') || '#E61E2B';
         const textOnMain = getReadableTextColorForBackground(mainColor);
-        const fontSize = Math.max(11, Math.round((design.axisSize || 12) * (layoutMode === 'side' ? 0.98 : 1.08)));
-        const headerFontSize = Math.max(fontSize + 1, Math.round(fontSize * 1.06));
+        const layoutScale = layoutMode === 'side' ? 0.72 : 0.86;
+        const fontSize = Math.max(9, Math.round((parseFloat(getSnapshotControlValue(state, 'datasetFontSize1', '18')) || 18) * layoutScale));
+        const headerFontSize = Math.max(10, Math.round((parseFloat(getSnapshotControlValue(state, 'chartDataLabelFontSize', '18')) || 18) * layoutScale));
         let html = `<div class="list-info-container multi-composite-list" style="font-size:${fontSize}px; margin-top:0;">`;
         let currentListHTML = '';
         let hasContent = false;
@@ -5879,8 +5920,9 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
         const resolvedPalette = timelinePalette || getPaletteFromStateSnapshot(state) || getActivePalette();
         const mainColor = normalizePieHexColor(resolvedPalette.main || '#E61E2B') || '#E61E2B';
         const textOnMain = getReadableTextColorForBackground(mainColor);
-        const fontSize = Math.max(11, Math.round((design.axisSize || 12) * (layoutMode === 'side' ? 0.96 : 1.08)));
-        const leftFontSize = Math.max(fontSize + 1, Math.round(fontSize * 1.06));
+        const layoutScale = layoutMode === 'side' ? 0.72 : 0.86;
+        const fontSize = Math.max(9, Math.round((parseFloat(getSnapshotControlValue(state, 'datasetFontSize1', '18')) || 18) * layoutScale));
+        const leftFontSize = Math.max(10, Math.round((parseFloat(getSnapshotControlValue(state, 'chartDataLabelFontSize', '18')) || 18) * layoutScale));
         const timelineWidths = getManualTimelineWidths(state);
         let html = `<div class="timeline-container multi-composite-timeline" style="font-size:${fontSize}px; margin-top:0;">`;
         let hasContent = false;
@@ -8069,8 +8111,14 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
     }
 
     function getManualTableColumnWidths(expectedCount) {
-        const input = document.getElementById('tableColumnWidthsInput');
-        if (!input) return [];
+        let input = document.getElementById('tableColumnWidthsInput');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.id = 'tableColumnWidthsInput';
+            input.value = '';
+            (document.querySelector('.control-panel') || document.body).appendChild(input);
+        }
 
         return String(input.value || '')
             .split(',')
@@ -8271,7 +8319,15 @@ body.v6-ready #capture-area,body.v6-ready #multi-capture-area{box-shadow:0 18px 
         if (!group) return;
 
         if (isTextSheetType(type)) {
-            group.style.display = 'none';
+            group.style.display = 'block';
+            [1, 2, 3, 4].forEach(index => {
+                const wrap = document.getElementById(`datasetFontWrap${index}`);
+                const label = document.getElementById(`datasetFontLabel${index}`);
+                if (!wrap || !label) return;
+                wrap.style.display = index === 1 ? 'block' : 'none';
+                if (index === 1) label.textContent = '표 본문';
+            });
+            updateDatasetFontDisplays();
             return;
         }
 
@@ -10406,6 +10462,91 @@ function isAreaChartType(type) {
 
     const TIGHT_EXPORT_PADDING = 20;
 
+    const logoVisibleBoundsCache = new Map();
+
+    function applyLogoVisiblePixelBounds(image, bounds) {
+        if (!image || !bounds) return;
+        const expand = 0.004;
+        const left = Math.max(0, bounds.left - expand);
+        const top = Math.max(0, bounds.top - expand);
+        const right = Math.min(1, bounds.right + expand);
+        const bottom = Math.min(1, bounds.bottom + expand);
+        image.dataset.visiblePixelLeft = String(left);
+        image.dataset.visiblePixelTop = String(top);
+        image.dataset.visiblePixelRight = String(right);
+        image.dataset.visiblePixelBottom = String(bottom);
+        image.style.setProperty('--logo-alpha-left', `${left * 100}%`);
+        image.style.setProperty('--logo-alpha-top', `${top * 100}%`);
+        image.style.setProperty('--logo-alpha-right', `${(1 - right) * 100}%`);
+        image.style.setProperty('--logo-alpha-bottom', `${(1 - bottom) * 100}%`);
+    }
+
+    function analyzeLogoVisiblePixelBounds(image) {
+        if (!image || !image.complete || !image.naturalWidth || !image.naturalHeight) return;
+        const cacheKey = image.currentSrc || image.src || 'asiae-logo';
+        if (logoVisibleBoundsCache.has(cacheKey)) {
+            applyLogoVisiblePixelBounds(image, logoVisibleBoundsCache.get(cacheKey));
+            requestAnimationFrame(updateSaveAreaGuide);
+            return;
+        }
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+            const ctx = canvas.getContext('2d', { willReadFrequently:true });
+            if (!ctx) return;
+            ctx.drawImage(image, 0, 0);
+            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            let minX = canvas.width, minY = canvas.height, maxX = -1, maxY = -1;
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+                    if (alpha <= 12) continue;
+                    minX = Math.min(minX, x); minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+                }
+            }
+            if (maxX < minX || maxY < minY) return;
+            const bounds = {
+                left:minX / canvas.width,
+                top:minY / canvas.height,
+                right:(maxX + 1) / canvas.width,
+                bottom:(maxY + 1) / canvas.height
+            };
+            logoVisibleBoundsCache.set(cacheKey, bounds);
+            document.querySelectorAll('.as_logo_img').forEach(item => {
+                if ((item.currentSrc || item.src || 'asiae-logo') === cacheKey) applyLogoVisiblePixelBounds(item, bounds);
+            });
+            requestAnimationFrame(updateSaveAreaGuide);
+        } catch (error) {
+            image.dataset.visiblePixelScanFailed = 'true';
+        }
+    }
+
+    function setupLogoVisiblePixelBounds() {
+        document.querySelectorAll('.as_logo_img').forEach(image => {
+            if (image.dataset.visiblePixelBound === 'true') return;
+            image.addEventListener('load', () => analyzeLogoVisiblePixelBounds(image));
+            image.dataset.visiblePixelBound = 'true';
+            if (image.complete) analyzeLogoVisiblePixelBounds(image);
+        });
+    }
+
+    function getLogoVisiblePixelRect(image) {
+        if (!image) return null;
+        const rect = image.getBoundingClientRect();
+        const leftRatio = Number(image.dataset.visiblePixelLeft);
+        const topRatio = Number(image.dataset.visiblePixelTop);
+        const rightRatio = Number(image.dataset.visiblePixelRight);
+        const bottomRatio = Number(image.dataset.visiblePixelBottom);
+        if (![leftRatio, topRatio, rightRatio, bottomRatio].every(Number.isFinite)) return rect;
+        const left = rect.left + rect.width * leftRatio;
+        const top = rect.top + rect.height * topRatio;
+        const right = rect.left + rect.width * rightRatio;
+        const bottom = rect.top + rect.height * bottomRatio;
+        return { left, top, right, bottom, width:Math.max(1, right-left), height:Math.max(1, bottom-top) };
+    }
+
     function getTightContentBoundsCss(captureRoot, paddingCssPx = TIGHT_EXPORT_PADDING) {
         if (!captureRoot) return null;
         const rootRect = captureRoot.getBoundingClientRect();
@@ -10426,12 +10567,12 @@ function isAreaChartType(type) {
             if (!element || element.classList?.contains('save-area-guide')) return;
             const style = getComputedStyle(element);
             if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return;
-            includeRect(element.getBoundingClientRect(), extra);
+            includeRect(element.matches?.('.as_logo_img') ? getLogoVisiblePixelRect(element) : element.getBoundingClientRect(), extra);
         };
 
         const selectors = captureRoot.id === 'multi-capture-area'
             ? ['.multi-card-topline', '.multi-card-title', '.multi-card-sub', '.multi-card-chart canvas', '.multi-card-table-content', '.multi-card-footnote', '.multi-card-free-text', '.multi-card-emoji-overlay', '.graphic-guide-box', '.multi-capture-footer > *']
-            : ['#topLine', '#displayTitle', '#displaySub', '#pie-side-list', '.pie-draggable-label', '.scatter-draggable-label', '#table-container > *', '.area-svg-preview svg', '.free-text-overlay', '.graphic-guide-box', '#displayFootnote', '.footer-watermark > *', '#graphEmojiOverlay'];
+            : ['#topLine', '#displayTitle', '#displaySub', '#pie-side-list .pie-side-item', '.pie-draggable-label', '.scatter-draggable-label', '#table-container > *', '.area-svg-preview svg', '.free-text-overlay', '.graphic-guide-box', '#displayFootnote', '.footer-watermark > *', '#graphEmojiOverlay'];
         selectors.forEach(selector => captureRoot.querySelectorAll(selector).forEach(element => includeElement(element)));
 
         if (captureRoot.id === 'capture-area') {
@@ -10524,6 +10665,7 @@ function isAreaChartType(type) {
         ['capture-area','multi-capture-area'].forEach(id => document.getElementById(id)?.addEventListener('pointerup', refresh, true));
         window.addEventListener('resize', refresh);
         document.body.dataset.saveAreaGuideBound = 'true';
+        setupLogoVisiblePixelBounds();
         refresh();
     }
 
@@ -10715,52 +10857,147 @@ function isAreaChartType(type) {
         line.dataset.resizeBound = 'true';
     }
 
+    function refreshTableResizeHandles() {
+        const host = document.getElementById('table-container');
+        if (!host) return;
+        host.querySelectorAll('.direct-col-resize-handle').forEach(handle => handle.remove());
+
+        const hostRect = host.getBoundingClientRect();
+        host.querySelectorAll('.asia-table').forEach((table, tableIndex) => {
+            table.dataset.resizeTableIndex = String(tableIndex);
+            const rows = Array.from(table.rows || []);
+            const sizingRow = rows.sort((a, b) => b.cells.length - a.cells.length)[0];
+            if (!sizingRow || sizingRow.cells.length < 2) return;
+            const tableRect = table.getBoundingClientRect();
+            Array.from(sizingRow.cells).slice(0, -1).forEach((cell, boundaryIndex) => {
+                const cellRect = cell.getBoundingClientRect();
+                const handle = document.createElement('span');
+                handle.className = 'direct-col-resize-handle table-column-boundary-handle';
+                handle.dataset.kind = 'column';
+                handle.dataset.tableIndex = String(tableIndex);
+                handle.dataset.boundaryIndex = String(boundaryIndex);
+                handle.dataset.side = 'right';
+                handle.style.left = `${cellRect.right - hostRect.left}px`;
+                handle.style.top = `${tableRect.top - hostRect.top}px`;
+                handle.style.height = `${tableRect.height}px`;
+                handle.setAttribute('aria-hidden', 'true');
+                host.appendChild(handle);
+            });
+        });
+
+        host.querySelectorAll('.timeline-left').forEach(cell => {
+            const handle = document.createElement('span');
+            handle.className = 'direct-col-resize-handle';
+            handle.dataset.kind = 'timeline-column';
+            handle.dataset.side = 'right';
+            handle.setAttribute('aria-hidden', 'true');
+            cell.appendChild(handle);
+        });
+
+        host.querySelectorAll('.list-header-box, .list-item').forEach(cell => {
+            ['left', 'right'].forEach(side => {
+                const handle = document.createElement('span');
+                handle.className = 'direct-col-resize-handle';
+                handle.dataset.kind = 'list-column';
+                handle.dataset.side = side;
+                handle.setAttribute('aria-hidden', 'true');
+                cell.appendChild(handle);
+            });
+        });
+    }
+
     function setupTableDirectResizing() {
         const host = document.getElementById('table-container');
         if (!host || host.dataset.directResizeBound === 'true') return;
+        const cueClasses = ['direct-resize-col-left', 'direct-resize-col-right', 'direct-resize-row-bottom'];
+        const clearResizeCue = () => {
+            host.querySelectorAll('.' + cueClasses.join(',.')).forEach(node => cueClasses.forEach(name => node.classList.remove(name)));
+            host.querySelectorAll('.direct-col-resize-handle.active').forEach(handle => handle.classList.remove('active'));
+            host.classList.remove('resize-col-active', 'resize-row-active');
+        };
+        const showResizeCue = edge => {
+            clearResizeCue();
+            if (!edge) return;
+            const isColumn = edge.kind.includes('column');
+            host.classList.add(isColumn ? 'resize-col-active' : 'resize-row-active');
+            if (edge.cell) edge.cell.classList.add(isColumn ? (edge.side === 'left' ? 'direct-resize-col-left' : 'direct-resize-col-right') : 'direct-resize-row-bottom');
+        };
         const getEdge = event => {
+            const directHandle = event.target.closest('.direct-col-resize-handle');
+            if (directHandle && host.contains(directHandle)) {
+                const kind = directHandle.dataset.kind || 'column';
+                const table = kind === 'column'
+                    ? host.querySelector(`.asia-table[data-resize-table-index="${directHandle.dataset.tableIndex}"]`)
+                    : null;
+                const sizingRow = table ? Array.from(table.rows || []).sort((a, b) => b.cells.length - a.cells.length)[0] : null;
+                const boundaryIndex = kind === 'column' ? Number(directHandle.dataset.boundaryIndex) : undefined;
+                const cell = kind === 'column'
+                    ? (sizingRow?.cells?.[boundaryIndex] || null)
+                    : directHandle.parentElement;
+                return {
+                    kind,
+                    cell,
+                    table,
+                    boundaryIndex,
+                    side: directHandle.dataset.side || 'right',
+                    handle: directHandle
+                };
+            }
             const cell = event.target.closest('.asia-table th, .asia-table td');
             if (cell && host.contains(cell)) {
                 const rect = cell.getBoundingClientRect();
                 const table = cell.closest('.asia-table');
-                if (Math.abs(event.clientX - rect.right) <= 7 && cell.cellIndex < cell.parentElement.cells.length - 1) return { kind:'column', cell, table };
-                if (Math.abs(event.clientY - rect.bottom) <= 7) return { kind:'row', cell, table };
+                const cellCount = cell.parentElement.cells.length;
+                const nearLeft = Math.abs(event.clientX - rect.left) <= 10;
+                const nearRight = Math.abs(event.clientX - rect.right) <= 10;
+                if (nearLeft && cell.cellIndex > 0) return { kind:'column', cell, table, boundaryIndex:cell.cellIndex - 1, side:'left' };
+                if (nearRight && cell.cellIndex < cellCount - 1) return { kind:'column', cell, table, boundaryIndex:cell.cellIndex, side:'right' };
+                if (Math.abs(event.clientY - rect.bottom) <= 9) return { kind:'row', cell, table, side:'bottom' };
             }
             const timelineCell = event.target.closest('.timeline-left, .timeline-right');
             if (timelineCell && host.contains(timelineCell)) {
                 const rect = timelineCell.getBoundingClientRect();
                 const row = timelineCell.closest('.timeline-row');
-                if (timelineCell.classList.contains('timeline-left') && Math.abs(event.clientX - rect.right) <= 8) return { kind:'timeline-column', cell:timelineCell };
-                if (row && Math.abs(event.clientY - row.getBoundingClientRect().bottom) <= 8) return { kind:'timeline-row', cell:timelineCell };
+                if (timelineCell.classList.contains('timeline-left') && Math.abs(event.clientX - rect.right) <= 10) return { kind:'timeline-column', cell:timelineCell, side:'right' };
+                if (timelineCell.classList.contains('timeline-right') && Math.abs(event.clientX - rect.left) <= 10) return { kind:'timeline-column', cell:timelineCell, side:'left' };
+                if (row && Math.abs(event.clientY - row.getBoundingClientRect().bottom) <= 9) return { kind:'timeline-row', cell:timelineCell, side:'bottom' };
             }
             const listCell = event.target.closest('.list-header-box, .list-item');
             if (listCell && host.contains(listCell)) {
                 const rect = listCell.getBoundingClientRect();
-                if (Math.abs(event.clientX - rect.right) <= 8) return { kind:'list-column', cell:listCell };
-                if (Math.abs(event.clientY - rect.bottom) <= 8) return { kind:'list-row', cell:listCell };
+                if (Math.abs(event.clientX - rect.left) <= 10) return { kind:'list-column', cell:listCell, side:'left' };
+                if (Math.abs(event.clientX - rect.right) <= 10) return { kind:'list-column', cell:listCell, side:'right' };
+                if (Math.abs(event.clientY - rect.bottom) <= 9) return { kind:'list-row', cell:listCell, side:'bottom' };
             }
             return null;
         };
         host.addEventListener('pointermove', event => {
             if (host.dataset.resizing === 'true') return;
             const edge = getEdge(event);
+            showResizeCue(edge);
             host.style.cursor = edge ? (edge.kind.includes('column') ? 'col-resize' : 'row-resize') : '';
         });
-        host.addEventListener('pointerleave', () => { if (host.dataset.resizing !== 'true') host.style.cursor = ''; });
+        host.addEventListener('pointerleave', () => { if (host.dataset.resizing !== 'true') { host.style.cursor = ''; clearResizeCue(); } });
         host.addEventListener('pointerdown', event => {
             const edge = getEdge(event);
             if (!edge || (event.button !== undefined && event.button !== 0)) return;
             event.preventDefault();
+            event.stopPropagation();
             host.dataset.resizing = 'true';
+            host.classList.add('is-direct-resizing');
+            showResizeCue(edge);
+            if (edge.handle) edge.handle.classList.add('active');
+            try { host.setPointerCapture(event.pointerId); } catch (error) {}
             if (edge.kind === 'column') {
-                const firstRow = edge.table.rows[0];
-                const widths = Array.from(firstRow.cells).map(cell => cell.getBoundingClientRect().width);
+                const sizingRow = Array.from(edge.table.rows || []).sort((a, b) => b.cells.length - a.cells.length)[0];
+                const widths = Array.from(sizingRow.cells).map(cell => cell.getBoundingClientRect().width);
                 const total = widths.reduce((sum, value) => sum + value, 0) || 1;
-                const index = edge.cell.cellIndex;
+                const index = Math.max(0, Math.min(widths.length - 2, Number(edge.boundaryIndex)));
                 const startX = event.clientX;
+                const initialFirstWidth = widths[index];
                 const pairTotal = widths[index] + widths[index + 1];
                 const move = moveEvent => {
-                    const first = Math.max(total * .05, Math.min(pairTotal - total * .05, widths[index] + moveEvent.clientX - startX));
+                    const first = Math.max(total * .05, Math.min(pairTotal - total * .05, initialFirstWidth + moveEvent.clientX - startX));
                     widths[index] = first;
                     widths[index + 1] = pairTotal - first;
                     const percentages = widths.map(value => value / total * 100);
@@ -10775,9 +11012,16 @@ function isAreaChartType(type) {
                     }
                     cols.forEach((col, colIndex) => { col.style.width = `${percentages[colIndex]}%`; });
                     edge.table.style.tableLayout = 'fixed';
+                    if (edge.handle) {
+                        const hostRect = host.getBoundingClientRect();
+                        const tableRect = edge.table.getBoundingClientRect();
+                        const boundaryPercent = percentages.slice(0, index + 1).reduce((sum, value) => sum + value, 0);
+                        edge.handle.style.left = `${tableRect.left - hostRect.left + tableRect.width * boundaryPercent / 100}px`;
+                    }
                 };
                 const end = () => {
-                    host.dataset.resizing = 'false'; host.style.cursor = '';
+                    host.dataset.resizing = 'false'; host.style.cursor = ''; host.classList.remove('is-direct-resizing'); clearResizeCue();
+                    try { host.releasePointerCapture(event.pointerId); } catch (error) {}
                     window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end);
                     updateOutput();
                     if (typeof recordHistoryCheckpoint === 'function') recordHistoryCheckpoint('표 열 너비 변경');
@@ -10792,7 +11036,8 @@ function isAreaChartType(type) {
                     document.getElementById('capture-area')?.style.setProperty('--table-cell-padding-y', `${padding}px`);
                 };
                 const end = () => {
-                    host.dataset.resizing = 'false'; host.style.cursor = '';
+                    host.dataset.resizing = 'false'; host.style.cursor = ''; host.classList.remove('is-direct-resizing'); clearResizeCue();
+                    try { host.releasePointerCapture(event.pointerId); } catch (error) {}
                     window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end);
                     updateOutput();
                     if (typeof recordHistoryCheckpoint === 'function') recordHistoryCheckpoint('표 전체 행 높이 변경');
@@ -10805,7 +11050,7 @@ function isAreaChartType(type) {
                 const config = {
                     'timeline-column': { id:'timelineLeftWidth', axis:'x', initial:getSizeControlValue('timelineLeftWidth', 33), factor:100 / Math.max(1, host.getBoundingClientRect().width), min:18, max:60, css:'--timeline-left-width', unit:'%' },
                     'timeline-row': { id:'textBlockRowPadding', axis:'y', initial:getSizeControlValue('textBlockRowPadding', 15), factor:.5, min:2, max:50, css:'--text-block-row-padding', unit:'px' },
-                    'list-column': { id:'listSidePadding', axis:'x', initial:getSizeControlValue('listSidePadding', 25), factor:.5, min:4, max:80, css:'--list-side-padding', unit:'px' },
+                    'list-column': { id:'listSidePadding', axis:'x', initial:getSizeControlValue('listSidePadding', 25), factor:edge.side === 'left' ? -.5 : .5, min:4, max:80, css:'--list-side-padding', unit:'px' },
                     'list-row': { id:'listRowGap', axis:'y', initial:getSizeControlValue('listRowGap', 15), factor:1, min:0, max:50, css:'--list-row-gap', unit:'px' }
                 }[edge.kind];
                 const move = moveEvent => {
@@ -10816,7 +11061,8 @@ function isAreaChartType(type) {
                     capture?.style.setProperty(config.css, `${value}${config.unit}`);
                 };
                 const end = () => {
-                    host.dataset.resizing = 'false'; host.style.cursor = '';
+                    host.dataset.resizing = 'false'; host.style.cursor = ''; host.classList.remove('is-direct-resizing'); clearResizeCue();
+                    try { host.releasePointerCapture(event.pointerId); } catch (error) {}
                     window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end);
                     updateOutput();
                     if (typeof recordHistoryCheckpoint === 'function') recordHistoryCheckpoint('텍스트형 그래픽 셀 간격 변경');
@@ -10828,6 +11074,7 @@ function isAreaChartType(type) {
     }
 
     function getSizeControlValue(id, fallback) {
+        if (id === 'chartInnerScale') return 100;
         const el = document.getElementById(id);
         if (!el || String(el.value).trim() === '') return Number(fallback);
         const value = el ? Number(el.value) : Number(fallback);
@@ -10857,6 +11104,9 @@ function isAreaChartType(type) {
     }
 
     function syncDatasetLabelSizesFromChart() {
+        const type = normalizeCompositeGraphType(document.getElementById('chartType')?.value || '');
+        // 텍스트형에서는 이 조절기가 헤더 전용이므로 본문 크기와 연동하지 않습니다.
+        if (isTextSheetType(type)) return;
         const value = getSizeControlValue('chartDataLabelFontSize', 18);
         [1, 2, 3, 4].forEach(index => {
             const input = document.getElementById(`datasetFontSize${index}`);
@@ -10942,12 +11192,11 @@ function isAreaChartType(type) {
 
     function applyChartSizePreset(name) {
         const presets = {
-            compact: { chartHeight: 320, chartInnerScale: 85, chartAxisFontSize: 12, xAxisFontSize: 12, yAxisFontSize: 12, chartAxisTitleFontSize: 13, chartLegendFontSize: 12, chartDataLabelFontSize: 13 },
-            standard: { chartHeight: 420, chartInnerScale: 100, chartAxisFontSize: 16, xAxisFontSize: 16, yAxisFontSize: 16, chartAxisTitleFontSize: 16, chartLegendFontSize: 16, chartDataLabelFontSize: 18 },
-            large: { chartHeight: 580, chartInnerScale: 125, chartAxisFontSize: 22, xAxisFontSize: 22, yAxisFontSize: 22, chartAxisTitleFontSize: 22, chartLegendFontSize: 21, chartDataLabelFontSize: 24 }
+            compact: { chartHeight: 320 },
+            standard: { chartHeight: 420 },
+            large: { chartHeight: 580 }
         };
         setSizeControlValues(presets[name] || presets.standard);
-        syncDatasetLabelSizesFromChart();
         updateOutput();
     }
 
@@ -11039,7 +11288,7 @@ function isAreaChartType(type) {
             items: getAutomaticGraphicGuideItems(),
             x: getSizeControlValue('graphicGuideX', 35),
             y: getSizeControlValue('graphicGuideY', 28),
-            fontSize: getSizeControlValue('graphicGuideFontSize', 15),
+            fontSize: getSizeControlValue('chartLegendFontSize', getSizeControlValue('graphicGuideFontSize', 15)),
             padding: getSizeControlValue('graphicGuidePadding', 7),
             borderWidth: getSizeControlValue('graphicGuideBorderWidth', 1)
         };
@@ -11615,7 +11864,7 @@ function isAreaChartType(type) {
             const initialY = Number(footer.dataset.offsetY || 0);
             const movableParts = Array.from(footer.querySelectorAll('#displayBylineText, #multiDisplayBylineText, .as_logo_img'))
                 .filter(element => getComputedStyle(element).display !== 'none')
-                .map(element => element.getBoundingClientRect());
+                .map(element => element.matches('.as_logo_img') ? getLogoVisiblePixelRect(element) : element.getBoundingClientRect());
             if (!movableParts.length) return;
             const groupRect = {
                 left: Math.min(...movableParts.map(rect => rect.left)),
@@ -11748,8 +11997,8 @@ function isAreaChartType(type) {
             const side = !!stage.closest('.multi-graph-layout.side');
             stage.style.height = `${Math.round(chartHeight * (side ? 0.62 : 0.72))}px`;
         });
-        const tableFont = getSizeControlValue('tableBodyFontSize', 20);
-        const tableHeader = getSizeControlValue('tableHeaderFontSize', 20);
+        const tableFont = getDatasetLabelFontSize(0);
+        const tableHeader = getSizeControlValue('chartDataLabelFontSize', 18);
         const tablePadding = getSizeControlValue('tableCellPaddingY', 15);
         const tableWidth = getSizeControlValue('tableWidthScale', 100);
         const timelineLeftWidth = getSizeControlValue('timelineLeftWidth', 33);
@@ -11919,8 +12168,8 @@ function isAreaChartType(type) {
     function renderTimeline(manualFootnote) {
         const tsvData = document.getElementById('tableDataInput').value.trim();
         const rows = tsvData.split('\n');
-        const fontSizeElem = document.getElementById('globalFontSize');
-        const fontSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
+        const fontSize = getDatasetLabelFontSize(0);
+        const headerFontSize = getSizeControlValue('chartDataLabelFontSize', 18);
         const timelineWidths = getManualTimelineWidths();
 
         let html = `<div class="timeline-container" style="font-size: ${fontSize}px;">`;
@@ -11950,21 +12199,22 @@ function isAreaChartType(type) {
             if(leftText || rightText) {
                 html += `
                 <div class="timeline-row" style="z-index: ${100 - i}; position: relative;">
-                    <div class="timeline-left preview-editable-target" ${makePreviewEditAttrs('table-cell', sourceRowIndex, 0, leftText)} style="font-size: ${Math.round(fontSize * 1.1)}px; width:${timelineWidths.left}%;">${escapeHtml(leftText)}</div>
+                    <div class="timeline-left preview-editable-target" ${makePreviewEditAttrs('table-cell', sourceRowIndex, 0, leftText)} style="font-size: ${headerFontSize}px; width:${timelineWidths.left}%;">${escapeHtml(leftText)}</div>
                     <div class="timeline-right preview-editable-target" ${makePreviewEditAttrs('table-cell', sourceRowIndex, 1, rightText)} style="font-size: ${fontSize}px; width:${timelineWidths.right}%;">${escapeHtml(rightText)}</div>
                 </div>`;
             }
         }
         html += `</div>`;
         if(document.getElementById('table-container')) document.getElementById('table-container').innerHTML = html;
+        refreshTableResizeHandles();
         return autoFootnote;
     }
 
     function renderList(manualFootnote) {
         const tsvData = document.getElementById('tableDataInput').value.trim();
         const rows = tsvData.split('\n');
-        const fontSizeElem = document.getElementById('globalFontSize');
-        const fontSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
+        const fontSize = getDatasetLabelFontSize(0);
+        const headerFontSize = getSizeControlValue('chartDataLabelFontSize', 18);
 
         let html = `<div class="list-info-container" style="font-size: ${fontSize}px;">`;
         let autoFootnote = manualFootnote;
@@ -11981,7 +12231,6 @@ function isAreaChartType(type) {
 
             if (cat && cat !== '^') {
                 if (currentListHTML !== '') { html += `<div class="list-item-group">${currentListHTML}</div>`; currentListHTML = ''; }
-                let headerFontSize = Math.round(fontSize * 1.1);
                 html += `<div class="list-header-box preview-editable-target" ${makePreviewEditAttrs('table-cell', sourceRowIndex, 0, cat)} style="font-size: ${headerFontSize}px;">${escapeHtml(cat)}</div>`;
                 if (val) currentListHTML += `<div class="list-item preview-editable-target" ${makePreviewEditAttrs('table-cell', sourceRowIndex, 1, val)} style="font-size: ${fontSize}px;">${escapeHtml(val)}</div>`;
             } else if (cat === '^' || cat === '') {
@@ -11991,14 +12240,15 @@ function isAreaChartType(type) {
         if (currentListHTML !== '') html += `<div class="list-item-group">${currentListHTML}</div>`;
         html += `</div>`;
         if(document.getElementById('table-container')) document.getElementById('table-container').innerHTML = html;
+        refreshTableResizeHandles();
         return autoFootnote;
     }
 
     function renderTable(manualFootnote) {
         const tsvData = document.getElementById('tableDataInput').value.trim();
         const rows = tsvData.split('\n');
-        const fontSizeElem = document.getElementById('globalFontSize');
-        const fontSize = fontSizeElem ? parseInt(fontSizeElem.value) : 20;
+        const fontSize = getDatasetLabelFontSize(0);
+        const headerFontSize = getSizeControlValue('chartDataLabelFontSize', 18);
         const isKoreanNumber = document.getElementById('koreanNumberType') ? document.getElementById('koreanNumberType').value === 'apply' : false;
         const subText = document.getElementById('subInput') ? document.getElementById('subInput').value : '';
 
@@ -12068,12 +12318,12 @@ function isAreaChartType(type) {
             if (isBlockHeader) {
                 if (inTable) { html += '</tbody></table>'; inTable = false; }
                 let blockTitle = row[0].text.replace('##', '').trim();
-                html += `<div class="preview-editable-target" ${makePreviewEditAttrs('table-block-header', row[0].sourceRow, 0, blockTitle)} style="background-color:#444; color:white; padding:8px 15px; font-size:${fontSize*0.9}px; font-weight:bold; border-radius:5px; margin-top:20px; margin-bottom:5px; width:100%; box-sizing:border-box;">■ ${escapeHtml(blockTitle)}</div>`;
+                html += `<div class="preview-editable-target" ${makePreviewEditAttrs('table-block-header', row[0].sourceRow, 0, blockTitle)} style="background-color:#444; color:white; padding:8px 15px; font-size:${headerFontSize}px; font-weight:bold; border-radius:5px; margin-top:20px; margin-bottom:5px; width:100%; box-sizing:border-box;">■ ${escapeHtml(blockTitle)}</div>`;
             } else {
                 if (!inTable) {
                     const visibleColumnIndexes = row.map((cell, cIdx) => cell.hide ? null : cIdx).filter(index => index !== null);
                     const manualWidths = getManualTableColumnWidths(visibleColumnIndexes.length);
-                    html += `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 5px;">`;
+                    html += `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 5px; table-layout:fixed; width:100%;">`;
                     if (visibleColumnIndexes.length) {
                         html += '<colgroup>';
                         visibleColumnIndexes.forEach((_, visibleIdx) => {
@@ -12101,6 +12351,7 @@ function isAreaChartType(type) {
         });
         if (inTable) html += '</tbody></table>';
         if(document.getElementById('table-container')) document.getElementById('table-container').innerHTML = html;
+        refreshTableResizeHandles();
         return autoFootnote;
     }
 
@@ -12188,7 +12439,7 @@ function isAreaChartType(type) {
         const tableContainer = document.getElementById('table-container');
         if (chartContainer) {
             chartContainer.style.display = 'block';
-            chartContainer.style.height = '420px';
+            chartContainer.style.height = `${getSizeControlValue('chartHeight', 420)}px`;
         }
         if (canvas) canvas.style.display = 'none';
         if (tableContainer) {
@@ -12334,10 +12585,31 @@ function isAreaChartType(type) {
         const list = document.getElementById('pie-side-list');
         if (!list) return;
         if (!pieSideListManualPosition) {
-            list.style.left = '';
-            list.style.right = '8px';
-            list.style.top = '50%';
-            list.style.transform = 'translateY(-50%)';
+            const root = document.getElementById('chart-container');
+            const canvas = document.getElementById('myChart');
+            const arc = myChart?.getDatasetMeta?.(0)?.data?.find?.(item => Number(item?.outerRadius) > 0);
+            if (root && canvas && arc) {
+                const rootRect = root.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                const scaleX = canvasRect.width / Math.max(1, myChart.width);
+                const scaleY = canvasRect.height / Math.max(1, myChart.height);
+                list.style.right = 'auto';
+                list.style.left = '0px';
+                list.style.top = '0px';
+                list.style.transform = 'none';
+                const pieRight = canvasRect.left - rootRect.left + (Number(arc.x) + Number(arc.outerRadius)) * scaleX;
+                const pieCenterY = canvasRect.top - rootRect.top + Number(arc.y) * scaleY;
+                const left = Math.max(0, Math.min(rootRect.width - list.offsetWidth, pieRight + 8));
+                const top = Math.max(0, Math.min(rootRect.height - list.offsetHeight, pieCenterY - list.offsetHeight / 2));
+                list.style.left = `${Math.round(left)}px`;
+                list.style.top = `${Math.round(top)}px`;
+            } else {
+                list.style.left = '';
+                list.style.right = '8px';
+                list.style.top = '50%';
+                list.style.transform = 'translateY(-50%)';
+            }
+            requestAnimationFrame(updateSaveAreaGuide);
             return;
         }
         list.style.right = 'auto';
@@ -12422,6 +12694,7 @@ function isAreaChartType(type) {
                         if (event.button !== undefined && event.button !== 0) return;
                         event.preventDefault();
                         event.stopPropagation();
+                        el.setPointerCapture?.(event.pointerId);
                         const index = Number(el.dataset.dataIndex);
                         const key = getManualDataLabelKey(0, index);
                         const saved = manualDataLabelOffsets[key] || { dx: 0, dy: -16 };
@@ -12441,6 +12714,7 @@ function isAreaChartType(type) {
                         };
                         const end = () => {
                             el.classList.remove('is-dragging');
+                            try { el.releasePointerCapture?.(event.pointerId); } catch (error) {}
                             window.removeEventListener('pointermove', move);
                             window.removeEventListener('pointerup', end);
                             window.removeEventListener('pointercancel', end);
@@ -13434,7 +13708,10 @@ function isAreaChartType(type) {
 
         const chartContainer = document.getElementById('chart-container');
         const pieSideList = document.getElementById('pie-side-list');
-        if (chartContainer) chartContainer.style.height = '420px';
+        if (normalizedType === 'scatter' && chartContainer) {
+            chartContainer.querySelectorAll('.scatter-draggable-label').forEach(label => label.remove());
+        }
+        if (chartContainer) chartContainer.style.height = `${getSizeControlValue('chartHeight', 420)}px`;
         syncPieTightLayout(normalizedType);
         if (pieSideList) {
             pieSideList.style.display = 'none';
@@ -13578,19 +13855,23 @@ function isAreaChartType(type) {
         if (normalizedType === '100-stacked-bar' || normalizedType === 'h-100-stacked-bar') {
             const isHorizontal = normalizedType === 'h-100-stacked-bar';
             const normalizedDatasets = normalizeToHundredPercent(datasets);
+            const hundredPercentDatasets = normalizedDatasets.map((series, index) => ({
+                type: 'bar',
+                label: datasetNames[index] || `데이터 ${index + 1}`,
+                data: series,
+                backgroundColor: colors[index % colors.length],
+                borderColor: colors[index % colors.length],
+                borderSkipped: false,
+                borderRadius: 4,
+                stack: 'stack-0'
+            }));
+            attachDatasetSourceMetadata(hundredPercentDatasets, datasets);
+            applyHighlightToDatasets(hundredPercentDatasets, labels, normalizedType, highlightConfig);
             myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels,
-                    datasets: normalizedDatasets.map((series, index) => ({
-                        type: 'bar',
-                        label: datasetNames[index] || `데이터 ${index + 1}`,
-                        data: series,
-                        backgroundColor: colors[index % colors.length],
-                        borderSkipped: false,
-                        borderRadius: 4,
-                        stack: 'stack-0'
-                    }))
+                    datasets: hundredPercentDatasets
                 },
                 plugins: [ChartDataLabels],
                 options: {
@@ -13605,13 +13886,19 @@ function isAreaChartType(type) {
                             display: shouldShowNativeChartLegend(true),
                             position: 'top',
                             align: 'end',
-                            labels: { font: { size: Math.round(15 * scale), weight: 'bold' }, color: '#111' },
+                            labels: { font: { size: getSizeControlValue('chartLegendFontSize', 16), weight: 'bold' }, color: '#111' },
                             onClick: function() {}
                         },
                         tooltip: { enabled: false },
                         datalabels: {
-                            color: '#ffffff',
-                            font: { size: Math.round(13 * scale), weight: '900' },
+                            color: function(context) {
+                                return getDatasetLabelColor(context.datasetIndex) || '#ffffff';
+                            },
+                            font: function(context) {
+                                const baseSize = getDatasetLabelFontSize(context.datasetIndex);
+                                const highlighted = isHighlightedTarget(highlightConfig, context.datasetIndex, context.dataIndex);
+                                return { size: highlighted ? Math.min(baseSize + 4, 36) : baseSize, weight: '900' };
+                            },
                             formatter: value => value >= 4 ? `${value}%` : '',
                             textStrokeColor: 'rgba(0,0,0,0.12)',
                             textStrokeWidth: 1,
@@ -13702,7 +13989,7 @@ function isAreaChartType(type) {
         const labels = parseLabelSeries(document.getElementById('labelsInput').value);
         const highlightConfig = getHighlightConfig(chartType, labels);
         const dataVals1 = parseNumericSeries(document.getElementById('dataInput1').value, labels.length);
-        if (chartContainer) chartContainer.style.height = chartType === 'pie' ? '560px' : '420px';
+        if (chartContainer) chartContainer.style.height = `${getSizeControlValue('chartHeight', 420)}px`;
         syncPieTightLayout(chartType);
         if (pieSideList) {
             pieSideList.style.display = 'none';
@@ -14447,10 +14734,10 @@ function isAreaChartType(type) {
   }
   function init(){
     if(document.body.classList.contains('v6-ready'))return;
-    document.body.classList.add('v6-ready');document.title='그래픽 보조 데스크 V6 · 개선 메뉴';
+    document.body.classList.add('v6-ready');document.title='그래픽 보조 데스크 V7 · 개선 메뉴';
     const panel=document.querySelector('.control-panel'),preview=document.querySelector('.preview-area');if(!panel||!preview)return;
     const scale=$('exportScale');if(scale)scale.value='3';
-    const top=document.createElement('header');top.className='v6-topbar';top.innerHTML='<div class="v6-brand"><span class="v6-brand-mark">G</span><div><strong>그래픽 보조 데스크 V6</strong><small>기사 그래픽 빠른 제작</small></div></div>';
+    const top=document.createElement('header');top.className='v6-topbar';top.innerHTML='<div class="v6-brand"><span class="v6-brand-mark">G</span><div><strong>그래픽 보조 데스크 V7</strong><small>기사 그래픽 빠른 제작</small></div></div>';
     const quick=document.createElement('select');quick.id='v6ChartTypeQuick';quick.className='v6-tool-select';if($('chartType'))quick.innerHTML=$('chartType').innerHTML;quick.value=$('chartType')?.value||'pie';quick.addEventListener('change',()=>syncQuickChart(true));top.appendChild(quick);
     const topDataSheetButton=makeTool('데이터 시트',()=>$('openSheetBtn')?.click());topDataSheetButton.id='topDataSheetButton';top.appendChild(topDataSheetButton);
     top.appendChild(makeTool('색상',()=>switchPane('style')));top.appendChild(makeTool('글자',()=>switchPane('style')));top.appendChild(makeTool('간격·여백',()=>{switchPane('style');setTimeout(()=>$('printLayoutSettingGroup')?.scrollIntoView({block:'start'}),0)}));top.appendChild(makeTool('수치·강조',()=>switchPane('style')));top.appendChild(makeTool('배경',()=>switchPane('background')));
@@ -14464,7 +14751,7 @@ function isAreaChartType(type) {
     const tuning=document.createElement('div');tuning.id='v6BarTuning';tuning.className='v6-tuning';tuning.innerHTML='<h4>막대 전용 옵션</h4><div class="v6-tuning-row"><label>항목 간격</label><input id="v6BarGap" type="range" min="35" max="100" value="74"><output id="v6BarGapOut">74%</output></div><div class="v6-tuning-row"><label>막대 너비</label><input id="v6BarWidth" type="range" min="20" max="100" value="72"><output id="v6BarWidthOut">72%</output></div><div class="v6-tuning-row"><label>둥근 모서리</label><input id="v6BarRadius" type="range" min="0" max="20" value="4"><output id="v6BarRadiusOut">4px</output></div>';chart.appendChild(tuning);tuning.querySelectorAll('input').forEach(i=>i.addEventListener('input',applyBarTuning));
     heading(chart,'선택 차트 옵션');['axisSettingGroup','areaShapeSettingGroup','columnWidthSettingGroup','tableColorSettingGroup','labelSettingGroup','chartElementSizeGroup','tableElementSizeGroup','graphicGuideBoxGroup','textBoxGroup'].forEach(id=>move(id,chart));
     placeGraphGapControls();makeGraphControlsAccordion();
-    move('printLayoutSettingGroup',style);move('palettePresetGroup',style);['fontSizeSettingGroup','datasetLabelSizeGroup','datasetLabelColorGroup','referenceLabelStyleGroup','koreanNumberGroup','highlightSettingGroup','multiGraphStyleGroup'].forEach(id=>move(id,style));
+    move('printLayoutSettingGroup',style);move('palettePresetGroup',style);['fontSizeSettingGroup','chartDataLabelDefaultSizeGroup','datasetLabelSizeGroup','datasetLabelColorGroup','referenceLabelStyleGroup','koreanNumberGroup','highlightSettingGroup','multiGraphStyleGroup'].forEach(id=>move(id,style));
     const bgTitle=document.createElement('div');bgTitle.className='v6-pane-section-title v6-bg-title';bgTitle.textContent='배경 세부 설정';bg.appendChild(bgTitle);const close=document.createElement('button');close.className='v6-close-bg';close.textContent='닫기 ×';close.onclick=()=>{bg.classList.remove('drawer-open');document.querySelector('.v6-nav-btn.active')?.classList.remove('active');document.querySelector('.v6-nav-btn[data-target="data"]')?.classList.add('active')};bg.appendChild(close);
     [['emojiOverlaySettingGroup','배경 이모지'],['imageOverlaySettingGroup','배경 이미지']].forEach(([id,label],idx)=>{const el=$(id);if(!el)return;const details=document.createElement('details');details.className='v6-bg-card';if(idx===0)details.open=true;const sum=document.createElement('summary');sum.textContent=label;details.append(sum,el);bg.appendChild(details)});
     move('reporterSettingGroup',output);move('saveAreaSettingGroup',output);move('downloadBtn',output);move('creatorFooter',output);
@@ -14475,7 +14762,7 @@ function isAreaChartType(type) {
       const aiNow=document.querySelector('.ai-input-group');if(aiNow)data.appendChild(aiNow);['multiGraphGroup','graphEditorTabs','textSettingGroup','openSheetBtn','chartInputs','tableInputs','footnoteSettingGroup','applyBtn'].forEach(id=>move(id,data));
       ['chartTypeHeaderRow','chartType','axisSettingGroup','areaShapeSettingGroup','columnWidthSettingGroup','tableColorSettingGroup','labelSettingGroup','chartElementSizeGroup','tableElementSizeGroup','graphicGuideBoxGroup','textBoxGroup'].forEach(id=>move(id,chart));
       placeGraphGapControls();makeGraphControlsAccordion();
-      ['printLayoutSettingGroup','palettePresetGroup','fontSizeSettingGroup','datasetLabelSizeGroup','datasetLabelColorGroup','referenceLabelStyleGroup','koreanNumberGroup','highlightSettingGroup','multiGraphStyleGroup'].forEach(id=>move(id,style));
+      ['printLayoutSettingGroup','palettePresetGroup','fontSizeSettingGroup','chartDataLabelDefaultSizeGroup','datasetLabelSizeGroup','datasetLabelColorGroup','referenceLabelStyleGroup','koreanNumberGroup','highlightSettingGroup','multiGraphStyleGroup'].forEach(id=>move(id,style));
       const cards=bg.querySelectorAll('.v6-bg-card');if(cards[0])move('emojiOverlaySettingGroup',cards[0]);if(cards[1])move('imageOverlaySettingGroup',cards[1]);
       ['reporterSettingGroup','saveAreaSettingGroup','downloadBtn','creatorFooter'].forEach(id=>move(id,output));
       updateChartPanel();syncQuickChart(false);
@@ -14530,6 +14817,11 @@ function isAreaChartType(type) {
     const summary=document.createElement('summary');
     const heading=group.querySelector('.element-size-heading strong')||group.querySelector(':scope > label');
     summary.textContent=(heading?.textContent||'세부 설정').replace(/^[^가-힣A-Za-z0-9]+/,'').trim();
+    if(heading){
+      const headingRow=heading.closest('.element-size-heading');
+      if(headingRow&&headingRow.parentElement===group)headingRow.remove();
+      else if(heading.parentElement===group)heading.remove();
+    }
     group.parentNode.insertBefore(details,group);details.append(summary,group);return details;
   }
   function ensureHiddenControl(id,value,host){
@@ -14548,7 +14840,7 @@ function isAreaChartType(type) {
     const chartButton=document.querySelector('.v6-nav-btn[data-target="chart"]');
     if(!host||!nav||!dataPane||!chartPane||!stylePane||!styleButton||!dataButton||document.body.classList.contains('v6-split-controls'))return;
     document.body.classList.add('v6-split-controls');
-    document.title='그래픽 보조 데스크 V6 · 그래프/폰트 분리형';
+    document.title='그래픽 보조 데스크 V7 · 그래프/폰트 분리형';
     $('applyBtn')?.remove();
     document.querySelectorAll('.v6-output-note, .export-save-warning').forEach(el=>el.remove());
     if(outputPane) Array.from(outputPane.querySelectorAll('.v6-pane-section-title')).forEach(el=>{if(el.textContent.trim()==='그래픽 바이라인')el.remove()});
@@ -14579,7 +14871,7 @@ function isAreaChartType(type) {
     chartPane.remove();if(chartButton)chartButton.remove();
     dataButton.innerHTML='<span>①</span>데이터·차트선택';
     dataButton.addEventListener('click',()=>{if($('v6PanelTitle'))$('v6PanelTitle').textContent='데이터·차트 선택';if($('v6PanelSub'))$('v6PanelSub').textContent='차트 종류와 원본 데이터 관리'});
-    const extraButton=makeNavButton('extras','②','부가 사항 표기',extraPane,'부가 사항 표기','수치·범례·부제·제목선·텍스트');
+    const extraButton=makeNavButton('extras','②','부가 요소 표기',extraPane,'부가 요소 표기','수치·범례·부제·제목선·텍스트');
     const graphButton=makeNavButton('graph-controls','③','그래프',graphPane,'그래프 조절','차트별 옵션과 그래프·표 위치 설정');
     nav.insertBefore(extraButton,styleButton);nav.insertBefore(graphButton,styleButton);
 
@@ -14592,12 +14884,12 @@ function isAreaChartType(type) {
 
     $('multiGraphStyleGroup')?.remove();
     $('referenceLabelStyleGroup')?.remove();
-    const styleOrder=['printLayoutSettingGroup','palettePresetGroup','fontSizeSettingGroup','datasetLabelSizeGroup','legendFontSizeGroup','datasetLabelColorGroup','highlightSettingGroup'];
+    const styleOrder=['printLayoutSettingGroup','palettePresetGroup','fontSizeSettingGroup','chartDataLabelDefaultSizeGroup','datasetLabelSizeGroup','legendFontSizeGroup','datasetLabelColorGroup','highlightSettingGroup'];
     styleOrder.forEach(id=>{const el=$(id);if(el)stylePane.appendChild(el)});
     styleOrder.forEach(id=>wrapFontAccordion($(id)));
     const previewHint=document.querySelector('.v6-preview-label span:last-child');if(previewHint)previewHint.textContent='(더블)클릭, 드래그로 데이터·위치 수정 · 부제 부분은 SHIFT+드래그로 정밀조정';
     const brand=document.querySelector('.v6-brand strong');
-    if(brand)brand.textContent='그래픽 보조 데스크 V6 · 분리형';
+    if(brand)brand.textContent='그래픽 보조 데스크 V7 · 분리형';
     dataButton.click();
   }
   document.addEventListener('v6-ui-ready',initSplitControls,{once:true});
