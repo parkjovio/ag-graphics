@@ -1180,6 +1180,8 @@ body.desk-ready .joined-preview-panel{zoom:1!important}body.desk-ready .v6-previ
 .desk-canvas-footer{height:34px;min-height:34px;background:#f9fbf8;border-top:1px solid #e0e7df;display:flex;align-items:center;justify-content:space-between;padding:0 21px;font-size:10px;color:#8b9a8d;gap:12px;width:100%}.desk-canvas-footer b{font-weight:500;color:#6b826d}.desk-canvas-footer .desk-link{font-size:10px;min-height:24px;text-decoration:none}
 body.desk-ready.desk-focus .v6-workspace{grid-template-columns:82px 0 minmax(0,1fr)}body.desk-ready.desk-focus .control-panel{visibility:hidden}
 .desk-toast{position:fixed;bottom:51px;left:50%;transform:translate(-50%,15px);opacity:0;pointer-events:none;padding:13px 20px;background:#294f3e;color:#fff;border-radius:10px;font:500 12px var(--desk-font);box-shadow:0 8px 30px #203e3026;z-index:4000;transition:opacity .2s,transform .2s;max-width:calc(100% - 36px);text-align:center;line-height:1.6}.desk-toast.show{opacity:1;transform:translate(-50%,0)}
+.desk-export-portal{position:fixed;left:0;top:0;z-index:2147483000;background:#fff;pointer-events:none}
+.desk-export-mask{position:fixed;inset:0;z-index:2147483001;display:grid;place-items:center;background:#f4f7f6e8;backdrop-filter:blur(3px);font-family:var(--desk-font);color:#294f3e}.desk-export-mask>div{display:flex;flex-direction:column;align-items:center;gap:7px;padding:22px 28px;border:1px solid #dce7df;border-radius:14px;background:#fff;box-shadow:0 18px 60px #203e3025}.desk-export-mask strong{font-size:14px}.desk-export-mask small{font-size:11px;color:#778a7d}.desk-export-spinner{width:24px;height:24px;margin-bottom:5px;border:3px solid #dce9e2;border-top-color:#27644e;border-radius:50%;animation:desk-spin .7s linear infinite}@keyframes desk-spin{to{transform:rotate(360deg)}}
 .desk-dialog{width:540px;max-width:calc(100vw - 32px);border:1px solid #dbe6dc;border-radius:16px;padding:0;box-shadow:0 30px 100px #19312340;font-family:var(--desk-font);color:#344d3a;max-height:85dvh;background:#fff}.desk-dialog::backdrop{background:#20312865;backdrop-filter:blur(3px)}.desk-dialog-head{display:flex;justify-content:space-between;align-items:center;padding:19px 22px;border-bottom:1px solid #e6ece5}.desk-dialog-head h2{font-size:16px;line-height:1.5;margin:0}.desk-dialog-body{padding:23px;line-height:1.75;font-size:12px;color:#6a7e6b}.desk-dialog-body h3{font-size:13px;font-weight:700;color:#3d6043;margin:0 0 6px}.desk-dialog-body p{margin:0 0 19px}.desk-dialog-body kbd{display:inline-block;border:1px solid #dbe4d8;border-bottom-width:2px;border-radius:4px;background:#f8faf7;padding:1px 6px;min-width:24px;text-align:center;font:11px var(--desk-font);color:#597456;margin-right:4px}.desk-shortcuts{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:12px}
 .desk-search-wrap{padding:15px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #e3eae1}.desk-search-wrap input{flex:1;border:0;outline:0;font:14px var(--desk-font);min-width:0;height:32px}.desk-search-results{padding:9px;max-height:420px;overflow:auto}.desk-search-result{display:flex;align-items:center;justify-content:space-between;gap:14px;text-align:left;width:100%;border:0;border-radius:7px;padding:12px;background:#fff;font:500 12px var(--desk-font);color:#425a44}.desk-search-result small{font-size:10px;color:#899b84;flex-shrink:0}.desk-search-result:hover,.desk-search-result:focus{background:#edf4e9}.desk-search-empty{padding:25px 15px;font-size:12px;color:#899581;text-align:center}.desk-highlight{animation:desk-highlight 1.5s ease}.desk-search-footer{border-top:1px solid #e6ece5;font-size:10px;color:#819077;padding:10px 18px}
 @keyframes desk-highlight{0%,50%{box-shadow:0 0 0 4px #85b86b55}100%{box-shadow:0 0 0 0 transparent}}
@@ -3572,7 +3574,7 @@ body.desk-ready .modal-overlay{background:#23392d65;backdrop-filter:blur(3px);pa
         await waitForOverlayImages(captureDiv);
         const restoreOverlayAssets = await prepareOverlayAssetsForExport(captureDiv);
         try {
-            return await html2canvas(captureDiv, {
+            return await deskHtml2Canvas(captureDiv, {
                 scale: exportScale,
                 width: captureDiv.offsetWidth,
                 height: captureDiv.offsetHeight,
@@ -3616,7 +3618,7 @@ body.desk-ready .modal-overlay{background:#23392d65;backdrop-filter:blur(3px);pa
             const exportWidth = Math.max(750, captureDiv.scrollWidth, captureDiv.offsetWidth, Math.round(rect.width));
             const exportHeight = Math.max(100, captureDiv.scrollHeight, captureDiv.offsetHeight, Math.round(rect.height));
             try {
-                const renderedCanvas = await html2canvas(captureDiv, {
+                const renderedCanvas = await deskHtml2Canvas(captureDiv, {
                     scale: exportScale,
                     width: exportWidth,
                     height: exportHeight,
@@ -14574,7 +14576,7 @@ function isAreaChartType(type) {
             await waitForOverlayImages(captureDiv);
             restoreOverlayAssets = await prepareOverlayAssetsForExport(captureDiv);
 
-            const canvas = await html2canvas(captureDiv, {
+            const canvas = await deskHtml2Canvas(captureDiv, {
                 scale: exportScale,
                 width: baseWidth,
                 height: baseHeight,
@@ -14686,7 +14688,7 @@ function isAreaChartType(type) {
             await waitForOverlayImages(captureDiv);
             restoreOverlayAssets = await prepareOverlayAssetsForExport(captureDiv);
 
-            const renderedCanvas = await html2canvas(captureDiv, {
+            const renderedCanvas = await deskHtml2Canvas(captureDiv, {
                 scale: exportScale,
                 width: baseWidth,
                 height: baseHeight,
@@ -15552,6 +15554,27 @@ function isAreaChartType(type) {
 </script>
 <script>
 function deskPixelScale(element){return Math.max(.01,(element?.getBoundingClientRect().width||1)/(element?.offsetWidth||1))}
+async function deskHtml2Canvas(target,options){
+ if(!target)return html2canvas(target,options);
+ const marker=document.createComment('desk-export-position');
+ const parent=target.parentNode;
+ parent.insertBefore(marker,target);
+ const portal=document.createElement('div');
+ portal.className='desk-export-portal';
+ portal.style.width=Math.max(1,target.offsetWidth)+'px';
+ const mask=document.createElement('div');
+ mask.className='desk-export-mask';
+ mask.innerHTML='<div><span class="desk-export-spinner"></span><strong>이미지를 저장하고 있습니다</strong><small>잠시만 기다려 주세요.</small></div>';
+ document.body.append(portal,mask);
+ portal.appendChild(target);
+ try{
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  return await html2canvas(target,options);
+ }finally{
+  marker.parentNode.insertBefore(target,marker);
+  marker.remove();portal.remove();mask.remove();
+ }
+}
 (function(){
  // Count changes must not replace a pressed tab before its click event arrives.
  let lastCount=Number(document.getElementById('multiEditorGraphCount').value)||2;
