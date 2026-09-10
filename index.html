@@ -1201,6 +1201,9 @@ body.desk-ready .modal-overlay{background:#23392d65;backdrop-filter:blur(3px);pa
  body.desk-ready .modal-overlay{padding:9px}body.desk-ready .modal-content{width:100%;padding:15px;max-height:94dvh;border-radius:12px}body.desk-ready .modal-table{min-width:440px}body.desk-ready .modal-content{overflow-x:auto}body.desk-ready .modal-btns{bottom:-15px}body.desk-ready .sheet-tool-row{min-width:0}body.desk-ready .modal-header{min-width:290px}.desk-modal-x{right:13px;top:10px}#deskRestoreBanner{top:112px;left:12px;right:12px;max-width:none}.desk-toast{bottom:79px}
 }
 @media(prefers-reduced-motion:reduce){body.desk-ready *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+body.desk-ready #svgDownloadBtn[onclick]{display:none!important}
+body.desk-ready #gifProgress[hidden]{display:none!important}
+body.desk-ready #exportScale option[value="3"]{display:none!important}
 
 </style>
 </head>
@@ -15601,6 +15604,466 @@ async function deskHtml2Canvas(target,options){
 <script>
 (function(){
  'use strict';
+ const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
+ let busy=false,lastCode='',lastSnapshot=null;
+ const escapeAttr=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ const cleanJSON=o=>JSON.stringify(o).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
+ function makeCanvas(w,h){const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));return c}
+ function raster(c){return c.toDataURL('image/png')}
+ function crop(c){
+  const ctx=c.getContext('2d'),d=ctx.getImageData(0,0,c.width,c.height).data;let l=c.width,t=c.height,r=-1,b=-1;
+  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(d[(y*c.width+x)*4+3]){l=Math.min(l,x);r=Math.max(r,x);t=Math.min(t,y);b=Math.max(b,y)}
+  if(r<0)return null;
+  l=Math.max(0,l-2);t=Math.max(0,t-2);r=Math.min(c.width-1,r+2);b=Math.min(c.height-1,b+2);
+  const out=makeCanvas(r-l+1,b-t+1);out.getContext('2d').drawImage(c,l,t,out.width,out.height,0,0,out.width,out.height);
+  return {src:raster(out),x:l/2,y:t/2,w:out.width/2,h:out.height/2};
+ }
+ function captureChart(canvas){
+  const chart=Chart.getChart(canvas);if(!chart)return null;
+  chart.stop();chart.update('none');
+  const w=chart.width,h=chart.height,final=raster(canvas),layers=[];
+  const filter={id:'deskNewsBase'+Date.now(),beforeDatasetsDraw:c=>c===chart?false:undefined};
+  let base;
+  Chart.register(filter);try{chart.draw();base=raster(canvas)}finally{Chart.unregister(filter);chart.draw()}
+  const draw=(fn,kind,extra={})=>{const c=makeCanvas(w*2,h*2),ctx=c.getContext('2d');ctx.scale(2,2);fn(ctx);const image=crop(c);if(image)layers.push({...image,kind,...extra})};
+  for(const meta of chart.getSortedVisibleDatasetMetas()){
+   if(meta.dataset)draw(ctx=>meta.dataset.draw(ctx,chart.chartArea),'line',{start:chart.chartArea.left,end:chart.chartArea.right});
+   const count=meta.data.length;
+   meta.data.forEach((item,index)=>{
+    if(item.skip||item.hidden)return;
+    if(meta.type==='doughnut'||meta.type==='pie')draw(ctx=>item.draw(ctx),'arc',{cx:item.x,cy:item.y,r:item.outerRadius+10,start:item.startAngle,end:item.endAngle,sweepStart:meta.data[0].startAngle,sweepEnd:meta.data[count-1].endAngle});
+    else if(meta.type==='bar')draw(ctx=>item.draw(ctx),'bar',{horizontal:!!item.horizontal,base:item.base,index,count});
+    else draw(ctx=>item.draw(ctx,chart.chartArea),'point',{index,count});
+   });
+  }
+  return {w,h,base,final,layers};
+ }
+ // Export the rendered design, including custom fonts, manually placed labels and backgrounds.
+ function copyDesign(source,charts){
+  if(source.nodeType===3)return document.createTextNode(source.textContent);
+  if(source.nodeType!==1)return null;
+  if(source.matches('script,style,[data-html2canvas-ignore="true"],.direct-col-resize-handle,.inline-delete-popover'))return null;
+  const cs=getComputedStyle(source);if(cs.display==='none'||cs.visibility==='hidden')return null;
+  let copy;
+  if(source.tagName==='CANVAS'){
+   const data=captureChart(source);copy=document.createElement(data?'canvas':'img');
+   if(data){copy.dataset.newsChart=String(charts.length);charts.push(data);copy.width=Math.round(data.w*2);copy.height=Math.round(data.h*2)}
+   else copy.src=raster(source);
+  }else copy=source.namespaceURI===NS?document.createElementNS(NS,source.tagName):document.createElement(source.tagName.toLowerCase());
+  for(const attr of source.attributes){
+   if(attr.name==='style'||attr.name==='id'||attr.name==='class'||attr.name==='contenteditable'||attr.name==='tabindex'||attr.name.startsWith('on')||attr.name.startsWith('data-'))continue;
+   if(source.tagName==='CANVAS'&&['width','height'].includes(attr.name))continue;
+   copy.setAttribute(attr.name,attr.value);
+  }
+  if(source.id)copy.id=source.id;
+  for(const prop of cs){if(prop.startsWith('--')||prop.startsWith('animation')||prop.startsWith('transition')||prop==='cursor'||prop==='caret-color')continue;copy.style.setProperty(prop,cs.getPropertyValue(prop))}
+  copy.style.cursor='default';copy.style.animation='none';copy.style.transition='none';
+  if(source.tagName==='CANVAS'){copy.style.width=source.clientWidth+'px';copy.style.height=source.clientHeight+'px'}
+  else for(const child of source.childNodes){const node=copyDesign(child,charts);if(node)copy.appendChild(node)}
+  if(source.namespaceURI!==NS&&source.tagName!=='CANVAS')for(const pseudo of ['::before','::after']){
+   const style=getComputedStyle(source,pseudo),content=style.content;
+   if(style.display==='none'||!content||content==='none'||content==='normal')continue;
+   const node=document.createElement('span');
+   for(const prop of style)if(!prop.startsWith('--'))node.style.setProperty(prop,style.getPropertyValue(prop));
+   node.style.content='normal';node.setAttribute('aria-hidden','true');
+   if(/^".*"$/.test(content))node.textContent=content.slice(1,-1);
+   if(pseudo==='::before')copy.prepend(node);else copy.append(node);
+  }
+  if(source.matches('.pie-draggable-label,.scatter-draggable-label,.pie-side-item,.multi-pie-small-list'))copy.dataset.newsLabel='true';
+  if(source.matches('.timeline-row,.list-item-group,.list-header-box,.asia-table tr'))copy.dataset.newsRow='true';
+  if(source.matches('.area-svg-preview path,.area-svg-preview polyline,.area-svg-preview polygon,.multi-card-chart svg path,.multi-card-chart svg polyline,.multi-card-chart svg polygon'))copy.dataset.newsSvg='true';
+  // Preserve line breaks as entities later so the saved embed itself has one physical line.
+  return copy;
+ }
+ async function createRenderer(root,config){
+  'use strict';
+  const canvases=[...root.querySelectorAll('[data-news-chart]')],labels=[...root.querySelectorAll('[data-news-label]')],rows=[...root.querySelectorAll('[data-news-row]')],svg=[...root.querySelectorAll('[data-news-svg]')];
+  const load=src=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=src});
+  const clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>1-Math.pow(1-clamp(x),3);
+  function paint(progress){
+   const p=ease(progress);
+   canvases.forEach((canvas,i)=>{
+    const data=config.charts[i],ctx=canvas.getContext('2d');ctx.setTransform(2,0,0,2,0,0);ctx.clearRect(0,0,data.w,data.h);
+    if(progress>=1){ctx.drawImage(data.finalImage,0,0,data.w,data.h);return}
+    ctx.drawImage(data.baseImage,0,0,data.w,data.h);
+    for(const layer of data.layers){
+     ctx.save();
+     if(layer.kind==='line'){ctx.beginPath();ctx.rect(0,0,layer.start+(layer.end-layer.start)*p,data.h);ctx.clip()}
+     if(layer.kind==='arc'){const end=Math.max(layer.start,Math.min(layer.end,layer.sweepStart+(layer.sweepEnd-layer.sweepStart)*p));ctx.beginPath();ctx.moveTo(layer.cx,layer.cy);ctx.arc(layer.cx,layer.cy,layer.r,layer.start,end);ctx.closePath();ctx.clip()}
+     if(layer.kind==='bar'){
+      const q=ease((progress-layer.index/Math.max(1,layer.count)*.22)/.78);
+      if(layer.horizontal){ctx.translate(layer.base,0);ctx.scale(Math.max(.00001,q),1);ctx.translate(-layer.base,0)}else{ctx.translate(0,layer.base);ctx.scale(1,Math.max(.00001,q));ctx.translate(0,-layer.base)}
+     }
+     if(layer.kind==='point')ctx.globalAlpha=clamp((progress-layer.index/Math.max(1,layer.count)*.6)*5);
+     ctx.drawImage(layer.image,layer.x,layer.y,layer.w,layer.h);ctx.restore();
+    }
+   });
+   labels.forEach(e=>e.style.opacity=String(clamp((progress-.65)/.35)));
+   rows.forEach((e,i)=>e.style.opacity=String(clamp((progress-i/Math.max(1,rows.length)*.6)*4)));
+   svg.forEach(e=>{
+    if(!e.dataset.length){try{e.dataset.length=String(e.getTotalLength())}catch{e.dataset.length='0'}}
+    const len=Number(e.dataset.length),stroke=getComputedStyle(e).stroke;
+    if(len&&stroke!=='none'){e.style.strokeDasharray=progress>=1?'none':String(len);e.style.strokeDashoffset=String(len*(1-p))}
+    if(getComputedStyle(e).fill!=='none')e.style.opacity=String(clamp((progress-.15)/.85));
+   });
+  }
+  await Promise.all(config.charts.map(async d=>{[d.baseImage,d.finalImage]=await Promise.all([load(d.base),load(d.final)]);await Promise.all(d.layers.map(async l=>l.image=await load(l.src)))}));
+  return paint;
+ }
+ function player(config,createRenderer){
+  const scene=document.getElementById('newsScene'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  let paused=false,visible=true,last=0,elapsed=0,raf=0,ready=false,paint=()=>{};
+  function fit(){const factor=innerWidth/config.width;scene.style.transform='scale('+factor+')';document.body.style.height=Math.ceil(config.height*factor)+'px'}
+  addEventListener('resize',fit);fit();
+  function tick(now){
+   raf=0;if(!ready||paused||!visible||document.hidden)return;
+   if(last)elapsed+=now-last;last=now;
+   const span=config.duration+2000,progress=reduced.matches?1:Math.min(1,(config.repeat?elapsed%span:elapsed)/config.duration);
+   paint(progress);if(!config.repeat&&progress>=1)play.textContent='다시 재생';
+   if(!reduced.matches&&(config.repeat||progress<1))raf=requestAnimationFrame(tick);
+  }
+  function resume(){last=0;if(!raf&&ready&&!paused&&visible)raf=requestAnimationFrame(tick)}
+  document.addEventListener('visibilitychange',()=>{last=0;if(!document.hidden)resume()});
+  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;last=0;if(visible)resume()}).observe(scene);
+  reduced.addEventListener('change',()=>{if(reduced.matches)paint(1);else resume()});
+  const play=document.getElementById('newsPlay');
+  play.onclick=()=>{if(!config.repeat&&elapsed>=config.duration){elapsed=0;paused=false}else paused=!paused;play.textContent=paused?'재생':'일시정지';play.setAttribute('aria-pressed',String(paused));resume()};
+  document.getElementById('newsReplay').onclick=()=>{elapsed=0;paused=false;play.textContent='일시정지';play.setAttribute('aria-pressed','false');resume()};
+  createRenderer(document,config).then(render=>{paint=render;ready=true;paint(reduced.matches?1:0);resume()}).catch(()=>{document.getElementById('newsStatus').textContent='이미지를 불러오지 못했습니다.'});
+ }
+ async function generate(){
+  if(busy)return null;busy=true;
+  const oldText=$('newsBuild').textContent;$('newsBuild').disabled=true;$('newsBuild').textContent='코드 생성 중…';
+  const stage=$('deskPaperStage'),zoom=stage.style.getPropertyValue('--desk-zoom');
+  let target,marker,portal,restoreAssets=()=>{};
+  try{
+   if(!validateReporterName()){DeskUI.reveal('nameInput');return null}
+   if(isMultiEditorEnabled())renderMultiGraphComposition();
+   target=$(isMultiEditorEnabled()?'multi-capture-area':'capture-area');
+   marker=document.createComment('news-position');target.before(marker);
+   portal=document.createElement('div');portal.style.cssText='position:fixed;left:0;top:0;width:750px;z-index:2147482999;pointer-events:none;background:white';document.body.appendChild(portal);portal.appendChild(target);
+   stage.style.setProperty('--desk-zoom','1');
+   await document.fonts.ready;await setAllChartPixelRatios(2);await waitForNextPaint();await waitForOverlayImages(target);restoreAssets=await prepareOverlayAssetsForExport(target);
+   const charts=[],copy=copyDesign(target,charts),width=target.offsetWidth,height=Math.max(target.offsetHeight,target.scrollHeight);
+   copy.style.margin='0';copy.style.boxShadow='none';copy.style.zoom='1';copy.style.position='relative';copy.style.left='0';copy.style.top='0';
+   copy.querySelectorAll('.inline-placeholder').forEach(e=>e.remove());
+   // Inline computed display:none placeholders are already omitted; clear remaining editing hints by original IDs.
+   for(const id of ['displayTitle','displaySub','displayFootnote'])if($(id)?.classList.contains('inline-placeholder'))copy.querySelector('#'+id)?.remove();
+   const duration=Number($('newsDuration').value)*1000,repeat=$('newsRepeat').checked;
+   const config={width,height:height+44,duration,repeat,charts};
+   const title=$('titleInput').value||'비주얼뉴스';
+   lastSnapshot={config,markup:copy.outerHTML,width,height,title};
+   const payload=cleanJSON(config),script='('+player.toString()+')('+payload+','+createRenderer.toString()+');';
+   const inner='<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escapeAttr(title)+'</title><style>html,body{margin:0;padding:0;background:#fff;overflow:hidden}#newsScene{width:'+width+'px;transform-origin:0 0}#newsControls{height:44px;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 14px;box-sizing:border-box;font:12px Arial,sans-serif;color:#666}#newsControls button{border:1px solid #ddd;border-radius:5px;background:#fff;padding:5px 10px;cursor:pointer;color:#444}#newsControls button:focus-visible{outline:2px solid #167b70}canvas{display:block}</style></head><body><main id="newsScene" aria-label="'+escapeAttr(title)+'">'+copy.outerHTML+'<div id="newsControls"><span id="newsStatus" role="status"></span><button type="button" id="newsReplay">다시 재생</button><button type="button" id="newsPlay" aria-pressed="false">일시정지</button></div></main><script>'+script.replace(/<\/script/gi,'<\\/script')+'</'+'script></body></html>';
+   // Entity-encode newlines instead of removing them: multiline text and JavaScript remain intact inside srcdoc.
+   const attr=escapeAttr(inner).replace(/\r/g,'&#13;').replace(/\n/g,'&#10;');
+   lastCode='<iframe title="'+escapeAttr(title).replace(/\r?\n/g,' ')+'" loading="lazy" sandbox="allow-scripts" scrolling="no" style="display:block;width:100%;max-width:'+width+'px;aspect-ratio:'+width+'/'+(height+44)+';border:0;margin:20px auto;background:#fff" srcdoc="'+attr+'"></iframe>';
+   $('newsCode').value=lastCode;$('newsBytes').textContent='HTML 한 줄 · '+(new Blob([lastCode]).size/1024).toFixed(0)+' KB · 외부 라이브러리 불필요';
+   const dialog=$('newsDialog');if(!dialog.open)dialog.showModal();
+   const previous=$('newsPreview'),frame=previous.cloneNode(false);frame.style.aspectRatio=width+'/'+(height+44);frame.srcdoc=inner;previous.replaceWith(frame);
+   dialog.querySelector('.desk-dialog-body').scrollTop=0;return lastCode;
+  }catch(error){console.error(error);DeskUI.toast('HTML 생성에 실패했습니다: '+error.message);return null}
+  finally{
+   restoreAssets();if(marker?.parentNode){marker.before(target);marker.remove()}portal?.remove();stage.style.setProperty('--desk-zoom',zoom);await setAllChartPixelRatios(NORMAL_CHART_DPR);DeskUI.sync();$('newsBuild').disabled=false;$('newsBuild').textContent=oldText;busy=false;
+  }
+ }
+ function download(extension){
+  if(!lastCode)return;const blob=new Blob([lastCode],{type:extension==='html'?'text/html;charset=utf-8':'text/plain;charset=utf-8'}),link=document.createElement('a'),u=URL.createObjectURL(blob);
+  link.href=u;link.download=($('titleInput').value||'비주얼뉴스').replace(/[<>:"/\\|?*\x00-\x1f]/g,'_')+'.visual-news.'+extension;link.click();setTimeout(()=>URL.revokeObjectURL(u),1000);
+ }
+ function init(){
+  const pane=document.querySelector('.v6-pane[data-pane="output"]'),group=document.createElement('section');group.className='data-group';group.id='newsSettings';
+  group.innerHTML='<div class="desk-section-heading">비주얼뉴스 애니메이션</div><p class="help-text">막대는 성장, 선·면적은 그리기, 도넛은 회전, 표·리스트는 순차 표시합니다. 현재 디자인과 복수 그래프 배치를 함께 저장합니다.</p><label for="newsDuration">그려지는 시간</label><select id="newsDuration"><option value="1.5">빠르게 · 1.5초</option><option value="2.5" selected>보통 · 2.5초</option><option value="4">천천히 · 4초</option></select><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="newsRepeat" checked>2초 머문 뒤 반복</label><button id="newsBuild" class="desk-btn primary" style="width:100%;margin-top:8px">애니메이션 미리보기 · HTML 저장</button><p class="help-text">PNG는 완성된 정지 화면으로 저장됩니다. HTML 삽입 시 iframe과 내부 스크립트를 허용하는 편집기가 필요합니다.</p>';
+  $('downloadBtn').after(group);$('newsBuild').onclick=generate;
+  const quick=document.createElement('button');quick.className='desk-btn';quick.textContent='비주얼뉴스 HTML';quick.id='newsTopButton';quick.onclick=()=>{DeskUI.showPane('output');group.scrollIntoView({block:'center'})};document.querySelector('.desk-canvas-actions').appendChild(quick);
+  const dialog=document.createElement('dialog');dialog.id='newsDialog';dialog.className='desk-dialog';dialog.style.width='920px';dialog.innerHTML='<div class="desk-dialog-head"><h2>비주얼뉴스 · 애니메이션 미리보기</h2><button class="desk-btn" id="newsClose">닫기</button></div><div class="desk-dialog-body" style="padding:16px;max-height:75vh;overflow:auto"><iframe id="newsPreview" title="비주얼뉴스 애니메이션 미리보기" sandbox="allow-scripts" style="width:100%;max-width:750px;border:1px solid #e3e9e9;display:block;margin:0 auto"></iframe><p id="newsBytes" style="margin:14px 0 8px"></p><label for="newsCode">비주얼뉴스에 붙여넣을 HTML 한 줄 코드</label><textarea id="newsCode" readonly style="width:100%;height:86px;box-sizing:border-box;font:11px monospace;border:1px solid #dce5e2;border-radius:7px;margin:6px 0 12px;padding:8px"></textarea><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="newsCopy" class="desk-btn primary">한 줄 코드 복사</button><button id="newsDownload" class="desk-btn">HTML 파일 저장</button><button id="newsTextDownload" class="desk-btn">코드 TXT 저장</button></div><p class="help-text" style="margin-top:12px">동작 줄이기 설정을 사용하는 독자에게는 완성된 정지 화면이 표시됩니다. 이미지가 포함되어 코드 길이가 길 수 있습니다.</p></div>';
+  document.body.appendChild(dialog);
+  const actions=$('newsCopy').parentElement;actions.style.cssText='display:flex;gap:8px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid #e3e9e3;background:#fff;flex-shrink:0';dialog.appendChild(actions);
+  dialog.querySelector('.desk-dialog-body').style.maxHeight='calc(85dvh - 165px)';
+  dialog.querySelector('h2').id='newsDialogTitle';dialog.setAttribute('aria-labelledby','newsDialogTitle');
+  $('newsClose').onclick=()=>dialog.close();$('newsDownload').onclick=()=>download('html');$('newsTextDownload').onclick=()=>download('txt');
+  $('newsCopy').onclick=async()=>{try{await navigator.clipboard.writeText(lastCode);DeskUI.toast('HTML 한 줄 코드를 복사했습니다.')}catch{$('newsCode').focus();$('newsCode').select();DeskUI.toast('코드가 선택되었습니다. Ctrl+C로 복사하세요.')}};
+  group.querySelector('.desk-section-heading').textContent='애니메이션';quick.textContent='애니메이션 HTML';dialog.querySelector('h2').textContent='애니메이션 미리보기';$('newsPreview').title='애니메이션 미리보기';
+  window.DeskNews={generate,createRenderer,get snapshot(){return lastSnapshot},get code(){return lastCode}};
+ }
+ document.addEventListener('v8-ready',init,{once:true});
+})();
+
+</script>
+<script>
+(function(){
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ // GIF89a with a shared adaptive palette and streaming LZW frames. No network or worker is required.
+ function paletteFor(rgba){
+  const histogram=new Map();
+  for(let i=0;i<rgba.length;i+=4){const r=rgba[i],g=rgba[i+1],b=rgba[i+2],key=(r>>3)<<10|(g>>3)<<5|(b>>3);let p=histogram.get(key);if(!p){p={n:0,r:0,g:0,b:0};histogram.set(key,p)}p.n++;p.r+=r;p.g+=g;p.b+=b}
+  const colors=[...histogram.values()].map(p=>({n:p.n,r:p.r/p.n,g:p.g/p.n,b:p.b/p.n}));
+  const box=items=>{const ranges=['r','g','b'].map(k=>Math.max(...items.map(p=>p[k]))-Math.min(...items.map(p=>p[k]))),axis=['r','g','b'][ranges.indexOf(Math.max(...ranges))];return {items,axis,score:Math.max(...ranges)*Math.sqrt(items.reduce((n,p)=>n+p.n,0))}};
+  const boxes=[box(colors)];
+  while(boxes.length<240){let index=-1,score=0;boxes.forEach((b,i)=>{if(b.items.length>1&&b.score>score){index=i;score=b.score}});if(index<0)break;
+   const current=boxes.splice(index,1)[0],items=current.items.sort((a,b)=>a[current.axis]-b[current.axis]),half=items.reduce((n,p)=>n+p.n,0)/2;let sum=0,split=1;
+   for(;split<items.length;split++){sum+=items[split-1].n;if(sum>=half)break}split=Math.min(items.length-1,split);
+   boxes.push(box(items.slice(0,split)),box(items.slice(split)));
+  }
+  const palette=[];for(let i=0;i<16;i++)palette.push([i*17,i*17,i*17]);
+  boxes.forEach(({items})=>{const count=items.reduce((n,p)=>n+p.n,0);palette.push(['r','g','b'].map(k=>Math.round(items.reduce((n,p)=>n+p[k]*p.n,0)/count)))});
+  while(palette.length<256)palette.push([255,255,255]);return palette;
+ }
+ function lzw(indices){
+  const out=new Uint8Array(indices.length*2+4096);let pos=0,buffer=0,used=0,bits=9,next=258;const dictionary=new Map();
+  const write=code=>{buffer|=code<<used;used+=bits;while(used>=8){out[pos++]=buffer&255;buffer>>>=8;used-=8}};
+  write(256);let prefix=indices[0];
+  for(let i=1;i<indices.length;i++){const value=indices[i],key=prefix*256+value,found=dictionary.get(key);if(found!==undefined){prefix=found;continue}
+   write(prefix);if(next===(1<<bits)&&bits<12)bits++;
+   if(next<4096)dictionary.set(key,next++);else{write(256);dictionary.clear();bits=9;next=258}prefix=value;
+  }
+  write(prefix);if(next===(1<<bits)&&bits<12)bits++;write(257);if(used)out[pos++]=buffer&255;
+  const blocks=[8];for(let i=0;i<pos;i+=255){const length=Math.min(255,pos-i);blocks.push(length,...out.subarray(i,i+length))}blocks.push(0);return new Uint8Array(blocks);
+ }
+ class Encoder{
+  constructor(width,height,palette,repeat){
+   this.width=width;this.height=height;this.palette=palette;this.lookup=new Int16Array(32768).fill(-1);
+   this.parts=[new Uint8Array([71,73,70,56,57,97,width&255,width>>8,height&255,height>>8,247,0,0,...palette.flat()])];
+   if(repeat)this.parts.push(new Uint8Array([33,255,11,78,69,84,83,67,65,80,69,50,46,48,3,1,0,0,0]));
+  }
+  frame(rgba,delay){
+   const pixels=new Uint8Array(rgba.length/4),{palette,lookup}=this;
+   for(let i=0,j=0;i<rgba.length;i+=4,j++){const r=rgba[i],g=rgba[i+1],b=rgba[i+2],key=(r>>3)<<10|(g>>3)<<5|(b>>3);let index=lookup[key];
+    if(index<0){let best=Infinity;for(let c=0;c<256;c++){const p=palette[c],d=(r-p[0])**2+(g-p[1])**2+(b-p[2])**2;if(d<best){best=d;index=c;if(!d)break}}lookup[key]=index}pixels[j]=index;
+   }
+   const w=this.width,h=this.height;this.parts.push(new Uint8Array([33,249,4,4,delay&255,delay>>8,0,0,44,0,0,0,0,w&255,w>>8,h&255,h>>8,0]),lzw(pixels));
+  }
+  finish(){return new Blob([...this.parts,new Uint8Array([59])],{type:'image/gif'})}
+ }
+ let working=false,cancelled=false;
+ async function saveGif(refresh){
+  if(working)return;working=true;cancelled=false;
+  let host,restoreClose,encoder;
+  const controls=()=>[$('newsGifBuild'),$('newsGifDownload'),$('newsDownload'),$('newsTextDownload'),$('newsCopy'),$('newsBuild')].filter(Boolean);
+  try{
+   if(refresh||!DeskNews.snapshot){if(!await DeskNews.generate())return}
+   const snapshot=DeskNews.snapshot,{width,height,title}=snapshot,config=JSON.parse(JSON.stringify(snapshot.config));
+   controls().forEach(b=>b.disabled=true);$('gifProgress').hidden=false;$('gifCancel').hidden=false;
+   const dialog=$('newsDialog');restoreClose=e=>{e.preventDefault();cancelled=true};dialog.addEventListener('cancel',restoreClose);$('newsClose').disabled=true;
+   $('gifStatus').textContent='GIF 화면 준비 중…';
+   host=document.createElement('div');host.className='desk-gif-render-host';host.style.cssText='position:fixed;left:0;top:0;z-index:-1;pointer-events:none;width:'+width+'px';
+   host.innerHTML=snapshot.markup;document.body.appendChild(host);const target=host.firstElementChild;
+   const paint=await DeskNews.createRenderer(target,config);
+   const capture=async progress=>{paint(progress);return html2canvas(target,{scale:1,width,height,windowWidth:1440,windowHeight:Math.max(1000,height),backgroundColor:'#fff',logging:false,useCORS:true,ignoreElements:e=>e!==host&&!host.contains(e)&&e.matches('dialog,.desk-toast,.desk-export-mask')})};
+   const final=await capture(1),finalData=final.getContext('2d').getImageData(0,0,width,height).data;
+   encoder=new Encoder(width,height,paletteFor(finalData),config.repeat);
+   const count=Math.ceil(config.duration/1000*15),centiseconds=config.duration/10;
+   for(let i=0;i<count;i++){
+    if(cancelled)throw new DOMException('저장을 취소했습니다.','AbortError');
+    const percent=Math.round(i/count*100);$('gifMeter').value=percent;$('gifStatus').textContent='GIF 생성 중 '+percent+'%';
+    await new Promise(resolve=>setTimeout(resolve,0));const canvas=await capture(i/count);
+    encoder.frame(canvas.getContext('2d').getImageData(0,0,width,height).data,Math.round((i+1)*centiseconds/count)-Math.round(i*centiseconds/count));
+   }
+   if(cancelled)throw new DOMException('저장을 취소했습니다.','AbortError');
+   encoder.frame(finalData,200);const blob=encoder.finish(),url=URL.createObjectURL(blob),link=document.createElement('a');
+   link.href=url;link.download=(title||'애니메이션').replace(/[<>:"/\\|?*\x00-\x1f]/g,'_')+'.gif';link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
+   $('gifMeter').value=100;$('gifStatus').textContent='GIF 저장 완료 · '+width+' × '+height+'px · '+(blob.size/1024/1024).toFixed(1)+' MB';DeskUI.toast('GIF 파일을 저장했습니다.');return blob;
+  }catch(error){if(error.name==='AbortError'){$('gifStatus').textContent='GIF 저장을 취소했습니다.';DeskUI.toast('GIF 저장을 취소했습니다.')}else{console.error(error);$('gifStatus').textContent='GIF 저장 실패: '+error.message;DeskUI.toast('GIF 저장에 실패했습니다. 다시 시도해 주세요.')}}
+  finally{host?.remove();encoder=null;controls().forEach(b=>b.disabled=false);$('gifCancel').hidden=true;$('newsClose').disabled=false;if(restoreClose)$('newsDialog').removeEventListener('cancel',restoreClose);working=false}
+ }
+ function init(){
+  const output=document.createElement('button');output.id='newsGifBuild';output.className='desk-btn';output.style.cssText='width:100%;margin-top:8px';output.textContent='애니메이션 GIF 저장';$('newsBuild').after(output);output.onclick=()=>saveGif(true);
+  const note=document.createElement('p');note.className='help-text';note.textContent='GIF는 가로 750px, 초당 15장으로 저장합니다. 위의 속도·반복 설정이 적용되며, 완성 화면은 2초간 유지됩니다.';output.after(note);
+  const button=document.createElement('button');button.id='newsGifDownload';button.className='desk-btn';button.textContent='GIF 파일 저장';$('newsDownload').after(button);button.onclick=()=>saveGif(false);
+  const progress=document.createElement('div');progress.id='gifProgress';progress.hidden=true;progress.style.cssText='flex-basis:100%;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px';progress.innerHTML='<progress id="gifMeter" max="100" value="0" aria-label="GIF 저장 진행률" style="width:120px"></progress><span id="gifStatus" role="status" aria-live="polite"></span><button id="gifCancel" class="desk-btn">취소</button>';
+  $('newsCopy').parentElement.appendChild(progress);$('gifCancel').onclick=()=>{cancelled=true};
+  window.DeskGif={save:saveGif,Encoder,paletteFor,get working(){return working}};
+ }
+ document.addEventListener('v8-ready',init,{once:true});
+})();
+
+</script>
+<script>
+(function(){
+ 'use strict';
+ const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
+ let code='',filename='비주얼뉴스',busy=false,assetId=0;
+ const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+ const text=s=>esc(s).replace(/\r?\n/g,'<br>');
+ const num=n=>Math.round(Number(n)*100)/100;
+ const visible=e=>{if(!e)return false;for(let node=e;node&&!node.matches('#capture-area,#multi-capture-area,.multi-graph-card');node=node.parentElement){const cs=getComputedStyle(node);if(cs.display==='none'||cs.visibility==='hidden')return false}return true};
+ const color=(v,fallback='#e61e2b')=>typeof v==='string'&&CSS.supports('color',v)?v:fallback;
+ const content=e=>!e||e.classList.contains('inline-placeholder')?'':e.innerText.trim();
+ function point(cx,cy,r,a){return [num(cx+Math.cos(a)*r),num(cy+Math.sin(a)*r)]}
+ function sector(cx,cy,outer,inner,start,end){
+  if(end-start<.00001)return '';end=Math.min(end,start+Math.PI*2-.00001);
+  const a=point(cx,cy,outer,start),b=point(cx,cy,outer,end),large=end-start>Math.PI?1:0;
+  let d='M'+a+'A'+outer+','+outer+' 0 '+large+' 1 '+b;
+  if(inner>0){const c=point(cx,cy,inner,end),f=point(cx,cy,inner,start);d+='L'+c+'A'+inner+','+inner+' 0 '+large+' 0 '+f}else d+='L'+cx+','+cy;
+  return d+'Z';
+ }
+ function svgTag(tag,attrs,body=''){
+  const styles=[];for(const key of ['fill','stroke','stroke-width','font-size','font-weight','text-anchor'])if(attrs[key]!==undefined)styles.push(key+':'+attrs[key]+(key==='font-size'?'px':'')+'!important');
+  if(styles.length)attrs.style=(attrs.style||'')+styles.join(';');
+  return '<'+tag+' '+Object.entries(attrs).map(([k,v])=>k+'="'+esc(v)+'"').join(' ')+'>'+body+'</'+tag+'>';
+ }
+ function valueText(chart,di,i){
+  const ds=chart.data.datasets[di],raw=ds.data[i];if(raw===null||raw===undefined)return '—';
+  if(typeof raw==='object')return 'x: '+raw.x+', y: '+raw.y;
+  if(['pie','doughnut'].includes(chart.config.type))return String(raw);
+  const fmt=chart.config.options.plugins?.datalabels?.formatter;
+  try{if(typeof fmt==='function'){const result=fmt(raw,{chart,dataset:ds,datasetIndex:di,dataIndex:i,active:false});if(result!==null&&result!==undefined&&String(result)!=='')return Array.isArray(result)?result.join(' '):String(result)}}catch{}
+  return String(raw);
+ }
+ function expandSvg(svg,minWidth){
+  const vb=svg.viewBox.baseVal,originalWidth=vb.width;if(!(originalWidth>0)||minWidth<=originalWidth)return svg;
+  const factor=minWidth/originalWidth,group=document.createElementNS(NS,'g');group.setAttribute('transform','scale('+factor+' 1)');
+  svg.querySelectorAll('text').forEach(e=>{const x=parseFloat(e.getAttribute('x'));if(Number.isFinite(x))e.setAttribute('x',x*factor);e.setAttribute('transform','scale('+(1/factor)+' 1) '+(e.getAttribute('transform')||''))});
+  while(svg.firstChild)group.appendChild(svg.firstChild);svg.appendChild(group);svg.setAttribute('viewBox','0 0 '+minWidth+' '+vb.height);svg.setAttribute('width',minWidth);svg.style.setProperty('width',minWidth+'px','important');return svg;
+ }
+ function chartHtml(chart,prefix){
+  chart.stop();chart.update('none');const pie=chart.config.type==='doughnut'||chart.config.type==='pie',metas=chart.getSortedVisibleDatasetMetas(),w=pie?340:Math.max(320,chart.width),h=pie?340:chart.height;
+  let shapes='',defs='',labels='';
+  if(!pie){
+   for(const scale of Object.values(chart.scales)){
+    const xAxis=scale.axis==='x',pos=xAxis?scale.top:scale.right;
+    shapes+=svgTag('line',{x1:xAxis?scale.left:pos,y1:xAxis?pos:scale.top,x2:xAxis?scale.right:pos,y2:xAxis?pos:scale.bottom,stroke:'#555','stroke-width':1});
+    scale.ticks.forEach((tick,i)=>{
+     const coordinate=scale.getPixelForTick(i),label=Array.isArray(tick.label)?tick.label.join(' '):tick.label;
+     if(!Number.isFinite(coordinate)||label===undefined)return;
+     if(!xAxis)shapes+=svgTag('line',{x1:chart.chartArea.left,y1:coordinate,x2:chart.chartArea.right,y2:coordinate,stroke:'#e5e7eb','stroke-width':1});
+     shapes+=svgTag('text',{x:xAxis?coordinate:Math.max(20,pos-8),y:xAxis?Math.min(h-4,pos+22):coordinate+5,fill:'#444','font-size':16,'text-anchor':xAxis?'middle':'end'},text(label));
+    });
+   }
+  }
+  for(const meta of metas){
+   const ds=chart.data.datasets[meta.index],fill=color(Array.isArray(ds.backgroundColor)?ds.backgroundColor[0]:ds.backgroundColor),stroke=color(ds.borderColor,fill);
+   if(meta.dataset){
+    let d='';meta.data.forEach(p=>{if(p.skip||!Number.isFinite(p.x)||!Number.isFinite(p.y)){if(!ds.spanGaps)d+=' ';return}const prior=d.trim().length>0&&!d.endsWith(' ');d+=(prior?'L':'M')+num(p.x)+','+num(p.y)});
+    if(d)shapes+=svgTag('path',{d,fill:'none',stroke,'stroke-width':Math.max(2,Number(ds.borderWidth)||3),pathLength:100,class:prefix+'-draw'});
+   }
+   meta.data.forEach((p,i)=>{
+    if(p.skip||p.hidden||!Number.isFinite(p.x)||!Number.isFinite(p.y))return;
+    const c=color(p.options?.backgroundColor,fill),line=color(p.options?.borderColor,stroke);
+    if(pie){
+     const start=p.startAngle,end=p.endAngle,outer=150,inner=p.innerRadius/p.outerRadius*outer;
+     shapes+=svgTag('path',{d:sector(170,170,outer,inner,start,end),fill:c,stroke:'#fff','stroke-width':2});
+     const [lx,ly]=point(170,170,(outer+inner)/2,(start+end)/2),name=chart.data.labels?.[i]??String(i+1);
+     labels+=svgTag('text',{x:lx,y:ly-5,fill:'#111',stroke:'#fff','stroke-width':3,'font-size':16,'font-weight':700,'text-anchor':'middle',style:'paint-order:stroke;stroke-linejoin:round;'},'<tspan x="'+lx+'">'+esc(String(name).replace(/\s+/g,' '))+'</tspan><tspan x="'+lx+'" dy="20">'+esc(valueText(chart,meta.index,i))+'</tspan>');
+    }else if(meta.type==='bar'){
+     const horizontal=p.horizontal,x=horizontal?Math.min(p.x,p.base):p.x-p.width/2,y=horizontal?p.y-p.height/2:Math.min(p.y,p.base),width=horizontal?Math.abs(p.x-p.base):p.width,height=horizontal?p.height:Math.abs(p.y-p.base);
+     shapes+=svgTag('rect',{x:num(x),y:num(y),width:num(width),height:num(height),rx:Math.min(3,width/2,height/2),fill:c,class:prefix+(horizontal?'-growx':'-growy'),style:'transform-origin:'+num(horizontal?p.base:p.x)+'px '+num(horizontal?p.y:p.base)+'px;'});
+    }else shapes+=svgTag('circle',{cx:num(p.x),cy:num(p.y),r:Math.max(3,p.options?.radius||4),fill:c,stroke:line,'stroke-width':2});
+    if(!pie){const horizontal=meta.type==='bar'&&p.horizontal,raw=valueText(chart,meta.index,i);labels+=svgTag('text',{x:num(horizontal?Math.min(w-8,Math.max(p.x,p.base)+8):p.x),y:num(horizontal?p.y+5:Math.max(20,p.y-10)),fill:'#111','font-size':16,'font-weight':700,'text-anchor':horizontal?'end':'middle'},text(raw))}
+   });
+  }
+  if(pie){const mask=prefix+'-mask'+assetId++;defs='<defs><mask id="'+mask+'" maskUnits="userSpaceOnUse" x="0" y="0" width="340" height="340">'+svgTag('circle',{cx:170,cy:170,r:75,fill:'none',stroke:'#fff','stroke-width':152,pathLength:100,transform:'rotate(-90 170 170)',class:prefix+'-draw'})+'</mask></defs>';shapes='<g mask="url(#'+mask+')">'+shapes+'</g>'}
+  const svg='<svg xmlns="'+NS+'" viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'" role="img" aria-label="'+esc(chart.data.datasets.map(ds=>ds.label||'데이터').join(', '))+'" style="display:block!important;width:'+w+'px!important;height:'+h+'px!important;max-width:none!important">'+defs+shapes+labels+'</svg>';
+  const rows=chart.data.labels?.length||Math.max(0,...chart.data.datasets.map(d=>d.data.length));
+  const parsed=new DOMParser().parseFromString(svg,'image/svg+xml').documentElement;
+  if(!pie)expandSvg(parsed,Math.max(550,Math.min(1600,metas.some(m=>m.data[0]?.horizontal)?550:rows*70+100)));
+  return '<div class="'+prefix+'-scroll" tabindex="0" role="region" aria-label="그래프. 좁은 화면에서는 좌우로 이동할 수 있습니다.">'+parsed.outerHTML+'</div>';
+ }
+ function areaHtml(source,prefix){
+  const svg=source.cloneNode(true),nodes=[svg,...svg.querySelectorAll('*')],original=[source,...source.querySelectorAll('*')],ids=new Map();
+  nodes.forEach(e=>{if(e.id){const next=prefix+'-svg'+assetId++;ids.set(e.id,next);e.id=next}});
+  nodes.forEach((e,i)=>{
+   const cs=getComputedStyle(original[i]);for(const attr of [...e.attributes])if(attr.name.startsWith('on')||['class','style','tabindex'].includes(attr.name)||attr.name.startsWith('data-'))e.removeAttribute(attr.name);
+   for(const attr of [...e.attributes])for(const [old,next]of ids)e.setAttribute(attr.name,e.getAttribute(attr.name).replaceAll('#'+old,'#'+next));
+   for(const prop of ['fill','stroke','stroke-width','opacity','font-family','font-weight','text-anchor'])e.style.setProperty(prop,cs.getPropertyValue(prop),'important');
+   e.style.setProperty('font-family','Arial,"Malgun Gothic",sans-serif','important');e.style.setProperty('font-size',Math.max(16,parseFloat(cs.fontSize)||16)+'px','important');
+   if(e.tagName.toLowerCase()==='path'){
+    if(cs.fill!=='none')e.setAttribute('class',prefix+'-area');
+    else{e.setAttribute('class',prefix+'-draw');e.setAttribute('pathLength','100')}
+   }
+  });
+  const vb=source.viewBox.baseVal;svg.setAttribute('width',vb.width);svg.setAttribute('height',vb.height);svg.style.cssText+=';display:block!important;width:'+vb.width+'px!important;height:'+vb.height+'px!important;max-width:none!important';
+  expandSvg(svg,550);
+  return '<div class="'+prefix+'-scroll" tabindex="0" role="region" aria-label="면적 그래프. 좁은 화면에서는 좌우로 이동할 수 있습니다.">'+svg.outerHTML+'</div>';
+ }
+ function textHtml(source,prefix){
+  const tables=[...source.querySelectorAll('table')];
+  if(tables.length)return tables.map(table=>{
+   const title=table.previousElementSibling;let html=title&&!title.matches('table')?'<div class="'+prefix+'-section">'+text(title.innerText)+'</div>':'';
+   html+='<div class="'+prefix+'-scroll" tabindex="0" role="region" aria-label="데이터 표"><table class="'+prefix+'-values">';
+   for(const row of table.rows){html+='<tr>';for(const cell of row.cells){const cs=getComputedStyle(cell),tag=cell.tagName.toLowerCase();html+='<'+tag+' rowspan="'+cell.rowSpan+'" colspan="'+cell.colSpan+'" style="background:'+esc(cs.backgroundColor)+'!important;color:'+esc(cs.color)+'!important">'+text(cell.innerText)+'</'+tag+'>'}html+='</tr>'}
+   return html+'</table></div>';
+  }).join('');
+  const timeline=[...source.querySelectorAll('.timeline-row')];if(timeline.length)return timeline.map(row=>'<div class="'+prefix+'-timeline"><div>'+text(row.querySelector('.timeline-left')?.innerText)+'</div><div>'+text(row.querySelector('.timeline-right')?.innerText)+'</div></div>').join('');
+  const items=[...source.querySelectorAll('.list-header-box,.list-item')];if(items.length)return items.map(e=>'<div class="'+prefix+(e.matches('.list-header-box')?'-section':'-item')+'">'+text(e.innerText)+'</div>').join('');
+  return '<div class="'+prefix+'-item">'+text(source.innerText)+'</div>';
+ }
+ function cardHtml(source,prefix,multi){
+  const title=content(source.querySelector(multi?'.multi-card-title':'#displayTitle')),sub=content(source.querySelector(multi?'.multi-card-sub':'#displaySub')),foot=content(source.querySelector(multi?'.multi-card-footnote':'#displayFootnote'));
+  const rule=source.querySelector(multi?'.multi-card-topline':'#topLine'),ruleStyle=rule?getComputedStyle(rule):null,accent=ruleStyle?(ruleStyle.backgroundColor==='rgba(0, 0, 0, 0)'?ruleStyle.borderTopColor:ruleStyle.backgroundColor):'#e61e2b';
+  let html='<div class="'+prefix+'-card" style="border-top-color:'+esc(accent)+'!important">';
+  for(const overlay of source.querySelectorAll('#graphEmojiOverlay,.multi-card-emoji-overlay,#graphImageOverlay,.multi-card-image-overlay,.image-overlay-item')){
+   if(!visible(overlay))continue;const cs=getComputedStyle(overlay),isEmoji=overlay.matches('#graphEmojiOverlay,.multi-card-emoji-overlay'),label=overlay.textContent.trim();
+   let background=cs.backgroundImage;
+   if(!isEmoji&&background==='none')continue;
+   background=background.replace(/https?:\/\/drive\.google\.com\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)[^"')\s]*/g,'https://lh3.googleusercontent.com/d/$1');
+   html+='<div class="'+prefix+'-decor" aria-hidden="true" style="opacity:'+esc(cs.opacity)+'!important;'+(isEmoji?'font-size:'+Math.max(16,parseFloat(cs.fontSize)||100)+'px!important;':'background-image:'+esc(background)+'!important;')+'">'+(isEmoji?text(label):'')+'</div>';
+  }
+  if(title)html+='<div class="'+prefix+'-title">'+text(title)+'</div>';if(sub)html+='<div class="'+prefix+'-sub">'+text(sub)+'</div>';
+  const canvas=[...source.querySelectorAll('canvas')].find(e=>visible(e)&&Chart.getChart(e)),area=source.querySelector('.area-svg-preview svg,.multi-card-chart svg'),table=source.querySelector(multi?'.multi-card-table-content':'#table-container');
+  html+='<div class="'+prefix+'-mobilehint">넓은 그래프·표는 좌우로 이동해 볼 수 있습니다.</div>';
+  if(area&&visible(area))html+=areaHtml(area,prefix);else if(canvas)html+=chartHtml(Chart.getChart(canvas),prefix);else if(visible(table))html+=textHtml(table,prefix);
+  const extras=[...source.querySelectorAll('.free-text-overlay,.multi-card-free-text')].filter(visible);for(const item of extras)html+='<div class="'+prefix+'-note">'+text(item.innerText)+'</div>';
+  if(foot)html+='<div class="'+prefix+'-note">'+text(foot)+'</div>';
+  return html+'</div>';
+ }
+ function style(root,duration){
+  const s='#'+root,p='.'+root;
+  return s+'{all:initial;display:block!important;box-sizing:border-box!important;position:relative!important;width:100%!important;max-width:750px!important;margin:20px auto!important;background:#fff!important;color:#111!important;font:16px Arial,"Malgun Gothic",sans-serif!important;text-align:left!important;isolation:isolate}'+
+  s+' *{box-sizing:border-box!important;font-family:Arial,"Malgun Gothic",sans-serif!important;font-size:16px!important;line-height:1.5!important;letter-spacing:normal!important;text-transform:none!important;text-decoration:none!important}'+
+  s+' '+p+'-card{display:block!important;position:relative!important;margin:0 0 24px!important;padding:16px 12px!important;border:0!important;border-top:4px solid #111!important;background:#fff!important;min-width:0!important}'+
+  s+' '+p+'-title{display:block!important;font-size:26px!important;font-weight:800!important;line-height:1.3!important;margin:0 0 8px!important;overflow-wrap:anywhere!important}'+
+  s+' '+p+'-sub,'+s+' '+p+'-note{display:block!important;color:#444!important;margin:8px 0 16px!important;overflow-wrap:anywhere!important}'+
+  s+' '+p+'-scroll{display:block!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;margin:12px 0!important;padding:4px 0!important;-webkit-overflow-scrolling:touch}'+
+  s+' '+p+'-scroll svg{margin:0 auto!important;overflow:visible!important}'+
+  s+' '+p+'-values{display:table!important;border-collapse:collapse!important;width:100%!important;table-layout:auto!important;margin:0!important;border:0!important;background:#fff!important;color:#111!important}'+
+  s+' '+p+'-values tr{display:table-row!important;background:transparent!important}'+
+  s+' '+p+'-values td,'+s+' '+p+'-values th{display:table-cell!important;padding:10px 8px!important;min-width:90px!important;border:0!important;border-bottom:1px solid #ddd!important;text-align:left!important;vertical-align:middle!important;color:#111!important;background:#fff!important;font-weight:400!important;word-break:normal!important}'+
+  s+' '+p+'-values th{font-weight:700!important}'+
+  s+' '+p+'-key{display:inline-block!important;width:12px!important;height:12px!important;margin-right:6px!important;border-radius:2px!important;vertical-align:baseline!important}'+
+  s+' '+p+'-section{display:block!important;padding:10px 12px!important;margin-top:12px!important;background:#f1f3f5!important;font-size:18px!important;font-weight:700!important}'+
+  s+' '+p+'-item{display:block!important;padding:10px 12px!important;border-bottom:1px solid #ddd!important;overflow-wrap:anywhere!important}'+
+  s+' '+p+'-timeline{display:grid!important;grid-template-columns:minmax(80px,120px) minmax(0,1fr)!important;gap:12px!important;border-bottom:1px solid #ddd!important;padding:12px 0!important}'+
+  s+' '+p+'-timeline>div{display:block!important;overflow-wrap:anywhere!important}'+
+  s+' '+p+'-footer{display:block!important;font-size:16px!important;color:#444!important;text-align:right!important;padding:12px!important}'+
+  s+' '+p+'-decor{display:block!important;position:absolute!important;left:15%!important;top:100px!important;width:70%!important;height:260px!important;z-index:0!important;pointer-events:none!important;text-align:center!important;background-size:contain!important;background-repeat:no-repeat!important;background-position:center!important}'+
+  s+' '+p+'-card>div:not('+p+'-decor){position:relative!important;z-index:1!important}'+s+' '+p+'-mobilehint{display:none!important;color:#666!important;margin:8px 0!important}'+
+  s+' '+p+'-draw{stroke-dasharray:100;stroke-dashoffset:0;animation:'+root+'-draw '+duration+'s ease-in-out infinite}'+
+  s+' '+p+'-growx{animation:'+root+'-growx '+duration+'s ease-in-out infinite}'+s+' '+p+'-growy{animation:'+root+'-growy '+duration+'s ease-in-out infinite}'+s+' '+p+'-area{animation:'+root+'-area '+duration+'s ease-in-out infinite}'+
+  '@keyframes '+root+'-draw{0%,100%{stroke-dashoffset:100}58%,94%{stroke-dashoffset:0}}@keyframes '+root+'-growx{0%,100%{transform:scaleX(0)}58%,94%{transform:scaleX(1)}}@keyframes '+root+'-growy{0%,100%{transform:scaleY(0)}58%,94%{transform:scaleY(1)}}@keyframes '+root+'-area{0%,100%{clip-path:inset(0 100% 0 0)}58%,94%{clip-path:inset(0 0 0 0)}}'+
+  '@media(max-width:560px){'+s+' '+p+'-card{padding:12px 6px!important;margin-bottom:16px!important}'+s+' '+p+'-title{font-size:22px!important}'+s+' '+p+'-mobilehint{display:block!important}'+s+' '+p+'-values td,'+s+' '+p+'-values th{padding:8px 6px!important}}'+
+  '@media(prefers-reduced-motion:reduce){'+s+' '+p+'-draw,'+s+' '+p+'-growx,'+s+' '+p+'-growy,'+s+' '+p+'-area{animation:none!important}}';
+ }
+ async function generate(){
+  if(busy)return;busy=true;const button=$('cmsBuild'),prior=button.textContent;button.disabled=true;button.textContent='비주얼뉴스용 코드 생성 중…';
+  try{
+   if(!validateReporterName()){DeskUI.reveal('nameInput');return}
+   const multi=isMultiEditorEnabled();if(multi)renderMultiGraphComposition();await document.fonts.ready;await waitForNextPaint();
+   const root='vn'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),target=$(multi?'multi-capture-area':'capture-area');
+   const cards=multi?[...target.querySelectorAll('.multi-graph-card')]:[target];
+   let body=cards.map(source=>cardHtml(source,root,multi)).join('');
+   const byline=isReporterBylineEnabled()?content(target.querySelector(multi?'#multiDisplayBylineText':'#displayBylineText')):'';if(byline)body+='<div class="'+root+'-footer">'+text(byline)+'</div>';
+   code='<div id="'+root+'" style="all:initial;display:block;box-sizing:border-box;position:relative"><style>'+style(root,(Number($('newsDuration').value)||2.5)+2)+'</style>'+body+'</div>';
+   code=code.replace(/[\r\n]+/g,'').replace(/[^\x00-\x7f]/gu,c=>'&#'+c.codePointAt(0)+';');
+   filename=$('titleInput').value||'비주얼뉴스';$('cmsCode').value=code;$('cmsInfo').textContent='한 줄 HTML · '+(new Blob([code]).size/1024).toFixed(1)+' KB · 외부 스크립트 없음';$('cmsDialog').showModal();return code;
+  }catch(error){console.error(error);DeskUI.toast('비주얼뉴스용 HTML 생성 실패: '+error.message)}finally{button.disabled=false;button.textContent=prior;busy=false}
+ }
+ function download(ext){if(!code)return;const url=URL.createObjectURL(new Blob([code],{type:ext==='html'?'text/html;charset=utf-8':'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=filename.replace(/[<>:"/\\|?*\x00-\x1f]/g,'_')+'.visual-news.'+ext;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+ function init(){
+  const button=document.createElement('button');button.id='cmsBuild';button.className='desk-btn';button.style.cssText='width:100%;margin-top:8px';button.textContent='비주얼뉴스용 HTML (테스트중)';$('newsGifBuild').after(button);button.onclick=generate;
+  const hint=document.createElement('p');hint.className='help-text';hint.textContent='기사입력기용 한 줄 코드. 글자는 16px 이상으로 유지하고, 수치를 항상 표시하며, 애니메이션은 반복합니다.';button.after(hint);
+  const dialog=document.createElement('dialog');dialog.id='cmsDialog';dialog.className='desk-dialog';dialog.style.width='780px';dialog.setAttribute('aria-labelledby','cmsTitle');dialog.innerHTML='<div class="desk-dialog-head"><h2 id="cmsTitle">비주얼뉴스용 HTML</h2><button id="cmsClose" class="desk-btn">닫기</button></div><div class="desk-dialog-body"><p>기사입력기의 HTML 입력 영역에 아래 코드 전체를 붙여넣으세요.</p><p>기사용 규칙에 맞춰 제목·본문을 재배치합니다. 작은 화면에서는 넓은 그래프·표 영역만 좌우로 이동할 수 있습니다. 복수 그래프는 읽는 순서대로 세로 배치합니다.</p><label for="cmsCode">한 줄 HTML 전체 코드</label><textarea id="cmsCode" readonly spellcheck="false" style="width:100%;height:200px;margin:8px 0;padding:10px;font:12px monospace"></textarea><p id="cmsInfo" role="status"></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="cmsCopy" class="desk-btn primary">한 줄 코드 복사</button><button id="cmsDownload" class="desk-btn">HTML 파일 저장</button><button id="cmsTextDownload" class="desk-btn">코드 TXT 저장</button></div><p style="margin-top:14px">외부 라이브러리·iframe 없이 HTML과 SVG로 표시합니다. 게시 시스템에서 style 또는 SVG를 제거하는 경우 표출이 달라질 수 있습니다.</p></div>';
+  document.body.appendChild(dialog);$('cmsClose').onclick=()=>dialog.close();$('cmsDownload').onclick=()=>download('html');$('cmsTextDownload').onclick=()=>download('txt');$('cmsCopy').onclick=async()=>{try{await navigator.clipboard.writeText(code);DeskUI.toast('비주얼뉴스용 HTML을 복사했습니다.')}catch{$('cmsCode').focus();$('cmsCode').select();DeskUI.toast('코드가 선택되었습니다. Ctrl+C로 복사하세요.')}};
+  window.DeskCMS={generate,get code(){return code}};
+ }
+ document.addEventListener('v8-ready',init,{once:true});
+})();
+
+</script>
+<script>
+(function(){
+ 'use strict';
  const $=id=>document.getElementById(id);
  const icons={
   data:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 9v12M3 15h18"/>',
@@ -15662,6 +16125,7 @@ async function deskHtml2Canvas(target,options){
  function groupHeading(host,title,sub){host.appendChild(el('div','desk-section-heading',title+(sub?'<small>'+sub+'</small>':'')))}
  function details(host,title,nodes,open=false){const d=el('details','desk-details');d.open=open;d.appendChild(el('summary','',title));nodes.filter(Boolean).forEach(x=>d.appendChild(x));host.appendChild(d);return d}
  function sync(){
+  if($('exportScale')?.value==='3'){$('exportScale').value='2';updateExportSizeHint()}
   const type=$('chartType').value,textOnly=['table','list','timeline'].includes(type);
   document.body.dataset.chartKind=textOnly?'text':'chart';
   document.querySelectorAll('.desk-chart-card').forEach(b=>{b.classList.toggle('active',b.dataset.chart===type);b.setAttribute('aria-pressed',String(b.dataset.chart===type))});
@@ -15765,7 +16229,10 @@ async function deskHtml2Canvas(target,options){
   pane.prepend(el('div','desk-output-note','PNG는 완성 이미지, 작업 파일은 다음 편집을 위한 원본입니다. 미리보기 확대 배율은 저장되는 이미지 크기에 영향을 주지 않습니다.'));
   $('downloadBtn').before($('exportOptionGroup'));$('downloadBtn').after($('svgDownloadBtn'));
   $('svgDownloadBtn').textContent='SVG 형식으로 저장';
-  const note=el('p','help-text','SVG는 이미지가 포함된 형식입니다. 계속 편집하려면 작업 파일을 저장하세요.');$('svgDownloadBtn').after(note);
+  const note=el('p','help-text','SVG는 이미지가 포함된 형식입니다. 계속 편집하려면 작업 파일을 저장하세요.');note.hidden=true;$('svgDownloadBtn').after(note);
+  const retiredScale=$('exportScale').querySelector('option[value="3"]');retiredScale.hidden=true;retiredScale.disabled=true;$('exportScale').value='2';
+  const ensureVisibleScale=()=>{if($('exportScale').value==='3'){$('exportScale').value='2';updateExportSizeHint()}};
+  document.addEventListener('v8-state-restored',ensureVisibleScale);ensureVisibleScale();
   const project=el('div','data-group');project.style.marginTop='22px';groupHeading(project,'편집용 작업 파일');
   const save=button('deskProjectSaveAlt','작업 저장 (.json)','save',()=>$('deskProjectSave').click());const open=button('deskProjectOpenAlt','작업 열기','folder',()=>$('deskProjectOpen').click());save.style.marginRight='7px';project.append(save,open);pane.appendChild(project);pane.appendChild($('creatorFooter'));
  }
