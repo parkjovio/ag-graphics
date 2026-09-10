@@ -16213,7 +16213,7 @@ async function deskHtml2Canvas(target,options){
   const stage=el('div','desk-paper-stage');stage.id='deskPaperStage';
   [...preview.children].filter(e=>!e.classList.contains('v6-preview-label')).forEach(e=>stage.appendChild(e));
   const scroll=el('div','desk-canvas-scroll');scroll.id='deskCanvasScroll';scroll.appendChild(stage);
-  const footer=el('div','desk-canvas-footer','<span><b>750 px</b> 작업 화면 · <span id="deskZoomValue">100%</span></span><span class="desk-footer-hint">텍스트 더블클릭으로 수정 · 드래그로 위치 이동</span>');
+  const footer=el('div','desk-canvas-footer','<span><b>750 px</b> 작업 화면 · <span id="deskZoomValue">100%</span></span><span class="desk-footer-hint">더블클릭으로 데이터 수정 · 드래그로 로고, 표기 위치 이동</span>');
   const help=el('button','desk-link','사용 도움말 ↗');help.type='button';help.onclick=()=>$('deskHelpDialog').showModal();footer.appendChild(help);
   preview.replaceChildren(toolbar,actions,scroll,footer);old.hidden=true;
   // Keep the original topbar element so its graph-scoped action renderer can find its nodes.
