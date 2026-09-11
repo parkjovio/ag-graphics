@@ -1204,6 +1204,40 @@ body.desk-ready .modal-overlay{background:#23392d65;backdrop-filter:blur(3px);pa
 body.desk-ready #svgDownloadBtn[onclick]{display:none!important}
 body.desk-ready #gifProgress[hidden]{display:none!important}
 body.desk-ready #exportScale option[value="3"]{display:none!important}
+body.desk-ready .desk-canvas-footer{height:auto;flex-shrink:0;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:flex-start;padding:9px 16px;gap:16px;overflow-x:auto}
+body.desk-ready .desk-canvas-footer>span{flex:0 0 auto;white-space:nowrap}
+body.desk-ready .desk-footer-hint{display:block;font-size:14px;font-weight:500;line-height:1.6;color:#52665a;white-space:nowrap;width:auto}
+body.desk-ready .desk-table-color-trigger{display:block;width:100%;height:34px;min-height:34px;padding:3px;border:1px solid #cfd5df;border-radius:7px;cursor:pointer;color:#52665a;font-size:12px;box-shadow:inset 0 0 0 3px white}
+body.desk-ready .desk-table-color-trigger:focus-visible{outline:2px solid #246953;outline-offset:2px}
+body.desk-ready .desk-table-sheet-tools{display:flex;flex-wrap:wrap;align-items:end;gap:12px;padding:14px;background:#f0f6f3;border-radius:8px;margin-bottom:14px}
+body.desk-ready .desk-table-sheet-tools[hidden],body.desk-ready .desk-table-widths[hidden]{display:none!important}
+body.desk-ready .desk-table-sheet-tools label{display:flex;flex-direction:column;gap:4px;flex:1;min-width:180px}
+body.desk-ready .desk-table-sheet-tools input,body.desk-ready .desk-table-sheet-tools select{font:inherit;padding:8px;border:1px solid #cfdcd5;border-radius:6px;background:white}
+body.desk-ready .desk-table-sheet-tools p{flex-basis:100%;font-size:12px;margin:0;color:#52665a}
+body.desk-ready .desk-table-widths label{display:block;margin-top:12px}body.desk-ready .desk-table-widths input{margin-top:5px}body.desk-ready .desk-table-widths p{font-size:12px;color:#52665a;margin-bottom:0}
+body.desk-ready #deskSheetToolbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:10px 0;position:relative;z-index:5}
+body.desk-ready #deskSheetToolbar[hidden],body.desk-ready #deskSheetToolbar [hidden],body.desk-ready #deskSheetContext[hidden]{display:none!important}
+body.desk-ready .desk-sheet-compact #sheetToolRow{display:none!important}
+body.desk-ready #deskSheetToolbar button,body.desk-ready #deskSheetToolbar summary{font:inherit;font-size:13px;border:1px solid #d1ddd6;border-radius:6px;background:white!important;color:#253f33!important;padding:8px 12px;cursor:pointer;margin:0}
+body.desk-ready #deskSheetToolbar button:disabled{opacity:.35;cursor:default}
+body.desk-ready .desk-sheet-menu{position:relative}body.desk-ready .desk-sheet-menu summary{list-style:none}body.desk-ready .desk-sheet-menu summary::-webkit-details-marker{display:none}
+body.desk-ready .desk-sheet-menu>div{position:absolute;left:0;top:calc(100% + 5px);width:210px;padding:6px;display:flex;flex-direction:column;gap:3px;background:#fff;border:1px solid #cfddd4;box-shadow:0 10px 25px #12332326;border-radius:9px;z-index:100}
+body.desk-ready .desk-sheet-menu>div button{width:100%;text-align:left;border:0!important}body.desk-ready .desk-sheet-menu>div button:hover{background:#edf5f0!important}
+body.desk-ready .desk-sheet-instructions{font-size:12px;color:#526c5d;margin:0 0 0 auto}
+body.desk-ready #deskSheetViewport{overflow:auto;max-height:52vh;position:relative}
+body.desk-ready .desk-sheet-grid #deskSheetViewport{padding-left:38px}
+body.desk-ready .desk-sheet-grid #modalTable{table-layout:fixed;min-width:400px;width:100%;margin:0 0 12px}
+body.desk-ready .desk-sheet-grid #modalTable td{position:relative}body.desk-ready .desk-sheet-grid #modalTable th{padding:0;background:#edf4ef;position:sticky;top:0;z-index:3}
+body.desk-ready .desk-sheet-grid #modalTable input.table-grid-cell{min-width:90px}
+body.desk-ready .desk-sheet-handle{border:0;background:transparent;color:#365c48;font:inherit;font-size:12px;width:100%;min-height:34px;display:flex;align-items:center;justify-content:space-between;padding:5px 8px;cursor:cell;user-select:none;touch-action:none}
+body.desk-ready .desk-sheet-handle.selected{background:#cce9d9;color:#123e29;font-weight:700}
+body.desk-ready .desk-sheet-row-handle{position:absolute;left:-37px;top:0;width:34px;height:100%;padding:2px 3px;background:#edf4ef;border:1px solid #dce5de;border-radius:4px}
+body.desk-ready .desk-sheet-grip{cursor:grab;display:inline-block;padding:4px 2px;font-size:13px;letter-spacing:-3px;color:#769884}body.desk-ready .desk-sheet-grip:active{cursor:grabbing}
+body.desk-ready [data-sheet-axis="row"].desk-drop-before{border-top:3px solid #16754a}body.desk-ready [data-sheet-axis="row"].desk-drop-after{border-bottom:3px solid #16754a}
+body.desk-ready [data-sheet-axis="col"].desk-drop-before{border-left:3px solid #16754a}body.desk-ready [data-sheet-axis="col"].desk-drop-after{border-right:3px solid #16754a}
+body.desk-ready #deskSheetContext{position:fixed;z-index:200000;background:white;padding:6px;width:185px;box-shadow:0 10px 25px #12332335;border:1px solid #ccdacf;border-radius:8px}
+body.desk-ready #deskSheetContext button{display:block;width:100%;border:0;text-align:left;padding:8px;font-size:13px}body.desk-ready #deskSheetContext button:hover{background:#edf5f0}
+body.desk-ready .desk-sheet-compact #sheetSelectionStatus{display:block;font-size:12px;line-height:1.5;color:#496956;margin:10px 0;min-height:18px}
 
 </style>
 </head>
@@ -5865,7 +5899,7 @@ body.desk-ready #exportScale option[value="3"]{display:none!important}
         const metrics = getCompositeTableMetrics(rawText, design, layoutMode, state);
         const isKoreanNumber = String(getSnapshotControlValue(state, 'koreanNumberType', 'apply') || 'apply') === 'apply';
         const subText = config.subtitle || '';
-        const columnColors = parseSnapshotTableColumnColors(state);
+        let columnColors = parseSnapshotTableColumnColors(state);
         const resolvedPalette = tablePalette || getPaletteFromStateSnapshot(state) || getActivePalette();
         const tableMainColor = normalizePieHexColor(resolvedPalette.main || '#E61E2B') || '#E61E2B';
         const tableAccentColor = normalizePieHexColor(resolvedPalette.accent || resolvedPalette.gray1 || tableMainColor) || tableMainColor;
@@ -5885,11 +5919,12 @@ body.desk-ready #exportScale option[value="3"]{display:none!important}
             sourceRow: item.rowIndex,
             cols: (item.row.indexOf('\t') !== -1 ? item.row.split('\t') : item.row.split(',')).map(c => c.trim())
         }));
+        deskPrepareTableMatrix(matrix, state);
         const numCols = matrix.reduce((max, rowObj) => Math.max(max, rowObj.cols.length), 0);
-        const manualWidths = parseSnapshotTableColumnWidths(state, numCols);
+        
         const cells = matrix.map(rowObj => {
             const rowCells = [];
-            for (let cIdx = 0; cIdx < numCols; cIdx++) {
+            for (let cIdx = 0; cIdx < rowObj.columnCount; cIdx++) {
                 rowCells.push({ text: rowObj.cols[cIdx] || '', rowspan: 1, colspan: 1, hide: false });
             }
             return rowCells;
@@ -5914,6 +5949,7 @@ body.desk-ready #exportScale option[value="3"]{display:none!important}
             for (let c = 0; c < numCols; c++) {
                 let mergeTarget = null;
                 for (let r = 0; r < cells.length; r++) {
+                    if (cells[r][0]?.text.startsWith('##')) { mergeTarget = null; continue; }
                     if (!cells[r][c] || cells[r][c].hide) continue;
                     const isBlockHeader = cells[r][0] && cells[r][0].text.startsWith('##');
                     if (cells[r][c].text === '^') {
@@ -5933,7 +5969,7 @@ body.desk-ready #exportScale option[value="3"]{display:none!important}
         const cellStyle = (colIndex, isHeader = false, isFirstColumnBody = false) => {
             const styles = [];
             const bg = columnColors[colIndex] || '';
-            if (bg) styles.push(`background-color:${bg}`);
+            if (bg) styles.push(`background-color:${bg}`, "color:#000");
             if (isFirstColumnBody && !bg) {
                 styles.push(`background-color:${tableMainColor}`);
                 styles.push(`color:${tableMainTextColor}`);
@@ -5947,6 +5983,7 @@ body.desk-ready #exportScale option[value="3"]{display:none!important}
             return styles.length ? ` style="${styles.join(';')}"` : '';
         };
 
+        let blockIndex = 0;
         cells.forEach((row, rIdx) => {
             if (!row.length) return;
             const firstText = String(row[0].text || '');
@@ -5958,7 +5995,9 @@ body.desk-ready #exportScale option[value="3"]{display:none!important}
                 return;
             }
             if (!inTable) {
-                const visibleColumnIndexes = row.map((cell, cIdx) => cell.hide ? null : cIdx).filter(index => index !== null);
+                const visibleColumnIndexes = row.map((_, index) => index);
+                columnColors = deskTableColors(blockIndex, state);
+                const manualWidths = deskTableWidths(blockIndex++, row.length, state);
                 html += `<table class="asia-table multi-card-table" style="font-size:${metrics.fontSize}px; margin-top:4px; table-layout:fixed; width:100%;">`;
                 if (visibleColumnIndexes.length) {
                     html += '<colgroup>';
@@ -6210,7 +6249,7 @@ body.desk-ready #exportScale option[value="3"]{display:none!important}
             }
             card.draggable = true;
             card.classList.add('mixed-layout-draggable');
-            card.title = (card.title ? card.title + ' · ' : '') + '혼합 배치: 드래그해서 순서와 전폭/반폭을 바꿀 수 있습니다.';
+            card.title = (card.title ? card.title + ' · ' : '') + '드래그로 순서와 전폭·반폭을 바꾸세요.';
             card.addEventListener('dragstart', event => {
                 mixedLayoutDraggingGraphIndex = parseInt(card.dataset.graphIndex, 10) || null;
                 if (event.dataTransfer) {
@@ -6421,7 +6460,7 @@ body.desk-ready #exportScale option[value="3"]{display:none!important}
             el.className = 'multi-card-free-text';
             el.dataset.textBox = String(item.id);
             el.textContent = item.text;
-            el.title = '클릭해서 내용 수정 · 끌어서 위치 이동 · 우클릭해서 삭제';
+            el.title = '클릭 수정 · 드래그 이동 · 우클릭 삭제';
             el.style.left = `${item.x}%`;
             el.style.top = `${item.y}%`;
             el.style.fontSize = `${Math.max(9, Number(item.fontSize) || 18)}px`;
@@ -8149,10 +8188,10 @@ body.desk-ready #exportScale option[value="3"]{display:none!important}
         return parseColorSlots(document.getElementById('tableColumnColorsInput')?.value || '');
     }
 
-    function getTableCellColorStyle(rowIndex, colIndex) {
-        const colColors = getTableColumnColors();
+    function getTableCellColorStyle(rowIndex, colIndex, blockIndex = 0) {
+        const colColors = deskTableColors(blockIndex);
         const bg = colColors[colIndex] || '';
-        return bg ? ` style="background-color:${escapeHtml(bg)};"` : '';
+        return bg ? ` style="background-color:${escapeHtml(bg)};color:#000;"` : '';
     }
 
     function getRenderableTableSizeForColorControls() {
@@ -11145,8 +11184,7 @@ function isAreaChartType(type) {
                     widths[index] = first;
                     widths[index + 1] = pairTotal - first;
                     const percentages = widths.map(value => value / total * 100);
-                    const input = document.getElementById('tableColumnWidthsInput');
-                    if (input) input.value = percentages.map(value => value.toFixed(1)).join(', ');
+                    deskStoreTableWidths(Number(edge.table.dataset.resizeTableIndex || 0), percentages);
                     let cols = edge.table.querySelectorAll('colgroup col');
                     if (!cols.length) {
                         const group = document.createElement('colgroup');
@@ -11625,7 +11663,7 @@ function isAreaChartType(type) {
         const item = freeTextBoxes.find(entry => entry.id === Number(id));
         if (!el || !item || el.getAttribute('contenteditable') === 'true') return;
         el.setAttribute('contenteditable', 'true');
-        el.title = 'Enter로 적용 · Shift+Enter로 줄바꿈 · Esc로 취소';
+        el.title = 'Enter 적용 · Shift+Enter 줄바꿈';
         el.focus();
         const range = document.createRange();
         range.selectNodeContents(el);
@@ -12412,10 +12450,11 @@ function isAreaChartType(type) {
             sourceRow: item.rowIndex,
             cols: (item.row.indexOf('\t') !== -1 ? item.row.split('\t') : item.row.split(',')).map(c => c.trim())
         }));
+        deskPrepareTableMatrix(matrix);
         const numCols = matrix.reduce((max, rowObj) => Math.max(max, rowObj.cols.length), 0);
         const cells = matrix.map(rowObj => {
             const rowCells = [];
-            for (let cIdx = 0; cIdx < numCols; cIdx++) {
+            for (let cIdx = 0; cIdx < rowObj.columnCount; cIdx++) {
                 rowCells.push({ text: rowObj.cols[cIdx] || '', rowspan: 1, colspan: 1, hide: false, sourceRow: rowObj.sourceRow, sourceCol: cIdx });
             }
             return rowCells;
@@ -12442,6 +12481,7 @@ function isAreaChartType(type) {
             for (let c = 0; c < numCols; c++) {
                 let mergeTarget = null;
                 for (let r = 0; r < cells.length; r++) {
+                    if (cells[r][0]?.text.startsWith('##')) { mergeTarget = null; continue; }
                     if (!cells[r][c] || cells[r][c].hide) continue;
                     const isBlockHeader = cells[r][0] && cells[r][0].text.startsWith('##');
                     if (cells[r][c].text === '^') {
@@ -12456,6 +12496,7 @@ function isAreaChartType(type) {
             }
         }
 
+        let blockIndex = 0;
         cells.forEach((row, rIdx) => {
             if (!row.length) return;
             const isBlockHeader = row[0].text.startsWith('##');
@@ -12465,8 +12506,8 @@ function isAreaChartType(type) {
                 html += `<div class="preview-editable-target" ${makePreviewEditAttrs('table-block-header', row[0].sourceRow, 0, blockTitle)} style="background-color:#444; color:white; padding:8px 15px; font-size:${headerFontSize}px; font-weight:bold; border-radius:5px; margin-top:20px; margin-bottom:5px; width:100%; box-sizing:border-box;">■ ${escapeHtml(blockTitle)}</div>`;
             } else {
                 if (!inTable) {
-                    const visibleColumnIndexes = row.map((cell, cIdx) => cell.hide ? null : cIdx).filter(index => index !== null);
-                    const manualWidths = getManualTableColumnWidths(visibleColumnIndexes.length);
+                    const visibleColumnIndexes = row.map((_, index) => index);
+                    const manualWidths = deskTableWidths(blockIndex++, visibleColumnIndexes.length);
                     html += `<table class="asia-table" style="font-size: ${fontSize}px; margin-top: 5px; table-layout:fixed; width:100%;">`;
                     if (visibleColumnIndexes.length) {
                         html += '<colgroup>';
@@ -12477,7 +12518,7 @@ function isAreaChartType(type) {
                         html += '</colgroup>';
                     }
                     html += '<thead><tr>';
-                    row.forEach((cell, cIdx) => { if (!cell.hide) html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ''} class="preview-editable-target col-${cIdx}"${getTableCellColorStyle(rIdx, cIdx)} ${makePreviewEditAttrs('table-cell', cell.sourceRow, cell.sourceCol, cell.text)}>${escapeHtml(cell.text)}</th>`; });
+                    row.forEach((cell, cIdx) => { if (!cell.hide) html += `<th${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ''} class="preview-editable-target col-${cIdx}"${getTableCellColorStyle(rIdx, cIdx, blockIndex - 1)} ${makePreviewEditAttrs('table-cell', cell.sourceRow, cell.sourceCol, cell.text)}>${escapeHtml(cell.text)}</th>`; });
                     html += '</tr></thead><tbody>';
                     inTable = true;
                 } else {
@@ -12486,7 +12527,7 @@ function isAreaChartType(type) {
                         if (!cell.hide) {
                             let cellText = cell.text; let cleanText = cellText.replace(/,/g, '');
                             if (isKoreanNumber && cellText !== '' && !isNaN(cleanText)) cellText = formatKoreanNumber(Number(cleanText), subText);
-                            html += `<td${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ''} class="preview-editable-target col-${cIdx}"${getTableCellColorStyle(rIdx, cIdx)} ${makePreviewEditAttrs('table-cell', cell.sourceRow, cell.sourceCol, cell.text)}>${escapeHtml(cellText)}</td>`;
+                            html += `<td${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''}${cell.colspan > 1 ? ` colspan="${cell.colspan}"` : ''} class="preview-editable-target col-${cIdx}"${getTableCellColorStyle(rIdx, cIdx, blockIndex - 1)} ${makePreviewEditAttrs('table-cell', cell.sourceRow, cell.sourceCol, cell.text)}>${escapeHtml(cellText)}</td>`;
                         }
                     });
                     html += '</tr>';
@@ -12921,7 +12962,7 @@ function isAreaChartType(type) {
                     el = document.createElement('div');
                     el.className = 'pie-draggable-label';
                     el.dataset.dataIndex = String(dataIndex);
-                    el.title = '드래그해서 원그래프 데이터 위치 이동 · 더블클릭해서 수정';
+                    el.title = '드래그로 위치 이동 · 더블클릭으로 수정';
                     host.appendChild(el);
                     el.addEventListener('pointerdown', event => {
                         if (event.button !== undefined && event.button !== 0) return;
@@ -15152,7 +15193,7 @@ function isAreaChartType(type) {
     if (el) {
       el.textContent = message;
       el.dataset.state = state;
-      el.title = state === 'error' ? '브라우저 저장 공간이나 설정을 확인하거나 프로젝트 파일로 저장해 주세요.' : '이 브라우저에 자동 저장됩니다. 다른 기기에서는 프로젝트 파일을 열어 주세요.';
+      el.title = state === 'error' ? '저장 공간을 확인하거나 작업 파일로 저장하세요.' : '이 브라우저에 자동 저장됩니다.';
     }
   }
 
@@ -15598,6 +15639,326 @@ async function deskHtml2Canvas(target,options){
    if(chart===myChart&&document.getElementById('chartType')?.value==='pie')applyPieSideListPosition();
   });
  }});
+})();
+
+</script>
+<script>
+(function(){
+ const messages={
+  '#deskAiPasteDetails .ai-input-group':'AI 생성 데이터를 통째로 붙여 넣으세요.',
+  '#tableInputs':'위 셀과 병합하려면 ^를 입력하세요.',
+  '#labelSettingGroup':'데이터별 수치 표시 방법을 선택하세요.',
+  '#graphicGuideBoxGroup':'범례 박스의 표시와 모양을 조절하세요.',
+  '#textBoxGroup':'텍스트를 추가하고 위치와 모양을 바꾸세요.',
+  '#areaShapeSettingGroup':'면적 그래프의 좌우 여백을 조절하세요.',
+  '#tableColorSettingGroup':'색상 칸을 눌러 옅은 열 배경색을 고르세요.',
+  '#chartElementSizeGroup':'그래프의 간격과 높이, 여백을 조절하세요.',
+  '#tableElementSizeGroup':'셀 경계선을 끌어 너비와 높이를 바꾸세요.',
+  '#printLayoutSettingGroup':'제목과 부제의 글자 및 배치를 조절하세요.',
+  '#palettePresetGroup':'색상 프리셋을 눌러 강조색을 바꾸세요.',
+  '#fontSizeSettingGroup':'X축과 Y축의 글자 크기를 조절하세요.',
+  '#chartDataLabelDefaultSizeGroup':'수치의 기본 크기와 표 제목 크기를 바꿉니다.',
+  '#datasetLabelSizeGroup':'데이터별 수치와 표 본문 크기를 바꿉니다.',
+  '#legendFontSizeGroup':'범례의 글자 크기를 조절하세요.',
+  '#datasetLabelColorGroup':'데이터 묶음별로 수치 색상을 고르세요.',
+  '#highlightSettingGroup':'Ctrl+클릭으로 강조 항목을 선택하세요.',
+  '#emojiOverlaySettingGroup':'미리보기의 이모지를 끌어 위치를 옮기세요.',
+  '#imageOverlaySettingGroup':'이미지를 올려 배경에 배치하세요.',
+  '#reporterSettingGroup':'바이라인 표시 여부와 이름을 설정하세요.',
+  '#saveAreaSettingGroup':'PNG는 콘텐츠 바깥에 20px을 남깁니다.',
+  '#exportOptionGroup':'저장할 이미지의 출력 배율을 선택하세요.',
+  '#sectionGemini > summary':'AI 데이터로 제목과 수치를 자동 입력합니다.',
+  '#sectionDataEdit > summary':'차트 종류와 데이터를 편집하세요.',
+  '#sectionDesign > summary':'글자, 색상, 축과 강조를 조절하세요.',
+  '#sectionExport > summary':'바이라인과 저장 옵션을 확인하세요.',
+  '#sheetModalHeader':'데이터와 표 셀을 한 번에 편집하세요.'
+ };
+ document.addEventListener('v8-ready',()=>{
+  for(const [selector,message] of Object.entries(messages)){
+   const target=document.querySelector(selector);if(!target)continue;
+   target.dataset.helpTooltip=message;bindHelpTooltipTarget(target);
+  }
+  document.querySelectorAll('#emojiOverlaySettingGroup button[title]').forEach(button=>button.removeAttribute('title'));
+  refreshTableColorControls();
+ },{once:true});
+
+ // Reuse the text-box color popup; only table backgrounds get pale colors.
+ const paleColors=TABLE_COLOR_PALETTE.filter(item=>item.color).flatMap(item=>[0,.25,.5,.75].map((mix,index)=>{
+  const color='#'+item.color.slice(1).match(/../g).map(hex=>Math.round(parseInt(hex,16)*(1-mix)+255*mix).toString(16).padStart(2,'0')).join('');
+  return {color,name:item.name+' '+(index+1)};
+ }));
+ const openOriginal=openRepresentativeColorPanel;
+ openRepresentativeColorPanel=function(input){
+  openOriginal(input);
+  const panel=document.getElementById('representativeColorPanel'),table=input.dataset.tableColumn!==undefined;
+  const choices=table?[{color:'',name:'없음'},...paleColors]:REPRESENTATIVE_COLORS.map(color=>({color,name:color}));
+  panel.querySelector('.representative-color-title').firstElementChild.textContent=table?'옅은 배경색 44개':'대표 색상 64개';
+  panel.querySelector('.representative-color-grid').innerHTML=choices.map(item=>'<button type="button" class="representative-color-swatch'+(item.color.toLowerCase()===input.value.toLowerCase()?' selected':'')+'" data-color="'+item.color+'" style="'+(item.color?'background:'+item.color:'grid-column:1/-1;width:auto')+'" title="'+item.name+'" aria-label="'+item.name+'">'+(item.color?'':'없음')+'</button>').join('');
+  const rect=input.getBoundingClientRect(),height=panel.offsetHeight;
+  panel.style.top=Math.max(8,Math.min(innerHeight-height-8,rect.bottom+7))+'px';
+ };
+ renderTableColorPalette=function(targetId,kind,count,colors){
+  const wrap=document.getElementById(targetId);if(!wrap)return;
+  wrap.replaceChildren();
+  if(!count){wrap.textContent='표 내용을 입력하면 열 색상을 고를 수 있습니다.';return}
+  for(let index=0;index<count;index++){
+   const row=document.createElement('div');row.className='table-color-target';
+   const label=document.createElement('label');label.htmlFor='deskTableColor'+index;label.textContent=(index+1)+'열';
+   const button=document.createElement('button');button.type='button';button.id=label.htmlFor;button.className='desk-table-color-trigger';button.dataset.tableColumn=String(index);button.value=colors[index]||'';
+   button.style.backgroundColor=button.value||'#ffffff';button.textContent=button.value?'':'없음';button.setAttribute('aria-label',(index+1)+'열 배경색 선택');
+   button.addEventListener('click',()=>openRepresentativeColorPanel(button));
+   button.addEventListener('input',()=>{setTablePaletteColor(kind,index,button.value);recordHistoryCheckpoint('표 열 배경색 변경')});
+   row.append(label,button);wrap.appendChild(row);
+  }
+ };
+})();
+
+</script>
+<script>
+function deskReadTableLayout(state){
+ try{const raw=state?state.tableBlockLayoutInput?.value:document.getElementById('tableBlockLayoutInput')?.value;const value=JSON.parse(raw||'[]');return Array.isArray(value)?value:[]}catch{return []}
+}
+function deskPrepareTableMatrix(matrix,state){
+ const layout=deskReadTableLayout(state);let group=[],index=0;
+ const flush=()=>{if(!group.length)return;const columns=Math.max(1,...group.map(row=>row.cols.length),Math.min(100,Number(layout[index]?.columns)||0));group.forEach(row=>row.columnCount=columns);group=[];index++};
+ for(const row of matrix){if(String(row.cols[0]||'').startsWith('##')){flush();row.columnCount=1}else group.push(row)}flush();
+}
+function deskTableWidths(index,count,state){
+ const widths=deskReadTableLayout(state)[index]?.widths;
+ return Array.isArray(widths)&&widths.length===count?widths.map(x=>Number.isFinite(Number(x))&&x>0?Number(x):null):(state?parseSnapshotTableColumnWidths(state,count):getManualTableColumnWidths(count));
+}
+function deskStoreTableWidths(index,widths){
+ const input=document.getElementById('tableBlockLayoutInput');if(!input)return;
+ const layout=deskReadTableLayout();layout[index]={...layout[index],widths:widths.map(x=>Math.round(x*1000)/1000)};input.value=JSON.stringify(layout);
+}
+function deskTableColors(index,state){
+ const colors=deskReadTableLayout(state)[index]?.colors;
+ return Array.isArray(colors)?colors:(state?parseSnapshotTableColumnColors(state):getTableColumnColors());
+}
+(function(){
+ const $=id=>document.getElementById(id);
+ const layoutInput=document.createElement('input');layoutInput.type='hidden';layoutInput.id='tableBlockLayoutInput';layoutInput.value='[]';document.querySelector('.control-panel').appendChild(layoutInput);
+ const originalColor=setTablePaletteColor;setTablePaletteColor=function(kind,index,color){
+  const layout=deskReadTableLayout();layout.forEach(item=>{if(Array.isArray(item?.colors))item.colors[index]=color||''});layoutInput.value=JSON.stringify(layout);return originalColor(kind,index,color);
+ };
+ // Older projects and graph templates have no per-table layout field.
+ for(const name of ['applyGraphEditorStateValues','restoreControlState']){const original=window[name];window[name]=function(state,...args){if(!state?.tableBlockLayoutInput)layoutInput.value='[]';return original(state,...args)}}
+ function blocks(raw){
+  const list=[];let block=null;
+  for(const line of String(raw||'').split(/\r?\n/)){
+   const cells=(line.includes('\t')?line.split('\t'):line.split(',')).map(x=>x.trim());
+   if(cells[0].startsWith('##')){block={title:cells[0].slice(2).trim(),headed:true,rows:[]};list.push(block)}
+   else if(line.trim()){if(!block){block={title:'',headed:false,rows:[]};list.push(block)}block.rows.push(cells)}
+  }
+  return list.length?list:[{title:'',headed:false,rows:[]}];
+ }
+ const originalOpen=openTextDataSheet,originalSave=saveTextDataSheet,originalClose=closeDataSheet;
+ let session=null,selected=0,bar=null;
+ function stash(){
+  if(!session)return;
+  const block=session[selected],columns=getTextSheetColumnCount();
+  block.title=$('deskSheetTableTitle').value.trim();
+  block.rows=[...document.querySelectorAll('#modalTbody tr')].map(row=>[...row.querySelectorAll('input.table-grid-cell')].map(input=>input.value));
+  if(block.columns!==columns)block.layout.widths=[];
+  block.columns=columns;
+ }
+ function draw(){
+  resetSheetSelection();const block=session[selected];
+  $('deskSheetTableSelect').replaceChildren(...session.map((item,i)=>new Option((i+1)+'번 표'+(item.title?' · '+item.title:''),String(i),false,i===selected)));
+  $('deskSheetTableTitle').value=block.title;
+  refreshTextSheetHeaders(block.columns,'table');$('modalTbody').replaceChildren();
+  for(let i=0;i<Math.max(1,block.rows.length);i++)createTextSheetRow(block.rows[i]||[],block.columns);
+  $('sheetModalNote').textContent='선택한 표에만 열 추가·삭제가 적용됩니다. 셀 선택 후 병합도 가능합니다.';
+ }
+ function ensureBar(){
+  if(bar)return;
+  bar=document.createElement('div');bar.id='deskSheetTableTools';bar.className='desk-table-sheet-tools';
+  bar.innerHTML='<label>편집할 표<select id="deskSheetTableSelect" aria-label="편집할 표"></select></label><label>표 소제목<input id="deskSheetTableTitle" placeholder="소제목 없이 사용 가능"></label><button type="button" class="desk-btn" id="deskSheetAddTable">＋ 표 추가</button><p>열 추가·삭제는 아래 버튼, 열 너비는 미리보기의 셀 경계선으로 조절하세요.</p>';
+  $('modalTable').before(bar);
+  $('deskSheetTableSelect').onchange=event=>{stash();selected=Number(event.target.value);draw()};
+  $('deskSheetAddTable').onclick=()=>{stash();session.push({title:'새 표',headed:true,rows:[['항목','내용']],columns:2,layout:{}});selected=session.length-1;draw()};
+ }
+ openTextDataSheet=function(type){
+  originalOpen(type);ensureBar();bar.hidden=type!=='table';session=null;
+  if(type!=='table')return;
+  const layouts=deskReadTableLayout();session=blocks($('tableDataInput').value).map((block,i)=>({...block,columns:Math.max(1,...block.rows.map(r=>r.length),Number(layouts[i]?.columns)||0),layout:{...layouts[i]}}));selected=0;draw();
+ };
+ closeDataSheet=function(){session=null;if(bar)bar.hidden=true;return originalClose()};
+ saveTextDataSheet=function(){
+  if(!session)return originalSave();stash();
+  const lines=[],layouts=[];
+  session.forEach((block,index)=>{
+   // Preserve explicit blank columns; each block carries its own count.
+   if(block.headed||block.title||index>0)lines.push('## '+block.title);
+   const rows=block.rows.filter(row=>row.some(value=>String(value).trim()));
+   if(!rows.length)rows.push(Array.from({length:block.columns},(_,i)=>(i+1)+'열'));
+   rows.forEach(row=>lines.push(Array.from({length:block.columns},(_,i)=>String(row[i]||'').trim()).join('\t')));
+   layouts.push({...block.layout,columns:block.columns});
+  });
+  $('tableDataInput').value=lines.join('\n');layoutInput.value=JSON.stringify(layouts);
+  closeDataSheet();updateOutput();recordHistoryCheckpoint('표별 데이터와 열 개수 편집');
+ };
+ window.DeskTableSheet={
+  active:()=>!!session&&$('chartType').value==='table',
+  snapshot:()=>{if(!session)return null;stash();return JSON.parse(JSON.stringify({tables:session,index:selected}))},
+  restore:draft=>{session=JSON.parse(JSON.stringify(draft.tables));selected=draft.index;draw()},
+ };
+ let widthGroup,signature='';
+ function refreshWidths(){
+  if(!widthGroup)return;const table=$('chartType').value==='table';widthGroup.hidden=!table;if(!table)return;
+  const list=blocks($('tableDataInput').value),key=JSON.stringify([list,layoutInput.value,$('tableColumnWidthsInput').value]);if(key===signature)return;signature=key;
+  widthGroup.replaceChildren();const heading=document.createElement('strong');heading.textContent='표별 열 너비';widthGroup.appendChild(heading);
+  list.forEach((block,index)=>{
+   const row=document.createElement('label');row.textContent=(index+1)+'번 표'+(block.title?' · '+block.title:'');
+   const input=document.createElement('input');input.type='text';input.dataset.tableWidths=String(index);input.setAttribute('aria-label',(index+1)+'번 표 열 너비');
+   const count=Math.max(1,...block.rows.map(r=>r.length),Number(deskReadTableLayout()[index]?.columns)||0);
+   const example=Array.from({length:count},(_,i)=>Math.floor(100/count)+(i<100%count?1:0));
+   input.value=deskTableWidths(index,count).filter(Boolean).join(', ');input.placeholder=count+'개 열의 비율 (예: '+example.join(', ')+')';
+   input.onchange=()=>{
+    const raw=input.value.trim(),widths=raw.split(/[,\s]+/).map(Number);
+    if(raw&&(widths.length!==count||widths.some(x=>!Number.isFinite(x)||x<=0))){input.setCustomValidity(count+'개 열의 양수 비율을 입력하세요.');input.reportValidity();return}
+    input.setCustomValidity('');const total=widths.reduce((a,b)=>a+b,0);deskStoreTableWidths(index,raw?widths.map(x=>x/total*100):[]);updateOutput();recordHistoryCheckpoint('표별 열 너비 변경');
+   };input.oninput=()=>input.setCustomValidity('');row.appendChild(input);widthGroup.appendChild(row);
+  });
+  const note=document.createElement('p');note.textContent='셀 경계선을 끌면 해당 표의 너비만 바뀝니다.';widthGroup.appendChild(note);
+ }
+ const originalUpdate=updateOutput;updateOutput=function(...args){const result=originalUpdate(...args);refreshWidths();return result};
+ document.addEventListener('v8-ready',()=>{
+  widthGroup=document.createElement('div');widthGroup.className='data-group desk-table-widths';widthGroup.id='deskTableBlockWidths';$('tableColorSettingGroup').after(widthGroup);refreshWidths();
+ },{once:true});
+})();
+
+</script>
+<script>
+(function(){
+ const $=id=>document.getElementById(id),active=()=>window.DeskTableSheet?.active();
+ let axis=null,indices=[],anchor=0,drag=null,undo=[],redo=[],typing=null,queued=false,commandDepth=0;
+ const rows=()=>[...$('modalTbody').rows];
+ function status(text){updateSheetSelectionStatus(text)}
+ function historyButtons(){if($('deskSheetUndo')){$('deskSheetUndo').disabled=!undo.length;$('deskSheetRedo').disabled=!redo.length}}
+ function checkpoint(){if(!active())return;const state=DeskTableSheet.snapshot();if(!undo.length||JSON.stringify(undo.at(-1))!==JSON.stringify(state))undo.push(state);if(undo.length>60)undo.shift();redo=[];historyButtons()}
+ function restore(state){DeskTableSheet.restore(state);axis=null;indices=[];decorate();historyButtons()}
+ function back(forward=false){const from=forward?redo:undo,to=forward?undo:redo;if(!from.length)return;to.push(DeskTableSheet.snapshot());restore(from.pop());typing=null;status(forward?'다시 실행했습니다.':'변경을 되돌렸습니다.')}
+ function select(kind,start,end=start){
+  axis=kind;anchor=start;indices=Array.from({length:Math.abs(end-start)+1},(_,i)=>Math.min(start,end)+i);
+  const height=rows().length,width=getTextSheetColumnCount();
+  if(kind==='row')markSheetRangeSelected(indices[0],0,indices.length,width);else markSheetRangeSelected(0,indices[0],height,indices.length);
+  paint();status(indices.length+'개 '+(kind==='row'?'행':'열')+' 선택 · ⋮⋮ 손잡이를 끌어 이동');
+ }
+ function paint(){document.querySelectorAll('[data-sheet-axis]').forEach(b=>{const on=b.dataset.sheetAxis===axis&&indices.includes(Number(b.dataset.sheetIndex));b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on))})}
+ function header(kind,index,label){
+  const b=document.createElement('button');b.type='button';b.className='desk-sheet-handle';b.dataset.sheetAxis=kind;b.dataset.sheetIndex=String(index);b.setAttribute('aria-label',label+' 전체 선택');
+  const text=document.createElement('span');text.textContent=label;const grip=document.createElement('span');grip.className='desk-sheet-grip';grip.draggable=true;grip.textContent='⋮⋮';grip.title=(kind==='row'?'행':'열')+'을 끌어 순서를 바꾸세요.';grip.setAttribute('aria-hidden','true');b.append(text,grip);return b;
+ }
+ function decorate(){
+  queued=false;if(!$('modalTable'))return;const enabled=active();$('sheetModal').classList.toggle('desk-sheet-grid',enabled);$('deskSheetToolbar').hidden=!enabled;
+  if(!enabled){document.querySelectorAll('.desk-sheet-row-handle').forEach(e=>e.remove());return}
+  [...$('modalTh').children].forEach((th,c)=>{const b=th.querySelector('[data-sheet-axis]');if(!b){const label=th.textContent;th.replaceChildren(header('col',c,label||c+1+'열'))}else b.dataset.sheetIndex=String(c)});
+  rows().forEach((row,r)=>{const cell=row.cells[0];if(!cell)return;let b=row.querySelector('.desk-sheet-row-handle');if(!b){b=header('row',r,String(r+1));b.classList.add('desk-sheet-row-handle');cell.prepend(b)}b.dataset.sheetIndex=String(r);b.firstElementChild.textContent=String(r+1);b.setAttribute('aria-label',(r+1)+'행 전체 선택')});
+  paint();historyButtons();
+ }
+ function schedule(){if(!queued){queued=true;requestAnimationFrame(decorate)}}
+ function selection(kind){if(axis===kind&&indices.length)return indices.slice();const p=getSheetCellPosition(selectedSheetCell);return [Math.max(0,p?(kind==='row'?p.row:p.col):0)]}
+ function commitDraft(draft){DeskTableSheet.restore(draft);axis=null;indices=[];decorate();typing=null}
+ function move(kind,chosen,boundary){
+  const draft=DeskTableSheet.snapshot(),block=draft.tables[draft.index],length=kind==='row'?block.rows.length:block.columns;
+  chosen=[...new Set(chosen)].filter(i=>i>=0&&i<length).sort((a,b)=>a-b);if(!chosen.length)return;
+  const rest=Array.from({length},(_,i)=>i).filter(i=>!chosen.includes(i));let at=rest.filter(i=>i<boundary).length;
+  const order=[...rest.slice(0,at),...chosen,...rest.slice(at)];if(order.every((v,i)=>v===i))return;
+  const position=new Map(order.map((v,i)=>[v,i]));
+  for(let r=0;r<block.rows.length;r++)for(let c=0;c<block.columns;c++){
+   const token=String(block.rows[r][c]||'').trim();
+   if((kind==='row'&&token==='^'&&r>0&&position.get(r)!==position.get(r-1)+1)||(kind==='col'&&token==='<'&&c>0&&position.get(c)!==position.get(c-1)+1)){status('병합된 셀을 나누어 이동할 수 없습니다. 병합 범위를 함께 선택하세요.');return}
+  }
+  checkpoint();
+  if(kind==='row')block.rows=order.map(i=>block.rows[i]);
+  else{block.rows=block.rows.map(row=>order.map(i=>row[i]||''));const widths=block.layout.widths?.length===length?block.layout.widths:deskTableWidths(draft.index,length);block.layout.widths=order.map(i=>widths[i]||100/length);const colors=block.layout.colors||getTableColumnColors();block.layout.colors=order.map(i=>colors[i]||'')}
+  commitDraft(draft);select(kind,at,at+chosen.length-1);status(chosen.length+'개 '+(kind==='row'?'행':'열')+'을 이동했습니다.');
+ }
+ function remove(kind){
+  const draft=DeskTableSheet.snapshot(),block=draft.tables[draft.index],chosen=selection(kind),length=kind==='row'?block.rows.length:block.columns;
+  if(chosen.length>=length){status((kind==='row'?'행':'열')+'은 최소 1개를 남겨 주세요.');return}
+  if(!wholeMerges(block,kind,chosen))return;
+  checkpoint();const order=Array.from({length},(_,i)=>i).filter(i=>!chosen.includes(i));
+  if(kind==='row')block.rows=order.map(i=>block.rows[i]);else{block.rows=block.rows.map(row=>order.map(i=>row[i]||''));block.columns=order.length;block.layout.widths=[];if(block.layout.colors)block.layout.colors=order.map(i=>block.layout.colors[i]||'')}
+  commitDraft(draft);status('선택한 '+(kind==='row'?'행':'열')+'을 삭제했습니다.');
+ }
+ function duplicate(){
+  if(!axis){status('복제할 행 번호나 열 머리글을 선택하세요.');return}
+  const draft=DeskTableSheet.snapshot(),block=draft.tables[draft.index],chosen=selection(axis),after=Math.max(...chosen)+1;if(!wholeMerges(block,axis,chosen))return;checkpoint();
+  if(axis==='row')block.rows.splice(after,0,...chosen.map(i=>block.rows[i].slice()));
+  else{block.rows.forEach(row=>row.splice(after,0,...chosen.map(i=>row[i]||'')));block.columns+=chosen.length;block.layout.widths=[];if(block.layout.colors)block.layout.colors.splice(after,0,...chosen.map(i=>block.layout.colors[i]||''))}
+  commitDraft(draft);status('선택한 행·열을 복제했습니다.');
+ }
+ function wholeMerges(block,kind,chosen){
+  for(let r=0;r<block.rows.length;r++)for(let c=0;c<block.columns;c++){
+   const token=String(block.rows[r][c]||'').trim(),index=kind==='row'?r:c;
+   if(index>0&&token===(kind==='row'?'^':'<')&&chosen.includes(index)!==chosen.includes(index-1)){status('병합 범위를 함께 선택하거나 먼저 병합을 해제하세요.');return false}
+  }return true;
+ }
+ function closeMenus(){document.querySelectorAll('#deskSheetToolbar details').forEach(d=>d.open=false);$('deskSheetContext').hidden=true}
+ function makeButton(text,action,id){const b=document.createElement('button');b.type='button';b.className='desk-btn';b.textContent=text;if(id)b.id=id;b.onclick=()=>{action();closeMenus()};return b}
+ function menu(toolbar,label){const d=document.createElement('details');d.className='desk-sheet-menu';const s=document.createElement('summary');s.textContent=label+' ▾';const content=document.createElement('div');d.append(s,content);toolbar.appendChild(d);return content}
+ document.addEventListener('v8-ready',()=>{
+  const modal=$('sheetModal'),old=$('sheetToolRow');
+  const viewport=document.createElement('div');viewport.id='deskSheetViewport';$('modalTable').before(viewport);viewport.appendChild($('modalTable'));
+  viewport.after($('sheetSelectionStatus'));
+  const toolbar=document.createElement('div');toolbar.id='deskSheetToolbar';toolbar.hidden=true;viewport.before(toolbar);
+  toolbar.append(makeButton('↶',()=>back(false),'deskSheetUndo'),makeButton('↷',()=>back(true),'deskSheetRedo'));
+  $('deskSheetUndo').setAttribute('aria-label','시트 편집 되돌리기');$('deskSheetRedo').setAttribute('aria-label','시트 편집 다시 실행');
+  const add=menu(toolbar,'추가'),del=menu(toolbar,'삭제'),cells=menu(toolbar,'셀 작업'),arrange=menu(toolbar,'순서');
+  [...old.children].filter(e=>e.tagName==='BUTTON').forEach(b=>{const dest=/add/.test(b.className)?add:/delete/.test(b.className)?del:cells;dest.appendChild(b)});
+  add.appendChild(makeButton('선택 행·열 복제',duplicate,'deskSheetDuplicate'));
+  arrange.append(makeButton('앞으로 이동',()=>{if(axis)move(axis,indices,Math.max(0,Math.min(...indices)-1));else status('행 번호나 열 머리글을 선택하세요.')}),makeButton('뒤로 이동',()=>{if(axis)move(axis,indices,Math.max(...indices)+2);else status('행 번호나 열 머리글을 선택하세요.')}));
+  const hint=document.createElement('p');hint.className='desk-sheet-instructions';hint.textContent='머리글 드래그: 전체 선택 · ⋮⋮ 드래그: 순서 이동 · 우클릭: 편집 메뉴';toolbar.appendChild(hint);
+  toolbar.addEventListener('click',event=>{if(event.target.closest('button'))closeMenus()});
+  const context=document.createElement('div');context.id='deskSheetContext';context.hidden=true;context.setAttribute('role','menu');modal.appendChild(context);
+  context.append(makeButton('행 추가',()=>addRow()),makeButton('열 추가',()=>addColumn()),makeButton('선택 행 삭제',()=>remove('row')),makeButton('선택 열 삭제',()=>remove('col')),makeButton('선택 행·열 복제',duplicate),makeButton('선택 복사',()=>copySelectedSheetCells()),makeButton('붙여넣기',()=>pasteSelectedSheetCellsFromClipboard()),makeButton('선택 지우기',()=>{checkpoint();clearSelectedSheetCells()}));
+  // Existing commands stay available and retain their original IDs/shortcuts.
+  for(const name of ['addRow','addColumn','addTextSheetRow','mergeSelectedSheetCell','clearSelectedSheetCells','fillDownSelectedSheetCells','applySheetPasteText']){const fn=window[name];window[name]=function(...args){if(active()&&!commandDepth)checkpoint();commandDepth++;try{return fn(...args)}finally{commandDepth--;schedule()}}}
+  const oldDelRow=deleteSelectedSheetRow,oldDelCol=deleteSelectedSheetColumn;
+  deleteSelectedSheetRow=function(){return active()?remove('row'):oldDelRow()};deleteSelectedSheetColumn=function(){return active()?remove('col'):oldDelCol()};
+  const open=openTextDataSheet;openTextDataSheet=function(...args){const result=open(...args);undo=[];redo=[];axis=null;indices=[];typing=null;decorate();return result};
+  const chartOpen=openDataSheet;openDataSheet=function(...args){const result=chartOpen(...args);decorate();return result};
+  const close=closeDataSheet;closeDataSheet=function(...args){closeMenus();return close(...args)};
+  const oldHeaders=refreshTextSheetHeaders,oldIndexes=refreshTextSheetRowIndexes;
+  refreshTextSheetHeaders=function(...args){const r=oldHeaders(...args);schedule();return r};refreshTextSheetRowIndexes=function(...args){const r=oldIndexes(...args);schedule();return r};
+  // Other chart sheets use the same commands without the new grid interaction.
+  const originalSetMode=setSheetModalMode;setSheetModalMode=function(...args){const r=originalSetMode(...args);schedule();return r};
+  modal.addEventListener('beforeinput',event=>{if(active()&&event.target.matches('input.table-grid-cell,#deskSheetTableTitle')){if(typing!==event.target){checkpoint();typing=event.target}}},true);
+  modal.addEventListener('keydown',event=>{
+   if(!active())return;
+   if((event.ctrlKey||event.metaKey)&&['z','y'].includes(event.key.toLowerCase())){event.preventDefault();event.stopImmediatePropagation();back(event.shiftKey||event.key.toLowerCase()==='y');return}
+   if(event.key==='Escape')closeMenus();
+   const h=event.target.closest('[data-sheet-axis]');if(h&&['Enter',' '].includes(event.key)){event.preventDefault();select(h.dataset.sheetAxis,Number(h.dataset.sheetIndex))}
+  },true);
+  modal.addEventListener('mousedown',event=>{
+   if(!active())return;const h=event.target.closest('[data-sheet-axis]');if(!h){if(event.target.matches('.table-grid-cell')){axis=null;indices=[];paint()}return}
+   if(event.target.closest('.desk-sheet-grip'))return;
+   if(event.button!==0)return;event.preventDefault();const kind=h.dataset.sheetAxis,index=Number(h.dataset.sheetIndex),start=event.shiftKey&&axis===kind?anchor:index;select(kind,start,index);
+   const extend=e=>{const next=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-sheet-axis]');if(next?.dataset.sheetAxis===kind)select(kind,start,Number(next.dataset.sheetIndex))};
+   const end=()=>{document.removeEventListener('mousemove',extend);document.removeEventListener('mouseup',end)};document.addEventListener('mousemove',extend);document.addEventListener('mouseup',end);
+  },true);
+  modal.addEventListener('click',event=>{if(event.target.closest('#deskSheetTableSelect,#deskSheetAddTable')){axis=null;indices=[];typing=null;schedule()}if(event.target.closest('#deskSheetAddTable')&&active())checkpoint()},true);
+  modal.addEventListener('change',event=>{if(event.target.id==='deskSheetTableSelect'){axis=null;indices=[];typing=null;schedule()}},true);
+  modal.addEventListener('dragstart',event=>{
+   if(!active()||!event.target.closest('.desk-sheet-grip'))return;const h=event.target.closest('[data-sheet-axis]'),kind=h.dataset.sheetAxis,index=Number(h.dataset.sheetIndex);if(axis!==kind||!indices.includes(index))select(kind,index);
+   drag={kind,indices:indices.slice()};event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain','sheet-reorder');
+  });
+  function dropTarget(event){const h=event.target.closest('[data-sheet-axis]');if(!h||!drag||h.dataset.sheetAxis!==drag.kind)return null;const rect=h.getBoundingClientRect(),after=drag.kind==='row'?event.clientY>rect.top+rect.height/2:event.clientX>rect.left+rect.width/2;return {h,after,boundary:Number(h.dataset.sheetIndex)+(after?1:0)}}
+  function clearDrop(){document.querySelectorAll('.desk-drop-before,.desk-drop-after').forEach(e=>e.classList.remove('desk-drop-before','desk-drop-after'))}
+  modal.addEventListener('dragover',event=>{const target=dropTarget(event);if(!target)return;event.preventDefault();event.dataTransfer.dropEffect='move';clearDrop();target.h.classList.add(target.after?'desk-drop-after':'desk-drop-before')});
+  modal.addEventListener('drop',event=>{const target=dropTarget(event);if(!target)return;event.preventDefault();move(drag.kind,drag.indices,target.boundary);drag=null;clearDrop()});modal.addEventListener('dragend',()=>{drag=null;clearDrop()});
+  modal.addEventListener('contextmenu',event=>{
+   if(!active()||!event.target.closest('#modalTable'))return;event.preventDefault();const h=event.target.closest('[data-sheet-axis]');if(h){const kind=h.dataset.sheetAxis,i=Number(h.dataset.sheetIndex);if(axis!==kind||!indices.includes(i))select(kind,i)}else{const input=event.target.closest('td')?.querySelector('input');if(input&&!selectedSheetCells.has(getSheetCellKey(input)))selectSingleSheetCell(input)}
+   context.hidden=false;context.style.left=Math.max(8,Math.min(innerWidth-context.offsetWidth-8,event.clientX))+'px';context.style.top=Math.max(8,Math.min(innerHeight-context.offsetHeight-8,event.clientY))+'px';
+  });
+  document.addEventListener('mousedown',event=>{if(!event.target.closest('#deskSheetContext'))context.hidden=true});
+  modal.addEventListener('scroll',()=>context.hidden=true,true);
+  // Keep compact menus available in non-table sheets too; only grid handles differ.
+  const baseDecorate=()=>{const enabled=active();toolbar.hidden=false;modal.classList.toggle('desk-sheet-compact',true);hint.hidden=!enabled;$('deskSheetUndo').hidden=!enabled;$('deskSheetRedo').hidden=!enabled;arrange.parentElement.hidden=!enabled;$('deskSheetDuplicate').hidden=!enabled;const note=$('deskSheetTableTools')?.querySelector('p');if(note)note.hidden=true};
+  const prev=decorate;decorate=function(){prev();baseDecorate()};
+ });
 })();
 
 </script>
@@ -16117,8 +16478,8 @@ async function deskHtml2Canvas(target,options){
   const previous=Number(stage.style.getPropertyValue('--desk-zoom')||1);
   stage.style.setProperty('--desk-zoom',factor);
   if(Math.abs(previous-factor)>.0001){if(typeof myChart!=='undefined'&&myChart)myChart.draw();if(typeof applyPieSideListPosition==='function')applyPieSideListPosition()}
-  $('deskZoomValue').textContent=Math.round(factor*100)+'%';
   $('deskZoom').value=String(zoom);
+  $('deskZoomValue').textContent=Math.round(factor*100)+'%';
  }
  function setZoom(value){zoom=value;fit()}
  function changeZoom(delta){const factor=parseFloat($('deskPaperStage')?.style.getPropertyValue('--desk-zoom')||1);let value=Math.max(25,Math.min(150,Math.round((factor*100+delta)/5)*5));if(![...$('deskZoom').options].some(o=>o.value===String(value))){$('deskZoom').querySelector('[data-custom]')?.remove();const o=new Option(value+'%',String(value));o.dataset.custom='true';$('deskZoom').appendChild(o)}setZoom(value)}
@@ -16213,8 +16574,7 @@ async function deskHtml2Canvas(target,options){
   const stage=el('div','desk-paper-stage');stage.id='deskPaperStage';
   [...preview.children].filter(e=>!e.classList.contains('v6-preview-label')).forEach(e=>stage.appendChild(e));
   const scroll=el('div','desk-canvas-scroll');scroll.id='deskCanvasScroll';scroll.appendChild(stage);
-  const footer=el('div','desk-canvas-footer','<span><b>750 px</b> 작업 화면 · <span id="deskZoomValue">100%</span></span><span class="desk-footer-hint">더블클릭으로 데이터 수정 · 드래그로 로고, 표기 위치 이동</span>');
-  const help=el('button','desk-link','사용 도움말 ↗');help.type='button';help.onclick=()=>$('deskHelpDialog').showModal();footer.appendChild(help);
+  const footer=el('div','desk-canvas-footer','<span><b>750 px</b> 작업 화면 · <span id="deskZoomValue">100%</span></span><span class="desk-footer-hint">더블클릭 수정 · 드래그 이동(부제목 Shift) · 부제목·텍스트 우클릭 삭제</span>');
   preview.replaceChildren(toolbar,actions,scroll,footer);old.hidden=true;
   // Keep the original topbar element so its graph-scoped action renderer can find its nodes.
   new ResizeObserver(()=>requestAnimationFrame(fit)).observe(scroll);
