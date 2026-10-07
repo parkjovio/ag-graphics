@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="desk-starting">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1281,11 +1281,11 @@ body.desk-ready .desk-sheet-compact #sheetSelectionStatus{display:block;font-siz
 
         <div class="ai-input-group">
             <div class="ai-input-header">
-                <h3>🤖 제미나이 데이터 자동 입력</h3>
+                <h3>🤖 AI 채팅의 태그 데이터 입력</h3>
             </div>
-            <span class="help-text" style="color: #0056b3; margin-bottom:5px;">제미나이가 생성한 텍스트를 통째로 붙여넣으세요.</span>
-            <textarea id="geminiInput" placeholder="[종류] multi-line&#10;[제목] 서울 아파트 가격 추이&#10;..."></textarea>
-            <button class="btn-ai" id="autoFillBtn" onclick="parseGeminiData()">🪄 AI 데이터 자동 완성하기</button>
+            <span class="help-text" style="color: #0056b3; margin-bottom:5px;">AI 채팅에서 만든 그래프용 태그 데이터를 붙여넣으세요. 후보 하나의 코드블록 전체를 복사하세요.</span>
+            <textarea id="geminiInput" placeholder="[종류]&#10;h-bar&#10;[제목]&#10;서비스별 이용률 (형식 예시)&#10;[부제목]&#10;(단위: %)&#10;[X축]&#10;서비스 A,서비스 B,서비스 C&#10;[데이터1이름]&#10;이용률&#10;[데이터1수치]&#10;62,28,10"></textarea>
+            <button class="btn-ai" id="autoFillBtn" onclick="parseGeminiData()">🪄 붙여넣은 태그 데이터 적용</button>
         </div>
         
         <div class="data-group" id="multiGraphGroup" style="display:none;">
@@ -1298,8 +1298,8 @@ body.desk-ready .desk-sheet-compact #sheetSelectionStatus{display:block;font-siz
                     <option value="stack">세로 2개 붙이기</option>
                 </select>
             </div>
-            <label style="margin-top:10px;">두 번째 그래프용 제미나이 데이터</label>
-            <textarea id="secondGeminiInput" rows="8" placeholder="[종류] pie&#10;[제목] 두 번째 그래프 제목&#10;[부제목] (단위 및 출처)&#10;[X축] 항목1, 항목2, 항목3&#10;[데이터1이름] 값&#10;[데이터1수치] 30, 20, 50&#10;[하단주석] *주석"></textarea>
+            <label style="margin-top:10px;">두 번째 그래프용 태그 데이터</label>
+            <textarea id="secondGeminiInput" rows="8" placeholder="[종류]&#10;h-bar&#10;[제목]&#10;서비스별 이용률 (형식 예시)&#10;[부제목]&#10;(단위: %)&#10;[X축]&#10;서비스 A,서비스 B,서비스 C&#10;[데이터1이름]&#10;이용률&#10;[데이터1수치]&#10;62,28,10"></textarea>
             <div class="multi-graph-help">첫 번째 그래프는 현재 입력창과 설정을 그대로 사용하고, 여기에는 두 번째 그래프용 데이터만 넣으시면 됩니다. 원그래프 2개를 가로로 붙이거나, 서로 다른 그래프 2개를 세로로 이어 붙일 수 있습니다.</div>
         </div>
 
@@ -3692,7 +3692,7 @@ body.desk-ready .desk-sheet-compact #sheetSelectionStatus{display:block;font-siz
             const link = document.createElement('a');
             link.download = `asia_multi_${getMultiSaveJoinDirection()}_${exportScale}x_` + new Date().getTime() + '.png';
             link.href = joinedCanvas.toDataURL('image/png');
-            link.click();
+            document.body.appendChild(link);link.click();link.remove();window.DeskUI?.toast('PNG 다운로드를 시작했습니다.');
         } catch (err) {
             console.error(err);
             alert('복수 그래프 저장 오류가 발생했습니다. 두 그래프 데이터가 모두 들어갔는지 확인해 주세요.');
@@ -9905,7 +9905,7 @@ function isAreaChartType(type) {
         const inputEl = document.getElementById('geminiInput');
         const text = inputEl ? inputEl.value : '';
         if (!text.trim()) {
-            if (!silent) alert("제미나이에서 추출한 텍스트를 먼저 붙여넣어 주세요.");
+            if (!silent) alert("AI 채팅에서 만든 그래프용 태그 데이터를 먼저 붙여넣어 주세요.");
             setParseSummary('붙여넣은 내용이 없습니다.', 'error');
             return false;
         }
@@ -9990,7 +9990,7 @@ function isAreaChartType(type) {
             setTimeout(() => { btn.innerText = originalText; btn.style.backgroundColor = '#0056b3'; }, 2000);
         }
 
-        recordHistoryCheckpoint('제미나이 데이터 자동 입력');
+        recordHistoryCheckpoint('AI 채팅의 태그 데이터 입력');
         return true;
     }
 
@@ -14648,7 +14648,7 @@ function isAreaChartType(type) {
             let filePrefix = isMultiGraphMode() ? 'asia_multi_' : (type === 'table' ? 'asia_table_' : 'asia_chart_');
             link.download = `${filePrefix}${exportScale}x_` + new Date().getTime() + '.png';
             link.href = outputCanvas.toDataURL('image/png');
-            link.click();
+            document.body.appendChild(link);link.click();link.remove();window.DeskUI?.toast('PNG 다운로드를 시작했습니다.');
         } catch (err) {
             console.error(err);
             alert('저장 오류가 발생했습니다.');
@@ -14890,7 +14890,7 @@ function isAreaChartType(type) {
   function makeTool(label,action,extra){const b=document.createElement('button');b.type='button';b.className='v6-tool-btn '+(extra||'');b.textContent=label;b.addEventListener('click',action);return b}
   function switchPane(key){
     document.querySelectorAll('.v6-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.target===key));
-    $('capture-area')?.classList.toggle('emoji-direct-editing',key==='background');
+    $('capture-area')?.classList.toggle('emoji-direct-editing',key==='style');
     document.querySelectorAll('.v6-pane').forEach(p=>{if(p.dataset.pane==='background'&&innerWidth>1100){p.hidden=false;p.classList.toggle('drawer-open',key==='background')}else p.hidden=p.dataset.pane!==key});
     const names={data:['데이터','입력과 원본 데이터 관리'],chart:['차트','그래프 종류별 전용 설정'],style:['스타일','색상·글자·강조 설정'],background:['배경','이미지와 이모지 효과'],output:['출력','바이라인과 PNG 저장']};
     if(key!=='background'||innerWidth<=1100){$('v6PanelTitle').textContent=names[key][0];$('v6PanelSub').textContent=names[key][1]}
@@ -15645,7 +15645,7 @@ async function deskHtml2Canvas(target,options){
 <script>
 (function(){
  const messages={
-  '#deskAiPasteDetails .ai-input-group':'AI 생성 데이터를 통째로 붙여 넣으세요.',
+  '#deskAiPasteDetails .ai-input-group':'후보 하나의 코드블록 전체를 복사하세요. 첫 줄은 [종류], 값은 다음 줄입니다.',
   '#tableInputs':'위 셀과 병합하려면 ^를 입력하세요.',
   '#labelSettingGroup':'데이터별 수치 표시 방법을 선택하세요.',
   '#graphicGuideBoxGroup':'범례 박스의 표시와 모양을 조절하세요.',
@@ -16450,7 +16450,7 @@ function deskTableColors(index,state){
  function icon(name){return '<svg class="desk-icon" viewBox="0 0 24 24" aria-hidden="true">'+(icons[name]||icons.chart)+'</svg>'}
  function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html)e.innerHTML=html;return e}
  function button(id,label,name,action,cls=''){const b=el('button','desk-btn '+cls,icon(name)+'<span>'+label+'</span>');b.type='button';if(id)b.id=id;b.setAttribute('aria-label',label);b.title=label;if(action)b.addEventListener('click',action);return b}
- const panes={data:['데이터','차트를 고르고, 이야기할 내용을 담으세요.','data'], 'graph-controls':['그래프 조절','간격과 축, 크기를 섬세하게 조절하세요.','chart'],style:['글자 · 색상','잘 읽히는 글자와 어울리는 색을 선택하세요.','style'],extras:['표시 요소','수치, 범례와 텍스트를 필요한 만큼 더하세요.','extras'],background:['배경','이미지와 이모지로 맥락을 더하세요.','background'],output:['내보내기','완성된 그래픽과 편집용 작업 파일을 저장하세요.','output']};
+ const panes={data:['데이터','AI 데이터와 항목·수치를 편집하세요.','data'], 'graph-controls':['차트','차트 종류와 수치·범례를 선택하세요.','chart'],extras:['텍스트','제목과 설명을 쓰고 텍스트를 추가하세요.','style'],style:['디자인','색상과 글자를 다듬으세요.','background'],background:['고급','필요한 세부 설정만 펼쳐 사용하세요.','extras'],output:['저장 옵션','이미지와 편집 가능한 작업 파일을 저장하세요.','output']};
  let activePane='data',zoom='fit',initialized=false,exporting=false,toastTimer;
  function toast(message){const t=$('deskToast');if(!t)return;t.textContent=message;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3300)}
  function mobileView(preview){document.body.classList.toggle('desk-mobile-preview',preview);$('deskMobilePreview')?.classList.toggle('active',preview);$('deskMobileEdit')?.classList.toggle('active',!preview);$('deskMobilePreview')?.setAttribute('aria-pressed',String(preview));$('deskMobileEdit')?.setAttribute('aria-pressed',String(!preview));requestAnimationFrame(fit)}
@@ -16460,7 +16460,7 @@ function deskTableColors(index,state){
   document.querySelectorAll('.v6-pane').forEach(p=>{p.hidden=p.dataset.pane!==key;p.classList.remove('drawer-open')});
   document.querySelectorAll('.desk-nav-btn[data-target]').forEach(b=>{b.classList.toggle('active',b.dataset.target===key);if(b.dataset.target===key)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   $('v6PanelTitle').textContent=panes[key][0];$('v6PanelSub').textContent=panes[key][1];
-  $('capture-area')?.classList.toggle('emoji-direct-editing',key==='background');
+  $('capture-area')?.classList.toggle('emoji-direct-editing',key==='style');
   mobileView(false);
  }
  function reveal(target){
@@ -16518,13 +16518,13 @@ function deskTableColors(index,state){
   const chartGroup=el('div','desk-chart-chooser');groupHeading(chartGroup,'차트 종류','자주 쓰는 유형');
   const grid=el('div','desk-chart-grid');
   [['bar','막대','bar'],['line','꺾은선','line'],['pie','도넛','pie'],['area','면적','area'],['table','표','data'],['timeline','타임라인','timeline']].forEach(([value,title,name])=>{const b=el('button','desk-chart-card',icon(name)+'<span>'+title+'</span>');b.type='button';b.dataset.chart=value;b.title=title+' 차트 선택';b.addEventListener('click',()=>{if($('chartType').value===value)return;$('chartType').value=value;$('chartType').dispatchEvent(new Event('change',{bubbles:true}));sync()});grid.appendChild(b)});
-  chartGroup.append(grid,elements.type,el('p','desk-chart-hint','전체 20종 · 처음 선택한 유형은 예시 데이터로 시작합니다.'));
+  chartGroup.append(grid,elements.type,el('p','desk-chart-hint','전체 20종 · 입력한 데이터를 유지하며 유형을 바꿉니다.'));
   elements.type.setAttribute('aria-label','전체 차트 종류 20종');
   data.prepend(chartGroup);
   if(elements.ai){
    elements.ai.querySelector('.ai-input-header')?.remove();
-   $('autoFillBtn').textContent='붙여넣은 데이터 적용';
-   const aiDetails=details(data,'AI 추출 데이터 붙여넣기',[elements.ai]);
+   $('autoFillBtn').textContent='붙여넣은 태그 데이터 적용';
+   const aiDetails=details(data,'AI 채팅의 그래프용 태그 데이터 붙여넣기',[elements.ai]);
    aiDetails.id='deskAiPasteDetails';
    data.insertBefore(aiDetails,chartGroup);
   }
@@ -16545,7 +16545,7 @@ function deskTableColors(index,state){
  }
  function createHeader(){
   const old=document.querySelector('.v6-topbar');const header=el('header','desk-header');
-  header.innerHTML='<div class="desk-brand"><span class="desk-logo" aria-hidden="true"><i></i><i></i><i></i></span><div><strong>그래픽 보조 데스크</strong><small>GRAPHIC DESK / 08</small></div></div><div class="desk-doc"><span class="desk-doc-title" id="deskDocumentTitle"></span><span class="desk-save-line" id="deskSaveStatus" role="status">작업 준비 완료</span></div>';
+  header.innerHTML='<div class="desk-brand"><span class="desk-logo" aria-hidden="true"><i></i><i></i><i></i></span><div><strong>그래픽 보조 데스크</strong><small>GRAPHIC DESK</small></div></div><div class="desk-doc"><span class="desk-doc-title" id="deskDocumentTitle"></span><span class="desk-save-line" id="deskSaveStatus" role="status">작업 준비 완료</span></div>';
   const actions=el('div','desk-header-actions');
   const find=button('deskSearchButton','설정 찾기','search',()=>{$('deskSearchDialog').showModal();renderSearch();$('deskSearchInput').focus()});find.querySelector('span').className='desk-btn-label';find.title='설정 찾기 (Ctrl+K)';
   const save=button('deskProjectSave','작업 저장','save',null);save.querySelector('span').className='desk-btn-label';save.title='편집 가능한 작업 파일 저장 (Ctrl+S)';
@@ -16581,7 +16581,7 @@ function deskTableColors(index,state){
  }
  function createNav(){
   const nav=document.querySelector('.v6-nav');nav.setAttribute('aria-label','편집 메뉴');nav.replaceChildren();
-  Object.entries(panes).forEach(([key,[title,sub,name]])=>{const b=el('button','desk-nav-btn',icon(name)+'<span>'+title+'</span>');b.type='button';b.dataset.target=key;b.title=title;b.onclick=()=>showPane(key);nav.appendChild(b)});
+  Object.entries(panes).filter(([key])=>key!=='output').forEach(([key,[title,sub,name]])=>{const b=el('button','desk-nav-btn',icon(name)+'<span>'+title+'</span>');b.type='button';b.dataset.target=key;b.title=title;b.onclick=()=>showPane(key);nav.appendChild(b)});
   const help=el('button','desk-nav-btn desk-nav-help',icon('help')+'<span>도움말</span>');help.type='button';help.onclick=()=>$('deskHelpDialog').showModal();nav.appendChild(help);
  }
  function createOutput(){
@@ -16645,7 +16645,7 @@ function deskTableColors(index,state){
   }
  }
  function init(){
-  if(initialized||!document.body.classList.contains('v6-split-controls'))return;initialized=true;document.body.classList.add('desk-ready');document.title='그래픽 보조 데스크 V8';
+  if(initialized||!document.body.classList.contains('v6-split-controls'))return;initialized=true;document.body.classList.add('desk-ready');document.title='그래픽 보조 데스크 · 쉬운 시작';
   createDialogs();const old=createHeader();createCanvas(old);createNav();createDataPane();createOutput();labelControls();improveSheet();guardExports();
   const t=el('div','desk-toast');t.id='deskToast';t.setAttribute('role','status');t.setAttribute('aria-live','polite');document.body.appendChild(t);
   const restore=el('div');restore.id='deskRestoreBanner';restore.hidden=true;document.body.appendChild(restore);
@@ -16664,7 +16664,7 @@ function deskTableColors(index,state){
   document.addEventListener('v8-state-restored',()=>{sync();if($('multiEditorEnabled').checked)$('deskMultiDetails').open=true});
   document.addEventListener('keydown',e=>{
    const editing=e.target.closest('input,textarea,[contenteditable=true]');
-   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('deskSearchButton').click()}
+   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();if(document.documentElement.classList.contains('desk-starting'))return;$('deskSearchButton').click()}
    else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();$('deskProjectSave').click()}
    else if(!editing&&e.key==='?'&&!e.ctrlKey&&!e.metaKey)$('deskHelpDialog').showModal();
    else if(e.key==='Escape'&&document.body.classList.contains('desk-focus')){document.body.classList.remove('desk-focus');$('deskFocus').setAttribute('aria-pressed','false');fit()}
@@ -16681,5 +16681,170 @@ function deskTableColors(index,state){
 })();
 
 </script>
+<!-- Beginner-first interface. Existing rendering, sheet, history and export engines are retained. -->
+<style id="desk-beginner-style">
+html.desk-starting body.desk-ready{overflow:auto!important}
+html.desk-starting :is(.desk-header,.v6-workspace,.desk-mobile-tabs,#deskRestoreBanner){display:none!important}
+#deskStart{min-height:100dvh;background:radial-gradient(ellipse at 80% 0,#e5f1eb 0,transparent 50%),#f7faf8;color:#23423c;font-family:'Segoe UI','Malgun Gothic',sans-serif;padding:30px 24px 40px}
+.start-brand{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:750}.start-brand small{margin-left:auto;font-size:11px;letter-spacing:1.6px;color:#718c81}
+.start-main{max-width:720px;margin:65px auto 0}.start-eyebrow{font-size:11px;letter-spacing:2px;font-weight:750;color:#577d6a;margin:0 0 18px}.start-main h1{font-size:38px;line-height:1.35;letter-spacing:-1.8px;margin:0 0 14px;color:#1f4038}.start-intro{color:#657e74;font-size:15px;line-height:1.8;margin:0 0 30px}
+.start-card{background:#fff;border:1px solid #dce6df;border-radius:18px;padding:26px;box-shadow:0 12px 45px #1e50390a}.start-card label{font-size:13px;font-weight:700;display:block;margin-bottom:12px}.start-card textarea{width:100%;height:235px;padding:18px;border:1px solid #dce6df;border-radius:10px;resize:vertical;background:#fbfdfb;color:#29483f;font:14px/1.7 'Segoe UI','Malgun Gothic',sans-serif;outline:none}.start-card textarea:focus{border-color:#5e9c7e;box-shadow:0 0 0 3px #e5f1eb}.start-card textarea::placeholder{color:#8d9e94}
+.start-bottom{display:flex;align-items:center;gap:15px;margin-top:16px}.start-submit{flex:1;min-height:48px!important;font-size:14px!important;border-radius:10px!important}.start-note{color:#829087;font-size:11px;margin:13px 0 0;line-height:1.6}.start-tools{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px 24px;margin-top:21px}.start-tools button{border:0;background:transparent;padding:7px 0;color:#577769;font:600 12px 'Malgun Gothic',sans-serif;cursor:pointer}.start-tools button:hover{text-decoration:underline}.start-error{margin:10px 0 0;color:#b13c32;font-size:12px;line-height:1.6}.start-footer{text-align:center;font-size:11px;color:#8a9b91;margin-top:42px}.start-example{margin-top:12px;border-radius:10px;background:#edf5ef;padding:14px;color:#567767;font-size:12px;line-height:1.7}.start-example pre{margin:10px 0 0;white-space:pre-wrap;font-size:12px;color:#315443}
+#deskSaveMenu{border:1px solid #dce6df;border-radius:13px;padding:12px;width:295px;box-shadow:0 12px 35px #123e3529;color:#36554b;background:#fff}#deskSaveMenu::backdrop{background:#163c2926}#deskSaveMenu h2{font-size:16px;margin:6px 6px 14px}#deskSaveMenu .desk-btn{width:100%;justify-content:flex-start;margin-bottom:8px;min-height:44px}#deskSaveMenu p{font-size:11px;color:#789084;line-height:1.6;margin:6px}#deskSaveMenu #deskProjectOpen span{display:inline!important}
+.desk-start-back{font-size:12px!important}.desk-start-back span{display:inline!important}.desk-add-graph{width:100%;border-style:dashed!important;margin-top:20px}.desk-section-caption{font-size:12px;line-height:1.7;color:#758a80;margin:0 0 15px}.desk-advanced-intro{padding:12px;background:#f2f7f3;border-radius:10px;font-size:12px;line-height:1.7;color:#5d786b;margin-bottom:16px}
+body.desk-ready .desk-nav-btn span{font-size:12px}.desk-data-source{font-size:11px;color:#799184;margin-top:10px}body.desk-ready #geminiInput{min-height:140px}
+body.desk-ready .v6-workspace{grid-template-columns:78px 350px minmax(0,1fr)}
+@media(min-width:761px) and (max-width:1050px){body.desk-ready .v6-workspace{grid-template-columns:68px 310px minmax(0,1fr)}.desk-header{padding:0 15px;gap:12px}.desk-doc{padding-left:12px}.desk-brand small{display:none}.desk-start-back{padding:0 8px}}
+@media(max-width:760px){#deskStart{padding:24px 18px 30px}.start-main{margin-top:45px}.start-main h1{font-size:30px}.start-intro{font-size:13px}.start-card{padding:18px}.start-card textarea{font-size:12px;height:240px}.start-brand small{display:none}.start-footer{margin-top:28px}.desk-start-back{padding:0 7px;min-width:30px}.desk-start-back span{font-size:11px}.desk-header .desk-brand{gap:7px}.desk-header .desk-brand strong{font-size:12px}.desk-header-actions{gap:4px}.desk-header #deskSaveToggle{padding:0 9px}.desk-header #deskSearchButton{display:none}body.desk-ready .v6-workspace{grid-template-columns:1fr!important}body.desk-ready .v6-nav{gap:0!important;justify-content:space-around!important}.desk-nav-btn{min-width:0!important;width:20%!important}.desk-nav-help{display:none!important}body.desk-ready .v6-nav .desk-nav-btn span{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+@media(max-width:760px){.desk-canvas-footer .desk-footer-hint{display:none!important}.desk-canvas-footer{max-width:100%;overflow:hidden}}
+</style>
+<section id="deskStart" aria-labelledby="startTitle" hidden>
+ <div class="start-brand"><span class="desk-logo" aria-hidden="true"><i></i><i></i><i></i></span>그래픽 보조 데스크 <span style="font-size:12px;color:#687f7b;margin-left:8px;">V8.1</span></div>
+ <main class="start-main">
+  
+  <h1 id="startTitle">AI가 정리한 데이터로 그래프를 만드세요.</h1>
+  <p class="start-intro">제미나이 젬에서 추출한 그래프 데이터를 전체 복사해 붙여 넣으세요.<br>그래프 요소(부제목, 로고 등)의 위치는 마우스 드래그로 정밀하게 조정할 수 있습니다</p>
+  <div class="start-card">
+   <a class="desk-btn" href="https://gemini.google.com/gem/1hkOUApZVM9M4Ybgx3EqJJYbpxasmsIkE?usp=sharing" target="_blank" rel="noopener noreferrer" style="display:inline-flex;text-decoration:none;margin-bottom:16px;">제미나이 젬에서 데이터 추출하기 ↗</a>
+   <label for="deskStartInput">그래프용 태그 데이터 붙여넣기</label>
+   <textarea id="deskStartInput" spellcheck="false" placeholder="[종류]&#10;h-bar&#10;[제목]&#10;서비스별 이용률 (형식 예시)&#10;[부제목]&#10;(단위: %)&#10;[X축]&#10;서비스 A,서비스 B,서비스 C&#10;[데이터1이름]&#10;이용률&#10;[데이터1수치]&#10;62,28,10"></textarea>
+   <p id="deskStartError" class="start-error" role="alert" hidden></p>
+   <div class="start-bottom"><button id="deskStartCreate" type="button" class="desk-btn primary start-submit">그래프 만들기 →</button></div>
+   
+  </div>
+  <div class="start-tools"><button id="deskStartExample" type="button">예시 데이터 보기</button><button id="deskStartExcel" type="button">엑셀 데이터 붙여넣기</button><button id="deskStartManual" type="button">직접 입력으로 시작</button><button id="deskStartOpen" type="button">작업 파일 열기</button><button id="deskStartContinue" type="button" hidden>편집 중인 그래프 계속하기</button></div>
+  <div class="start-example" id="deskExampleHelp" hidden><strong>태그는 한 줄에, 값은 다음 줄에 씁니다.</strong><br>아래 예시가 입력창에 준비되었습니다. ‘그래프 만들기’를 누르면 편집 화면으로 이동합니다.<pre>[종류]
+h-bar
+[제목]
+서비스별 이용률
+[부제목]
+단위: % · 예시 데이터
+[X축]
+서비스 A, 서비스 B, 서비스 C
+[데이터1이름]
+이용률
+[데이터1수치]
+62, 28, 10</pre></div>
+  <p class="start-footer">01 데이터 붙여넣기&nbsp;&nbsp; → &nbsp;&nbsp;02 미리보며 편집&nbsp;&nbsp; → &nbsp;&nbsp;03 저장</p>
+ </main>
+</section>
+<script id="desk-beginner-script">
+(function(){
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const example='[종류] h-bar\n[제목] 서비스별 이용률\n[부제목] 단위: % · 예시 데이터\n[X축] 서비스 A, 서비스 B, 서비스 C\n[데이터1이름] 이용률\n[데이터1수치] 62, 28, 10';
+ const names={'가로막대':'h-bar','세로막대':'bar','막대':'bar','꺾은선':'line','선':'line','원':'pie','도넛':'pie','표':'table','면적':'area','타임라인':'timeline'};
+ const numeric=s=>/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)%?$/.test(String(s).trim().replace(/,/g,''));
+ function normalize(source){
+  let text=source.trim().replace(/^```[^\n]*\n/,'').replace(/\n```\s*$/,'');
+  if(!text)throw Error('데이터를 붙여넣거나 아래에서 예시 데이터를 불러오세요.');
+  if(!/\[(?:X축|표데이터)\]/.test(text)){
+   // Accept the simpler label/value format shown in the original UX proposal.
+   const fields={};for(const line of text.split(/\r?\n/)){const m=line.match(/^\s*(제목|단위|출처|항목|데이터|종류)\s*[:：]\s*(.*)$/);if(m)fields[m[1]]=m[2]}
+   if(fields['항목']&&fields['데이터']){const standalone=text.match(/^\[([^\]]+)\]/);text='[종류] '+(names[fields['종류']||standalone?.[1]]||fields['종류']||'bar')+'\n[제목] '+(fields['제목']||'새 그래프')+'\n[부제목] '+[fields['단위']&&'단위: '+fields['단위'],fields['출처']&&'자료: '+fields['출처']].filter(Boolean).join(' · ')+'\n[X축] '+fields['항목']+'\n[데이터1수치] '+fields['데이터'];}
+   else{
+    let rows=text.split(/\r?\n/).filter(x=>x.trim()).filter(x=>!/^\s*\|?[\s:|-]+\|?\s*$/.test(x)).map(line=>line.includes('\t')?line.split('\t'):line.includes('|')?line.trim().replace(/^\||\|$/g,'').split('|'):line.split(','));
+    rows=rows.map(row=>row.map(c=>c.trim()));
+    if(rows.length<2||rows.some(row=>row.length<2))throw Error('항목과 수치를 찾지 못했습니다. ‘예시 데이터 보기’에서 입력 형식을 확인해 주세요.');
+    const hasHeader=!rows[0].slice(1).every(numeric),headers=hasHeader?rows.shift():['항목','값'];
+    const width=rows[0].length;
+    if(rows.some(row=>row.length!==width))throw Error('표의 열 개수가 서로 다릅니다. 항목과 수치가 같은 열에 맞춰져 있는지 확인해 주세요.');
+    if(width>5||!rows.every(row=>row.slice(1).every(numeric))){text='[종류] table\n[제목] 새 표\n[표데이터]\n'+(hasHeader?[headers,...rows]:rows).map(row=>row.join('\t')).join('\n');}
+    else{text='[종류] '+(width>2?'multi-bar':'bar')+'\n[제목] 새 그래프\n[X축] '+rows.map(row=>row[0]).join(', ');for(let i=1;i<width;i++)text+='\n[데이터'+i+'이름] '+(headers[i]||'데이터 '+i)+'\n[데이터'+i+'수치] '+rows.map(row=>row[i].replace(/,/g,'').replace(/%$/,'')).join(', ');}
+   }
+  }
+  const fields={};let key='';for(const line of text.split(/\r?\n/)){const m=line.match(/^\s*\[([^\]]+)\]\s*[:：]?\s*(.*)$/);if(m){key=m[1];fields[key]=m[2]}else if(key)fields[key]+='\n'+line}
+  if(fields['표데이터']?.trim()){if(fields['표데이터'].trim().split(/\r?\n/).length<1)throw Error('표 데이터를 입력해 주세요.');return text}
+  const labels=(fields['X축']||'').split(/[,\n]/).map(x=>x.trim()).filter(Boolean);
+  if(!labels.length)throw Error('항목이 없습니다. [X축] 뒤에 항목명을 입력해 주세요.');
+  let found=false;for(let i=1;i<=4;i++){const raw=fields['데이터'+i+'수치'];if(!raw?.trim())continue;found=true;const values=normalizeNumberInput(raw,labels.length).split(',').map(x=>x.trim()).filter(Boolean);if(values.length!==labels.length||!values.every(numeric))throw Error('항목 '+labels.length+'개와 데이터 '+i+'의 수치 개수·형식이 맞지 않습니다. 숫자와 구분 쉼표를 확인해 주세요.');}
+  if(!found)throw Error('수치가 없습니다. [데이터1수치] 뒤에 숫자를 입력해 주세요.');
+  return text;
+ }
+ function enter(){document.documentElement.classList.remove('desk-starting');$('deskStart').hidden=true;$('deskStartContinue').hidden=false;if($('deskRestoreBanner').hidden&&$('deskStartRestore'))$('deskStartRestore').hidden=true;DeskUI.showPane('data');requestAnimationFrame(()=>DeskUI.fit());}
+ function start(){document.documentElement.classList.add('desk-starting');$('deskStart').hidden=false;$('deskStartInput').focus();}
+ function apply(source,fromStart){
+  try{const normalized=normalize(source);if(fromStart)[...$('deskRestoreBanner').querySelectorAll('button')].find(b=>b.textContent==='현재 작업 계속')?.click();recordHistoryCheckpoint('데이터 적용 전');$('geminiInput').value=normalized;if(!normalized.includes('[표데이터]'))$('tableDataInput').value='';const ok=parseGeminiData({silent:true});if(ok===false)return false;updateOutput();recordHistoryCheckpoint('데이터 붙여넣기');DeskUI.sync();if(fromStart)enter();DeskUI.toast('데이터를 적용했습니다. 미리보며 다듬어 보세요.');return true}
+  catch(error){if(fromStart){$('deskStartError').textContent=error.message;$('deskStartError').hidden=false;$('deskStartInput').setAttribute('aria-invalid','true');$('deskStartInput').focus()}else setParseSummary(error.message,'error');return false}
+ }
+ function btn(label,action,cls=''){const b=document.createElement('button');b.type='button';b.className='desk-btn '+cls;b.textContent=label;b.onclick=action;return b}
+ function section(host,title,nodes){const d=document.createElement('details');d.className='desk-details';const s=document.createElement('summary');s.textContent=title;d.appendChild(s);nodes.filter(Boolean).forEach(node=>d.appendChild(node));host.appendChild(d);return d}
+ function take(id){const node=$(id);if(!node)return null;const d=node.closest('details');return d&&d.querySelectorAll('.data-group').length===1?d:node}
+ function init(){
+  const pane=key=>document.querySelector('.v6-pane[data-pane="'+key+'"]');
+  const data=pane('data'),chart=pane('graph-controls'),text=pane('extras'),design=pane('style'),advanced=pane('background'),output=pane('output');
+  // Switching chart appearance must not reparse stale pasted data over manual edits.
+  window.handleChartTypeChange=function(){
+   const type=$('chartType').value;clearChartTypeTransientArtifacts(type);initializedChartTypes.add(type);
+   if(['table','list','timeline'].includes(type)&&!$('tableDataInput').value.trim()){
+    const labels=parseLabelSeries($('labelsInput').value);const datasets=[1,2,3,4].filter(i=>$('dataInput'+i).value.trim()).map(i=>({name:$('dataName'+i).value||'값 '+i,values:normalizeNumberInput($('dataInput'+i).value,labels.length).split(',')}));
+    if(labels.length&&datasets.length)$('tableDataInput').value=[['항목',...datasets.map(d=>d.name)],...labels.map((label,i)=>[label,...datasets.map(d=>d.values[i]||'')])].map(row=>row.join('\t')).join('\n');
+   }
+   toggleInputs();syncPieTightLayout(type);stabilizeChartLayout();DeskUI.sync();recordHistoryCheckpoint('차트 유형 변경');
+  };
+  if(['','박조비 기자','기자 이름','기자이름'].includes($('nameInput').value.trim())){$('showReporterByline').value='off';handleReporterBylineToggle();}
+  // Move actual nodes so legacy listeners, IDs and graph-scoped state remain connected.
+  const advancedTitles={v6BarTuning:'막대 간격·너비·모서리',axisSettingGroup:'축 범위 수동 설정',areaShapeSettingGroup:'면적 그래프 여백',tableColorSettingGroup:'표 열 색상',deskTableBlockWidths:'표 열 너비',chartElementSizeGroup:'그래프 크기와 간격',tableElementSizeGroup:'표 전체 크기'};
+  [...chart.children].forEach(node=>{if(node.matches('input[type=hidden]'))advanced.appendChild(node);else{const d=section(advanced,advancedTitles[node.id]||'세부 배치',[node]);const syncVisibility=()=>{d.hidden=node.style.display==='none'||!node.textContent.trim();};new MutationObserver(syncVisibility).observe(node,{attributes:true,attributeFilter:['style'],childList:true});syncVisibility();}});
+  chart.prepend(document.querySelector('.desk-chart-chooser'));
+  text.prepend($('textSettingGroup'),$('footnoteSettingGroup'));
+  chart.append($('labelSettingGroup'),$('graphicGuideBoxGroup'));
+  const number=$('koreanNumberGroup');if(number)section(advanced,'숫자 표기 방식',[number]);
+  for(const node of [...text.children]){if(node.id||node.tagName==='INPUT')continue;const control=node.querySelector('select,input');if(control?.id==='showSubtitleLine')section(text,'부제·단위·출처 표시',[node]);else if(control?.id==='showTopRule')section(design,'제목 위 구분선',[node]);}
+  const reporter=$('reporterSettingGroup');if(reporter)section(text,'작성자 표시',[reporter]);
+  const palette=$('palettePresetGroup');if(palette){design.prepend(palette);const empty=[...design.querySelectorAll('details')].find(d=>d.textContent.trim()==='색상 팔레트 프리셋');empty?.remove();}
+  const backgroundDetails=[...advanced.querySelectorAll(':scope > details.v6-bg-card')];backgroundDetails.forEach(d=>{d.open=false;design.appendChild(d)});
+  ['fontSizeSettingGroup','datasetLabelSizeGroup','datasetLabelColorGroup','legendFontSizeGroup'].forEach(id=>{const n=take(id);if(n)advanced.appendChild(n)});
+  const sizes=take('printLayoutSettingGroup');if(sizes)text.appendChild(sizes);
+  const tableColors=$('tableColorSettingGroup');if(tableColors)design.appendChild(tableColors.parentElement.tagName==='DETAILS'?tableColors.parentElement:tableColors);
+  const raw=$('deskRawData');if(raw){raw.querySelector('summary').textContent='항목과 수치 직접 입력';raw.open=true;data.insertBefore(raw,$('deskMultiDetails'));}
+  const multi=$('deskMultiDetails');advanced.appendChild(multi);multi.open=false;multi.querySelector('summary').textContent='여러 그래프의 개수와 배치';
+  const legacyMulti=$('multiGraphGroup');if(legacyMulti)advanced.appendChild(legacyMulti);
+  section(advanced,'저장 영역과 출력 설정',[$('saveAreaSettingGroup')]);
+  const intro=document.createElement('p');intro.className='desk-advanced-intro';intro.textContent='기본 설정만으로도 그래프를 완성할 수 있습니다. 축 범위, 배치, 데이터별 글자 설정은 필요한 항목만 펼쳐 조절하세요.';advanced.prepend(intro);
+  [...advanced.querySelectorAll('details')].forEach(d=>d.open=false);
+  [...data.children].forEach(n=>{if(n.classList.contains('desk-section-heading')&&n.textContent.startsWith('내용 입력'))n.remove()});
+  const ai=$('deskAiPasteDetails');ai.querySelector('summary').textContent='그래프용 태그 데이터 다시 붙여넣기';$('autoFillBtn').onclick=()=>apply($('geminiInput').value,false);
+  $('geminiInput').placeholder='[종류]\nbar\n[제목]\n그래프 제목\n[X축]\n항목 A,항목 B\n[데이터1이름]\n값\n[데이터1수치]\n30,70';
+  // Debounce only the raw-data controls which previously needed an Apply click.
+  let liveTimer;$('deskRawData').addEventListener('input',e=>{if(e.target.tagName==='BUTTON')return;clearTimeout(liveTimer);liveTimer=setTimeout(()=>{updateOutput();DeskUI.sync();scheduleHistoryCheckpoint('데이터 직접 입력')},300)});
+  ['titleInput','subInput','footnoteInput'].forEach(id=>$(id).addEventListener('input',()=>{updateOutput();DeskUI.sync();scheduleHistoryCheckpoint('텍스트 입력')}));
+  $('deskRawApply').textContent='미리보기 새로고침';
+  const add=btn('＋ 그래프 추가',()=>{
+   recordHistoryCheckpoint('그래프 추가 전');const toggle=$('multiEditorEnabled'),byline=$('showReporterByline').value;
+   if(!toggle.checked){toggle.checked=true;handleMultiEditorToggle();switchGraphEditorTab(2);}
+   else{const count=Number($('multiEditorGraphCount').value)||2;if(count>=8){DeskUI.toast('그래프는 최대 8개까지 추가할 수 있습니다.');return}$('multiEditorGraphCount').value=count+1;handleMultiEditorGraphCountCommit();switchGraphEditorTab(count+1);}
+   apply(example,false);$('titleInput').value='그래프 '+getMultiEditorGraphCount();$('showReporterByline').value=byline;handleReporterBylineToggle();updateOutput();recordHistoryCheckpoint('새 그래프');DeskUI.sync();DeskUI.showPane('data');DeskUI.toast('그래프를 추가했습니다. 데이터 시트나 AI 입력으로 내용을 바꾸세요.');
+  },'desk-add-graph');data.appendChild(add);
+  const caption=document.createElement('p');caption.className='desk-section-caption';caption.textContent='데이터 시트에서 항목과 수치를 한 번에 편집할 수 있습니다.';$('openSheetBtn').after(caption);
+  const actions=document.querySelector('.desk-header-actions');const back=btn('← 시작',()=>{start()},'desk-start-back');document.querySelector('.desk-brand').before(back);
+  const saveDialog=document.createElement('dialog');saveDialog.id='deskSaveMenu';saveDialog.innerHTML='<h2>저장 / 내보내기</h2><p>PNG는 완성 이미지, 작업 파일은 다음 편집을 위한 원본입니다.</p>';
+  window.validateReporterName=function(){if(!isReporterBylineEnabled())return true;const value=$('nameInput').value.trim();if(value&&!['박조비 기자','기자 이름','기자이름'].includes(value))return true;saveDialog.close();DeskUI.reveal('nameInput');DeskUI.toast('작성자 이름을 입력하거나 작성자 표시를 끈 뒤 저장하세요.');return false;};
+  const exportBtn=$('deskExport'),projectSave=$('deskProjectSave'),projectOpen=$('deskProjectOpen');projectOpen.classList.remove('icon-only');projectOpen.querySelector('span').hidden=false;
+  saveDialog.append(exportBtn,projectSave,projectOpen,btn('다른 형식과 출력 옵션',()=>{saveDialog.close();DeskUI.showPane('output')}),btn('닫기',()=>saveDialog.close(),'quiet'));document.body.appendChild(saveDialog);
+  const save=btn('저장 / 내보내기 ▾',()=>saveDialog.showModal(),'primary');save.id='deskSaveToggle';actions.appendChild(save);
+  ['deskExport','deskProjectSave'].forEach(id=>$(id).addEventListener('click',()=>saveDialog.close()));
+  const formats=section(output,'고급 내보내기 · SVG / 애니메이션',[$('svgDownloadBtn'),$('newsSettings')]);formats.open=false;
+  const animation=$('newsTopButton');if(animation)formats.appendChild(animation);
+  // Repair the inherited help copy to describe the new menu structure.
+  const help=$('deskHelpDialog').querySelector('.desk-dialog-body');help.innerHTML='<h3>01. 붙여넣고 시작</h3><p>ChatGPT 등 AI 채팅에 제작기용 프롬프트와 기사 본문·보도자료·통계표·PDF·그래프 이미지·화면 캡처를 넣으세요. AI가 원문을 바탕으로 그래픽 후보를 최대 3개까지 고릅니다. 원문에 없는 숫자는 임의로 만들지 않으며, 이미지에서 복원한 추정치는 주석으로 확인하세요. 후보 하나의 코드블록 전체를 복사해 붙여넣고 그래프 만들기를 누르세요. 첫 줄은 [종류], 값은 다음 줄입니다. 엑셀 표도 사용할 수 있습니다.</p><h3>02. 미리보며 다듬기</h3><p>데이터에서 항목·수치를, 차트에서 종류와 수치 표시를, 텍스트에서 제목과 설명을 수정하세요. 디자인에서는 색상과 글자를 조절합니다. 세부 옵션은 고급 메뉴에 있습니다.</p><p>제목과 수치는 미리보기에서 더블클릭해 수정하고, 요소는 드래그해 옮길 수 있습니다. 작은 화면에서는 편집 / 미리보기를 전환하세요.</p><h3>03. 저장</h3><p>저장 / 내보내기에서 PNG 또는 편집 가능한 작업 파일을 저장하세요. 다른 출력 형식은 추가 옵션에 있습니다.</p>';
+  $('deskStartCreate').onclick=()=>apply($('deskStartInput').value,true);
+  $('deskStartInput').oninput=()=>{$('deskStartError').hidden=true;$('deskStartInput').removeAttribute('aria-invalid')};
+  $('deskStartExample').onclick=()=>{$('deskStartInput').value=example;$('deskExampleHelp').hidden=false;$('deskStartError').hidden=true;$('deskStartInput').focus()};
+  $('deskStartExcel').onclick=()=>{$('deskStartInput').value='항목\t값\n서비스 A\t62\n서비스 B\t28\n서비스 C\t10';$('deskExampleHelp').hidden=true;$('deskStartInput').focus();$('deskStartInput').select()};
+  $('deskStartManual').onclick=()=>{apply(example,true);openDataSheet()};
+  $('deskStartOpen').onclick=()=>projectOpen.click();
+  $('deskStartContinue').onclick=enter;
+  document.addEventListener('v8-state-restored',()=>{enter()});
+  $('deskStartInput').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();$('deskStartCreate').click()}});
+  // Preserve the loaded draft until a valid new dataset is deliberately applied.
+  const restoreButton=[...$('deskRestoreBanner').querySelectorAll('button')].find(b=>b.textContent==='이전 작업 복원');if(restoreButton){const resume=btn('이전 작업 복원',()=>restoreButton.click());resume.id='deskStartRestore';document.querySelector('.start-tools').appendChild(resume);}
+  document.title='그래픽 보조 데스크 · 쉬운 시작';DeskUI.showPane('data');start();
+ }
+ document.addEventListener('v8-ready',init,{once:true});
+})();
+</script>
+
 </body>
 </html>
