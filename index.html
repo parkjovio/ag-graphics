@@ -2127,7 +2127,7 @@ body.desk-ready .modal-btns .btn-close{background:#edf4ff!important;color:#43658
             </select>
             <div id="nameInputWrap">
                 <label>기자 이름</label>
-                <input type="text" id="nameInput" value="박조비 기자" placeholder="예: 홍길동 기자">
+                <input type="text" id="nameInput" value="" placeholder="예: 홍길동 기자">
             </div>
             <span class="help-text" style="margin-top:8px;">‘표시 안 함’을 선택하면 이름을 입력하지 않아도 저장되며, 최종 결과물에서 ‘그래픽 ○○○ 기자’ 문구는 숨겨집니다.</span>
         </div>
@@ -5260,7 +5260,7 @@ body.desk-ready .modal-btns .btn-close{background:#edf4ff!important;color:#43658
 
     function getPrimaryPreviewReporterName() {
         const nameInput = document.getElementById('nameInput');
-        return nameInput && nameInput.value.trim() ? nameInput.value.trim() : '박조비 기자';
+        return nameInput && nameInput.value.trim() ? nameInput.value.trim() : '기자 이름';
     }
 
     function syncReporterNameAcrossMultiEditorStates() {
@@ -9824,6 +9824,23 @@ function isAreaChartType(type) {
         syncReferenceEditorSummary(); closeDataSheet(); updateOutput(); recordHistoryCheckpoint('데이터 시트 편집');
     }
 
+    const REPORTER_NAME_KEY = 'graphic-desk.reporter-name.v1';
+    let rememberedReporterName = null;
+    try { rememberedReporterName = localStorage.getItem(REPORTER_NAME_KEY); } catch {}
+    function applyRememberedReporterName() {
+        const input = document.getElementById('nameInput');
+        if (!input || rememberedReporterName === null) return;
+        input.value = rememberedReporterName;
+        if (typeof graphEditorStates !== 'undefined') {
+            Object.values(graphEditorStates).forEach(state => { if(state) state.nameInput = {type:'text',value:rememberedReporterName}; });
+        }
+    }
+    document.addEventListener('input', event => {
+        if(event.target.id !== 'nameInput') return;
+        rememberedReporterName = event.target.value.trim();
+        try { localStorage.setItem(REPORTER_NAME_KEY, rememberedReporterName); } catch {}
+        applyRememberedReporterName();
+    }, true);
     function loadExampleData() {
         const type = document.getElementById('chartType').value;
         [1, 2, 3, 4].forEach(index => {
@@ -9835,7 +9852,7 @@ function isAreaChartType(type) {
         document.getElementById('dataName4').value = ''; document.getElementById('dataInput4').value = '';
         document.getElementById('yMin').value = ''; document.getElementById('yMax').value = '';
         document.getElementById('y1Min').value = ''; document.getElementById('y1Max').value = '';
-        document.getElementById('footnoteInput').value = ''; document.getElementById('nameInput').value = '박조비 기자'; const bylineToggle = document.getElementById('showReporterByline'); if (bylineToggle) bylineToggle.value = 'on';
+        document.getElementById('footnoteInput').value = ''; applyRememberedReporterName(); const bylineToggle = document.getElementById('showReporterByline'); if (bylineToggle) bylineToggle.value = 'on';
 
         if (type === 'table') {
             document.getElementById('titleInput').value = '주요 지역별 부동산 시장 동향';
@@ -12292,6 +12309,7 @@ function isAreaChartType(type) {
         Chart.defaults.font.family=globalFont;
     }
     function updateOutput() {
+        applyRememberedReporterName();
         applyChartFontFamily();
         applyElementSizeSettings();
         const type = document.getElementById('chartType').value;
@@ -16792,7 +16810,7 @@ body.desk-ready .v6-workspace{grid-template-columns:78px 350px minmax(0,1fr)}
 @media(max-width:760px){.desk-canvas-footer .desk-footer-hint{display:none!important}.desk-canvas-footer{max-width:100%;overflow:hidden}}
 </style>
 <section id="deskStart" aria-labelledby="startTitle" hidden>
- <div class="start-brand"><span class="desk-logo" aria-hidden="true"><i></i><i></i><i></i></span>그래픽 보조 데스크 <span style="font-size:12px;color:#687f7b;margin-left:8px;">V8.4</span></div>
+ <div class="start-brand"><span class="desk-logo" aria-hidden="true"><i></i><i></i><i></i></span>그래픽 보조 데스크 <span style="font-size:12px;color:#687f7b;margin-left:8px;">V8.5</span></div>
  <main class="start-main">
   
   <h1 id="startTitle">AI가 정리한 데이터로 그래프를 만드세요.</h1>
