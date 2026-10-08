@@ -1168,6 +1168,7 @@ body.desk-ready .preview-area{display:flex!important;flex-direction:column;posit
 .desk-canvas-label{font-size:12px;font-weight:650;display:flex;align-items:center;gap:7px;color:#5a7267;white-space:nowrap}.desk-live-dot{width:6px;height:6px;background:#76a567;border-radius:50%}.desk-canvas-label small{font-size:10px;font-weight:400;color:#8a9d90;border-left:1px solid #dbe3dc;padding-left:9px;margin-left:2px}.desk-view-tools{display:flex;align-items:center;gap:3px}.desk-view-tools .desk-btn{height:30px;min-height:30px;padding:0 7px;font-size:11px}.desk-view-tools select{font-size:11px;border:0;background:transparent;color:#5f7664;max-width:101px;cursor:pointer;min-height:34px}
 .desk-canvas-actions{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;width:100%;padding:13px 16px 0;z-index:80;min-height:51px}
 body.desk-ready .desk-canvas-actions :is(.v6-tool-btn,.v6-top-graph-btn){display:inline-flex!important;align-items:center;justify-content:center;gap:4px;height:31px;min-height:31px;border-radius:6px;background:#ffffffc9;border:1px solid #dfe6df;color:#657b69;font:500 11px var(--desk-font);padding:0 10px!important;white-space:nowrap}
+body.desk-ready .desk-canvas-actions .v6-top-graph-btn[aria-pressed="true"]{background:#167b70;border-color:#167b70;color:#fff;font-weight:700}
 body.desk-ready .desk-canvas-actions [hidden],body.desk-ready .desk-canvas-actions .v6-top-action-group[hidden]{display:none!important}body.desk-ready .desk-canvas-actions .v6-top-toggle:before,body.desk-ready .desk-canvas-actions .v6-top-toggle:after{display:none}body.desk-ready .desk-canvas-actions .v6-top-toggle[aria-pressed=true]{background:#e6efe4;border-color:#c6d6bf;color:#44713c}body.desk-ready .desk-canvas-actions .v6-top-toggle[aria-pressed=true]:before{content:'';display:block;width:4px;height:4px;border-radius:50%;background:#6c9b5c;box-shadow:none}body.desk-ready .desk-canvas-actions .v6-top-action-group{flex-wrap:wrap;justify-content:center}
 .desk-canvas-scroll{width:100%;flex:1;min-height:0;overflow:auto;padding:30px 36px 55px;scrollbar-width:thin;background-image:radial-gradient(#bac8bd60 .8px,transparent .8px);background-size:18px 18px;position:relative}
 .desk-paper-stage{width:max-content;margin:0 auto;display:flex;align-items:center;flex-direction:column;gap:24px;zoom:var(--desk-zoom,1);position:relative}
@@ -16538,7 +16539,7 @@ function deskTableColors(index,state){
   $('titleInput').placeholder='그래픽의 제목을 입력하세요';$('subInput').placeholder='예: 단위: %, 자료: 통계청';
   data.append(elements.text,elements.foot);
   const multi=details(data,'여러 그래프 함께 만들기',[elements.multi,elements.tabs]);multi.id='deskMultiDetails';
-  if(elements.multi){elements.multi.querySelector('strong').textContent='복수 그래프';elements.multi.querySelector('.help-text')?.remove()}
+  if(elements.multi){elements.multi.querySelector('strong').textContent='';elements.multi.querySelector('.help-text')?.remove()}
   multi.appendChild(el('p','','2~8개 그래프를 각각 편집하고 한 장으로 저장합니다.'));
   const raw=details(data,'원본 데이터 직접 입력',[elements.raw,elements.table]);raw.id='deskRawData';
   const rawApply=button('deskRawApply','입력한 데이터 적용','data',()=>{updateOutput();recordHistoryCheckpoint('원본 데이터 입력');sync();toast('입력한 데이터를 적용했습니다.')});rawApply.style.margin='0 12px 12px';raw.appendChild(rawApply);
@@ -16729,6 +16730,14 @@ h-bar
   <p class="start-footer">01 데이터 붙여넣기&nbsp;&nbsp; → &nbsp;&nbsp;02 미리보며 편집&nbsp;&nbsp; → &nbsp;&nbsp;03 저장</p>
  </main>
 </section>
+<style id="desk-advanced-group-styles">
+.desk-advanced-group{margin-top:25px;padding-top:20px;border-top:1px solid #e1e8e5}
+.desk-advanced-group>h3{display:flex;align-items:center;gap:9px;margin:0 0 6px;font-size:14px;font-weight:700;color:#294740}
+.desk-advanced-group>h3:before{content:'';width:4px;height:16px;border-radius:3px;background:var(--group-accent);flex:none}
+.desk-advanced-group-hint{margin:0 0 13px;font-size:11px;line-height:1.6;color:#7b8e86}
+.desk-advanced-group>.desk-details{margin-bottom:9px}
+.desk-advanced-group:not(:has(>details:not([hidden]))){display:none}
+</style>
 <script id="desk-beginner-script">
 (function(){
  'use strict';
@@ -16799,11 +16808,26 @@ h-bar
   const sizes=take('printLayoutSettingGroup');if(sizes)text.appendChild(sizes);
   const tableColors=$('tableColorSettingGroup');if(tableColors)design.appendChild(tableColors.parentElement.tagName==='DETAILS'?tableColors.parentElement:tableColors);
   const raw=$('deskRawData');if(raw){raw.querySelector('summary').textContent='항목과 수치 직접 입력';raw.open=true;data.insertBefore(raw,$('deskMultiDetails'));}
-  const multi=$('deskMultiDetails');advanced.appendChild(multi);multi.open=false;multi.querySelector('summary').textContent='여러 그래프의 개수와 배치';
+  const multi=$('deskMultiDetails');advanced.appendChild(multi);multi.open=false;multi.querySelector('summary').textContent='복수 그래프 생성';
   const legacyMulti=$('multiGraphGroup');if(legacyMulti)advanced.appendChild(legacyMulti);
   section(advanced,'저장 영역과 출력 설정',[$('saveAreaSettingGroup')]);
   const intro=document.createElement('p');intro.className='desk-advanced-intro';intro.textContent='기본 설정만으로도 그래프를 완성할 수 있습니다. 축 범위, 배치, 데이터별 글자 설정은 필요한 항목만 펼쳐 조절하세요.';advanced.prepend(intro);
   [...advanced.querySelectorAll('details')].forEach(d=>d.open=false);
+  const advancedGroups=[
+   {title:'그래프와 축',hint:'축 범위와 그래프 크기·간격을 조절합니다.',color:'#4d827b',ids:['v6BarTuning','axisSettingGroup','areaShapeSettingGroup','chartElementSizeGroup','tableElementSizeGroup','deskTableBlockWidths']},
+   {title:'글자와 숫자',hint:'숫자 표기와 글자 크기·색상을 조절합니다.',color:'#8b749d',ids:['koreanNumberGroup','fontSizeSettingGroup','datasetLabelSizeGroup','datasetLabelColorGroup','legendFontSizeGroup']},
+   {title:'복수 그래프',hint:'여러 그래프를 만들고 함께 배치합니다.',color:'#aa864b',ids:['deskMultiDetails']},
+   {title:'저장',hint:'저장할 이미지의 영역과 출력 설정을 확인합니다.',color:'#6687a3',ids:['saveAreaSettingGroup']}
+  ];
+  const advancedCards=[...advanced.children].filter(n=>n.tagName==='DETAILS');
+  advancedGroups.forEach(group=>{
+   const cards=advancedCards.filter(card=>group.ids.some(id=>card.id===id||card.querySelector('[id="'+id+'"]')));
+   if(!cards.length)return;
+   const wrapper=document.createElement('section');wrapper.className='desk-advanced-group';wrapper.style.setProperty('--group-accent',group.color);
+   const heading=document.createElement('h3');heading.textContent=group.title;
+   const hint=document.createElement('p');hint.className='desk-advanced-group-hint';hint.textContent=group.hint;
+   wrapper.append(heading,hint,...cards);advanced.appendChild(wrapper);
+  });
   [...data.children].forEach(n=>{if(n.classList.contains('desk-section-heading')&&n.textContent.startsWith('내용 입력'))n.remove()});
   const ai=$('deskAiPasteDetails');ai.querySelector('summary').textContent='그래프용 태그 데이터 다시 붙여넣기';$('autoFillBtn').onclick=()=>apply($('geminiInput').value,false);
   $('geminiInput').placeholder='[종류]\nbar\n[제목]\n그래프 제목\n[X축]\n항목 A,항목 B\n[데이터1이름]\n값\n[데이터1수치]\n30,70';
