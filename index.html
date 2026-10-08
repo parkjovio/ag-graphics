@@ -1313,6 +1313,16 @@ body.desk-ready .modal-btns .btn-close{background:#edf4ff!important;color:#43658
 .start-example{background:#eaf2ff;color:#5278a9}.start-example pre{color:#2c568e}
 .start-brand>span[style],.start-main>p[style]{color:#7289a8!important}
 </style>
+<style id="desk-save-preview-toggle-style">
+.desk-save-preview-toggle{display:inline-flex;align-items:center;gap:9px;padding:0 10px;min-height:38px;border:1px solid #d3e0f1;border-radius:8px;background:#f7faff;color:#36567b;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;position:relative}
+.desk-save-preview-toggle input{position:absolute;opacity:0;width:1px;height:1px}
+.desk-save-preview-track{display:block;width:32px;height:19px;background:#b8c7dc;border-radius:12px;position:relative;transition:background .15s}
+.desk-save-preview-track:after{content:'';position:absolute;left:3px;top:3px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .15s}
+.desk-save-preview-toggle input:checked+.desk-save-preview-track{background:#2563eb}
+.desk-save-preview-toggle input:checked+.desk-save-preview-track:after{transform:translateX(13px)}
+.desk-save-preview-toggle:focus-within{outline:3px solid #60a5fa;outline-offset:3px}
+@media(max-width:760px){.desk-save-preview-toggle{font-size:10px;padding:0 6px;gap:5px;min-height:36px}}
+</style>
 </head>
 <body>
 
@@ -16782,7 +16792,7 @@ body.desk-ready .v6-workspace{grid-template-columns:78px 350px minmax(0,1fr)}
 @media(max-width:760px){.desk-canvas-footer .desk-footer-hint{display:none!important}.desk-canvas-footer{max-width:100%;overflow:hidden}}
 </style>
 <section id="deskStart" aria-labelledby="startTitle" hidden>
- <div class="start-brand"><span class="desk-logo" aria-hidden="true"><i></i><i></i><i></i></span>그래픽 보조 데스크 <span style="font-size:12px;color:#687f7b;margin-left:8px;">V8.3</span></div>
+ <div class="start-brand"><span class="desk-logo" aria-hidden="true"><i></i><i></i><i></i></span>그래픽 보조 데스크 <span style="font-size:12px;color:#687f7b;margin-left:8px;">V8.4</span></div>
  <main class="start-main">
   
   <h1 id="startTitle">AI가 정리한 데이터로 그래프를 만드세요.</h1>
@@ -16936,7 +16946,16 @@ h-bar
   window.validateReporterName=function(){if(!isReporterBylineEnabled())return true;const value=$('nameInput').value.trim();if(value&&!['박조비 기자','기자 이름','기자이름'].includes(value))return true;saveDialog.close();DeskUI.reveal('nameInput');DeskUI.toast('작성자 이름을 입력하거나 작성자 표시를 끈 뒤 저장하세요.');return false;};
   const exportBtn=$('deskExport'),projectSave=$('deskProjectSave'),projectOpen=$('deskProjectOpen');projectOpen.classList.remove('icon-only');projectOpen.querySelector('span').hidden=false;
   saveDialog.append(exportBtn,projectSave,projectOpen,btn('다른 형식과 출력 옵션',()=>{saveDialog.close();DeskUI.showPane('background');saveSettings.open=true;saveSettings.scrollIntoView({block:'start',behavior:'smooth'})}),btn('닫기',()=>saveDialog.close(),'quiet'));document.body.appendChild(saveDialog);
-  const save=btn('저장 / 내보내기 ▾',()=>saveDialog.showModal(),'primary');save.id='deskSaveToggle';actions.appendChild(save);
+  const save=btn('저장 / 내보내기 ▾',()=>saveDialog.showModal(),'primary');save.id='deskSaveToggle';
+  const previewToggle=document.createElement('label');previewToggle.className='desk-save-preview-toggle';previewToggle.htmlFor='deskSavePreviewToggle';
+  const previewInput=document.createElement('input');previewInput.type='checkbox';previewInput.id='deskSavePreviewToggle';previewInput.setAttribute('role','switch');
+  const previewTrack=document.createElement('span');previewTrack.className='desk-save-preview-track';previewTrack.setAttribute('aria-hidden','true');
+  const previewText=document.createElement('span');previewText.textContent='저장영역 미리보기';
+  previewToggle.append(previewText,previewInput,previewTrack);actions.append(previewToggle,save);
+  const originalGuideUpdate=updateSaveAreaGuide;
+  updateSaveAreaGuide=function(...args){previewInput.checked=!!$('showSaveAreaGuide').checked;return originalGuideUpdate.apply(this,args)};
+  previewInput.addEventListener('change',()=>{$('showSaveAreaGuide').checked=previewInput.checked;$('showSaveAreaGuide').dispatchEvent(new Event('change',{bubbles:true}));updateSaveAreaGuide()});
+  updateSaveAreaGuide();
   ['deskExport','deskProjectSave'].forEach(id=>$(id).addEventListener('click',()=>saveDialog.close()));
   const formats=section(saveSettings,'애니메이션 효과',[$('svgDownloadBtn'),$('newsSettings')]);formats.open=false;
   const saveActions=document.createElement('div');saveActions.className='desk-save-settings-actions';
